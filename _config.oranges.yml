@@ -146,11 +146,12 @@ footer:
       name: rss
       icon: rss
       path: /atom.xml
-      # name: github
-      # icon: github
-      # path: https://github.com/qiaobeibei
+    -
+      name: github
+      icon: github
+      path: https://github.com/qiaobeibei
 
-      # name: email_contact  
+      # name: email
       # icon: envelope
       # path: qiaobeibei623@mail.nwpu.edu.cn
     # -
