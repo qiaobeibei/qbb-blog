@@ -150,10 +150,10 @@ footer:
       name: github
       icon: github
       path: https://github.com/qiaobeibei
-
-      # name: email
-      # icon: envelope
-      # path: qiaobeibei623@mail.nwpu.edu.cn
+    -
+      name: email
+      icon: envelope
+      path: qiaobeibei623@mail.nwpu.edu.cn
     # -
     #   name: facebook
     #   icon: facebooksquare

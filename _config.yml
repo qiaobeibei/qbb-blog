@@ -9,6 +9,7 @@ description: ''
 keywords:
 author: John Doe
 language: en
+
 timezone: ''
 
 # URL
@@ -115,3 +116,15 @@ feed:
   icon: icon.png
   autodiscovery: true
   template:
+
+lazyload:
+  enable: true
+  onlypost: false # optional
+  loadingImg: # optional eg ./images/loading.gif
+  isSPA: false # optional
+
+search:
+  path: search.xml
+  field: post
+  content: true
+
