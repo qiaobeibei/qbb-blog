@@ -128,3 +128,7 @@ search:
   field: post
   content: true
 
+# post_asset_folder: true
+marked:
+  prependRoot: true
+  postAsset: true
