@@ -26,9 +26,9 @@ favicon:
 
 # 用户头像与昵称
 avatar:
-  author_photo: /images/qiaobeibei.jpg
+  author_photo: /images/20241102012222.png
   author_nickname: 爱吃土豆
-  path: /images/qiaobeibei.jpg
+  path: /
 
 # Google 分析
 # https://analytics.google.com
