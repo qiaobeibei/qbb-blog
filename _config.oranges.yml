@@ -143,13 +143,16 @@ footer:
 
     # 按需取消注释以启用
     -
-      name: github
-      icon: github
-      path: https://github.com/qiaobeibei?tab=repositories
-    # -
-      name: email
-      icon: envelope
-      path: qiaobeibei623@mail.nwpu.edu.cn
+      name: rss
+      icon: rss
+      path: /atom.xml
+      # name: github
+      # icon: github
+      # path: https://github.com/qiaobeibei
+
+      # name: email_contact  
+      # icon: envelope
+      # path: qiaobeibei623@mail.nwpu.edu.cn
     # -
     #   name: facebook
     #   icon: facebooksquare
@@ -169,9 +172,7 @@ footer:
     # -
     #   # rss需安装 hexo-generator-feed 插件
     #   # 具体参照https://github.com/hexojs/hexo-generator-feed
-      name: rss
-      icon: rss
-      path: /atom.xml
+
 
   more:
     # 支持变量显示，可自定义扩展，具体见主题/layout/_partial/footer.ejs
