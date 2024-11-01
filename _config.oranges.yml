@@ -90,12 +90,12 @@ navbar:
     path: /archives/
     key: archives
   -
-    name: Categories
-    enable: false
+    name: 分类
+    enable: true
     path: /categories/
     key: categories
   -
-    name: Tags
+    name: 标签
     enable: true
     path: /tags/
     key: tags
@@ -105,7 +105,7 @@ navbar:
     path: /friends/
     key: friends
   -
-    name: About
+    name: 关于我
     enable: true
     path: /about/
     key: about
