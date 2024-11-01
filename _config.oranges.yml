@@ -154,14 +154,7 @@ footer:
       name: email
       icon: envelope
       path: qiaobeibei623@mail.nwpu.edu.cn
-    -
-      name: zhihu
-      icon: zhihu
-      path: https://www.zhihu.com/people/zhi-chi-tian-ya-10-23
-    -
-      name: CSDN
-      icon: csdn
-      path: https://blog.csdn.net/m0_63086198?spm=1000.2115.3001.5343
+
     # -
     #   name: wechat
     #   icon: wechat
