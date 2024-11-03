@@ -21,12 +21,12 @@
 # 网站图标
 favicon:
   enable: true
-  icon: /images/favicon.png
-  touch_icon: /images/favicon.png
+  icon: /images/土豆.png
+  touch_icon: /images/土豆.png
 
 # 用户头像与昵称
 avatar:
-  author_photo: /images/avatar.png
+  author_photo: /images/qiaobeibei.jpg
   author_nickname: 爱吃土豆
   path: /
 
@@ -100,12 +100,12 @@ navbar:
     path: /tags/
     key: tags
   -
-    name: 其他账号
+    name: 关联账号
     enable: true
     path: /friends/
     key: friends
   -
-    name: 关于
+    name: 关于我
     enable: true
     path: /about/
     key: about
@@ -131,6 +131,15 @@ friends:
     nickname: csdn
     site: https://blog.csdn.net/m0_63086198?spm=1000.2115.3001.5343
     meta:
+  -
+    nickname: github
+    site: https://github.com/qiaobeibei?tab=repositories
+    meta:
+  -
+    nickname: email
+    site: qiaobeibei623@mail.nwpu.edu.cn
+    meta:
+
 
 # 页脚信息
 footer:
@@ -155,10 +164,10 @@ footer:
       icon: envelope
       path: qiaobeibei623@mail.nwpu.edu.cn
 
-    # -
-    #   name: wechat
-    #   icon: wechat
-    #   path:
+    -
+      name: wechat
+      icon: wechat
+      path: aichitudou6923
     # -
     #   name: weibo
     #   icon: weibo
@@ -173,7 +182,7 @@ footer:
     # 一般用来显示根据各种场景需要切换的文本，如时间年份
     # 如：{thisYear} 会被替换为今年年份
     -
-      name: Copyright © {thisYear} Oranges
+      name: Copyright © {thisYear} 乔贝贝
       path: https://github.com/zchengsite/hexo-theme-oranges
     -
       name: Theme by Oranges | Powered by Hexo

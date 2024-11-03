@@ -1,4 +1,5 @@
 ---
+# type: "about"
 title: 并发编程（6）——future、promise、async
 date: 2024-11-03 13:58:01
 categories:
