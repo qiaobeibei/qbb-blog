@@ -183,7 +183,7 @@ footer:
     # 如：{thisYear} 会被替换为今年年份
     -
       name: Copyright © {thisYear} 乔贝贝
-      path: https://github.com/zchengsite/hexo-theme-oranges
+      path: https://github.com/qiaobeibei/qbb-blog/tree/main
     -
       name: Theme by Oranges | Powered by Hexo
       path: https://github.com/zchengsite/hexo-theme-oranges
