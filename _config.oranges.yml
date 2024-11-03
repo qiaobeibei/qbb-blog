@@ -21,8 +21,8 @@
 # 网站图标
 favicon:
   enable: true
-  icon: /images/土豆.png
-  touch_icon: /images/土豆.png
+  icon: /images/potato.png
+  touch_icon: /images/potato.png
 
 # 用户头像与昵称
 avatar:
