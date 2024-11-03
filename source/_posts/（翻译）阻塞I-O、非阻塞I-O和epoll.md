@@ -1,0 +1,180 @@
+---
+title: （翻译）阻塞I/O、非阻塞I/O和epoll
+date: 2024-11-03 12:47:25
+categories:
+- 网络编程
+- linux
+tags: 
+- 翻译
+- IO多路复用
+- select
+- poll
+- epoll
+typora-root-url: ./.. 
+---
+
+偶然看到一篇关于多路复用中阻塞模式和非阻塞模式的文章，讲的非常好，我将其翻译成中文以供大家学习浏览，受限于本人能力，一些地方与原文可能有较大出入。
+
+转载自：
+
+[Blocking I/O, Nonblocking I/O, And Epolleklitzke.org/blocking-io-nonblocking-io-and-epoll![img](../images/$%7Bfiilename%7D/icon-default-1730609254885-408.png)https://link.zhihu.com/?target=https%3A//eklitzke.org/blocking-io-nonblocking-io-and-epoll](https://link.zhihu.com/?target=https%3A//eklitzke.org/blocking-io-nonblocking-io-and-epoll)
+
+------
+
+这篇文章我想详细解释在使用非阻塞 I/O 时发生的事情。具体来说，我想解释以下内容：
+
+- 使用 fcntl 设置文件描述符的 O_NONBLOCK（将文件描述符设置为非阻塞状态） 语义。
+- 非阻塞 I/O 与异步 I/O 的区别。
+- 为什么非阻塞 I/O 通常与 I/O 多路复用器（如 epoll、kqueue 和 select）一起使用。
+- 非阻塞模式如何与 epoll 的边缘触发轮询相互作用。
+
+# 阻塞模式
+
+默认情况下，Unix系统中的所有文件描述符都处于“阻塞模式”。这意味着像 read、write 或 connect 这样的I/O系统调用可能会导致程序暂停。要理解这个概念，可以想象在基于TTY的程序中，从标准输入读取数据时的情况。如果你在标准输入上调用 read，程序会一直等待，直到有数据可用，比如用户在键盘上输入字符。具体来说，内核会将进程置于“休眠”状态，直到标准输入上有数据可读取。其他类型的文件描述符也类似。例如，如果你尝试从TCP套接字读取数据，该调用会阻塞，直到连接的另一端发送了数据。
+
+对于并发运行的程序来说，阻塞可能会导致问题，因为被阻塞的进程会暂停。为了解决这个问题，有两种不同但互补的方法：
+
+- 非阻塞模式：在这种模式下，I/O操作不会导致进程暂停。
+- I/O多路复用：使用像 select 和 epoll 这样的系统调用，可以监控多个文件描述符，以便在有数据可读或可写时及时处理。
+
+这两种方法通常结合使用，尽管它们是独立的策略。在解决阻塞问题时，了解它们的区别及其组合使用的原因非常重要。
+
+# 非阻塞模式（**O_NONBLOCK**）
+
+通过向文件描述符的标志集中添加 O_NONBLOCK，可以使用 **funtl函数**将文件描述符设置为“非阻塞模式”。具体实现如下：
+
+```cpp
+/* 在文件描述符上设置 O_NONBLOCK */
+int flags = fcntl(fd, F_GETFL, 0);
+fcntl(fd, F_SETFL, flags | O_NONBLOCK);
+```
+
+从此，文件描述符将被视为非阻塞的。在这种模式下，当执行 read 和 write 等 I/O 系统调用时，如果这些调用会导致阻塞，它们将返回 -1，并将 errno 设置为 EWOULDBLOCK。
+
+虽然这一特性很有趣，但单靠它并不够用。仅使用这个方法，实际上没有有效的手段来同时检查多个文件描述符。例如，如果我们有两个文件描述符并希望同时读取它们，通常的方法是通过循环检查每个文件描述符是否有数据，然后短暂休眠，再次进行检查（**但这也仅仅是遍历单独检查而不是并行处理**）：
+
+```cpp
+struct timespec sleep_interval{.tv_sec = 0, .tv_nsec = 1000};
+ssize_t nbytes;
+for (;;) {
+    /* try fd1 */
+    if ((nbytes = read(fd1, buf, sizeof(buf))) < 0) {
+        if (errno != EWOULDBLOCK) {
+            perror("read/fd1");
+        }
+    } else {
+        handle_data(buf, nbytes);
+    }
+
+    /* try fd2 */
+    if ((nbytes = read(fd2, buf, sizeof(buf))) < 0) {
+        if (errno != EWOULDBLOCK) {
+            perror("read/fd2");
+        }
+    } else {
+        handle_data(buf, nbytes);
+    }
+
+    /* sleep for a bit; real version needs error checking! */
+    nanosleep(sleep_interval, NULL);
+}
+```
+
+这种方法虽然可以工作，但存在几个缺点：
+
+- 当数据缓慢到达时，程序会频繁且不必要地唤醒，浪费CPU资源。
+- 如果数据到达时程序正在休眠，可能会导致延迟，未能立即读取。
+- 当处理大量文件描述符时，这种模式会变得繁琐且难以管理。
+
+为了解决这些问题，我们需要引入I/O多路复用。
+
+# I/O多路复用（**select, epoll, kqueue, etc.**）
+
+有几种 I/O 多路复用系统调用，例如 POSIX 定义的 **select**、Linux 上的 **epoll** 以及 BSD 上的 **kqueue**。这些调用的基本原理相似：这些模型允许内核知道我们对一组文件描述符中的特定事件（通常是读事件和写事件）感兴趣，并在这些事件发生之前阻塞。例如，你可以告诉内核，你对文件描述符 X 的读事件感兴趣，对文件描述符 Y 的读和写事件感兴趣，以及对文件描述符 Z 的写事件感兴趣。
+
+这些 I/O 多路复用系统调用通常不关心文件描述符是处于阻塞模式还是非阻塞模式。即使所有文件描述符都保持在阻塞模式，它们也能与 select 或 epoll 正常工作。如果你只在 select 或 epoll 返回的文件描述符上调用 read 和 write，这些调用不会阻塞，即便这些文件描述符处于阻塞模式。但需要注意的是，**在边缘触发模式下，文件描述符的阻塞或非阻塞状态是很重要的**，这一点将在后文进一步解释。
+
+我将这种多路复用的并发方法称为“异步 I/O”。有时人们也会称之为“非阻塞 I/O”，我认为这是由于对“非阻塞”在系统编程层面的含义产生了混淆。因此，我建议将“非阻塞”这个术语保留用于描述文件描述符是否实际处于非阻塞模式。
+
+# O_NONBLOCK（非阻塞模式） 如何与 I/O 多路复用交互
+
+假设我们正在使用阻塞文件描述符编写一个简单的套接字服务器。在这个例子中，我们只关心读取的文件描述符。事件循环的核心部分会调用 select，然后对每个有数据的文件描述符调用 read，示例代码如下：
+
+```cpp
+ssize_t nbytes;
+for (;;) {
+    /* select call happens here */
+    if (select(FD_SETSIZE, &read_fds, NULL, NULL, NULL) < 0) {
+        perror("select");
+        exit(EXIT_FAILURE);
+    }
+    for (int i = 0; i < FD_SETSIZE; i++) {
+        if (FD_ISSET(i, &read_fds)) {
+            /* read call happens here */
+            if ((nbytes = read(i, buf, sizeof(buf))) >= 0) {
+                handle_read(nbytes, buf);
+            } else {
+                /* real version needs to handle EINTR correctly */
+                perror("read");
+                exit(EXIT_FAILURE);
+            }
+        }
+    }
+}
+```
+
+这种方法虽然可行，但如果缓冲区太小，而同时收到大量数据，会发生什么？例如，假设缓冲区大小为 1024 字节，但一次性收到 64KB 数据。为了处理这些数据，我们需要调用 select，然后调用 read 64 次，**总共进行 128 次系统调用**（64次select和64次read），系统资源明显被占用太多。
+
+如果缓冲区太小，必须多次调用 read 是无法避免的，但我们可以尝试减少调用次数。理想情况下，我们希望只调用一次 read。
+
+为了解决这个问题，可以**将文件描述符设置为非阻塞模式**。基本思路是，**循环调用 read，直到返回 EWOULDBLOCK**（缓冲区没有数据，如果是阻塞模式下，线程会被阻塞直至缓冲区重新出现数据；在非阻塞模式下，函数会返回EWOULDBLOCK而不会阻塞），代码如下：
+
+```cpp
+ssize_t nbytes;
+for (;;) {
+    /* select call happens here */
+    if (select(FD_SETSIZE, &read_fds, NULL, NULL, NULL) < 0) {
+        perror("select");
+        exit(EXIT_FAILURE);
+    }
+    for (int i = 0; i < FD_SETSIZE; i++) {
+        if (FD_ISSET(i, &read_fds)) {
+            /* NEW: loop until EWOULDBLOCK is encountered */
+            for (;;) {
+                /* read call happens here */
+                nbytes = read(i, buf, sizeof(buf));
+                if (nbytes >= 0) {
+                    handle_read(nbytes, buf);
+                } else {
+                    if (errno != EWOULDBLOCK) {
+                        /* real version needs to handle EINTR correctly */
+                        perror("read");
+                        exit(EXIT_FAILURE);
+                    }
+                    break;
+                }
+            }
+        }
+    }
+}
+```
+
+在这个例子中（1024 字节缓冲区和 64KB 数据），**一共进行了 66 次系统调用**：一次 select，成功调用 read 64 次，然后再调用一次 read 返回 EWOULDBLOCK。相比于之前的 128 次系统调用要高效得多，显著提高了性能和可扩展性。
+
+这种方法有一个缺点：**由于新增的循环，至少会多进行一次系统调用**。也就是说，read 会被调用，直到返回 EWOULDBLOCK。假设在大多数情况下，读取的缓冲区足够大，能够在一次调用中读取所有数据。那么在常见情况下，这个循环将导致三个系统调用：一个用于等待数据，一个用于实际读取数据，另一个用于处理 EWOULDBLOCK（**而在阻塞模式下只有两次系统调用，一次调用select、一次调用read**）。
+
+# 边缘触发轮询
+
+非阻塞 I/O 的一个重要用途是系统调用中的**边缘触发轮询**，比如epoll一共有两种工作模式**：**水平触发轮询和边缘触发轮询。水平触发是一种更简单的编程模型，类似于传统的系统调用。为了理解这两者的区别，我们需要了解内核是如何工作的。
+
+假设你告诉内核，你希望监视某个文件描述符的读取事件。内核为每个文件描述符维护一个兴趣列表，当数据到达该文件描述符时，内核会遍历兴趣列表，并唤醒每个在事件列表中被阻塞的进程。
+
+两种触发模式下的内核工作过程均是如此，水平触发和边缘触发的区别在于**内核对调用的处理方式**。在水平触发模式下，内核会检查兴趣列表中的每个文件描述符，看它是否满足条件。例如，如果你在文件描述符 8 上注册了一个读取事件，当调用内核时，内核会首先检查：文件描述符 8 的读缓冲区是否有数据可读？如果有任何文件描述符满足条件，内核会在不阻塞的情况下返回，告诉你可以进行读取操作（**如果有数据那就一直返回，提醒你可以进行读操作**）。
+
+在边缘触发模式中，内核并不主动检查文件描述符的状态。相反，当你注册了事件并调用相关系统调用时，内核会立即将进程置于睡眠状态，直到有新的事件发生。这意味着，如果文件描述符的状态发生变化（例如，变为可读），内核会唤醒你，但如果没有处理所有的数据，它不会再唤醒你（**如果文件描述符状态发送变化，内核只会提醒一次。如果缓冲区数据没读取完，该状态就不会发生改变，内核当然也不会第二次提醒**）。
+
+在边缘触发模式下，内核维护一个事件列表，记录每个文件描述符的状态。当新的事件（例如，有数据到达）发生时，内核只需查找这个列表，而不需要遍历所有的文件描述符。这使得在唤醒进程时，内核能够以**常数时间 O(1)** 完成查找和唤醒操作。
+
+以下是边缘触发和水平触发模式之间区别的一个详细例子：假设你的读取缓冲区是 100 字节，而某个文件描述符收到了 200 字节的数据。如果你调用了一次读取，然后再次调用，此时仍有 100 字节的数据准备好读取。在水平触发模式下，内核会通知进程应该再次调用。相反，在边缘触发模式下，内核会立即进入睡眠状态（因为文件状态仍然没变）。如果另一方在等待响应（例如，发送的数据是一种 RPC），那么双方可能会“死锁”：服务器在等待客户端发送更多数据，而客户端在等待服务器的响应。
+
+**要使用边缘触发轮询，必须将文件描述符设置为非阻塞模式**。
