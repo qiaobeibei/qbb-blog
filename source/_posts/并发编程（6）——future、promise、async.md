@@ -330,6 +330,8 @@ void use_package() {
 
 C++11引入了`std::promise`和`std::future`两个类，用于实现异步编程。`std::promise`用于在某一线程中设置某个值或异常，之后通过 `std::promise` 对象所创建的`std::future`对象异步获得这个值或异常。
 
+我们可以选择将运行结果保存到promise中，然后通过promise绑定的future获得这个结果。
+
 示例：
 
 ```c++
