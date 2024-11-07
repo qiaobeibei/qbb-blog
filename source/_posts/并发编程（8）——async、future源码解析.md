@@ -252,7 +252,7 @@ _NODISCARD future<_Invoke_result_t<decay_t<_Fty>, decay_t<_ArgTypes>...>> async(
 
    其实，`_Associated_state` 模板类负责**管理异步任务的状态**，包括结果的存储、异常的处理以及任务完成的通知。它是实现 `std::future` 和 `std::promise` 的核心组件之一，通过 `_State_manager` 和 `_Promise` 类模板对其进行封装和管理，提供更高级别的接口和功能。
 
-   ![1730980524864](../images/$%7Bfiilename%7D/1730980524864.jpg)
+   ![1730990451098](/../../images/$%7Bfiilename%7D/1730990451098.jpg)
 
    `_Promise`、_`State_manager`、`_Associated_state` 之间的**包含关系**如上述结构所示。
 
@@ -317,7 +317,7 @@ _NODISCARD future<_Invoke_result_t<decay_t<_Fty>, decay_t<_ArgTypes>...>> async(
        : public _Associated_state<_Ret>
    ```
 
-   ![1730981460150](../images/$%7Bfiilename%7D/1730981460150.jpg)
+   ![1730981460150](/../../images/$%7Bfiilename%7D/1730981460150.jpg)
 
    如上图所示，`_Task_async_state` 与 `_Deferred_async_state` 都继承自 `_Packaged_state`， `_Packaged_state`中保存了传入给`std::async`的可调用对象。同时，`_Packaged_state`继承自`_Associated_state`，`_Associated_state` 是`_Primise`类中成员`_State`的最基本组成对象，基本所有的接口都是通过调用`_Associated_state` 的函数实现的。
 
@@ -492,7 +492,7 @@ public:
 
 `future`类继承自`_State_manager`类，`_State_manager`类又有一个`_Associated_state<_Ty>*`类型的私有成员`_State`，而`_State_manager`的接口实现大部分是通过调用`_Associated_state` 的成员函数实现的。关系如下：
 
-![1730985805487](../images/$%7Bfiilename%7D/1730985805487.jpg)
+![1730985805487](../../images/$%7Bfiilename%7D/1730985805487.jpg)
 
 ## 2.1 wait()
 
