@@ -3,6 +3,7 @@
 title: 并发编程（6）——future、promise、async，线程池
 date: 2024-11-04 13:58:01
 categories:
+- C++
 - 并发编程
 tags: 
 - future
@@ -18,11 +19,13 @@ typora-root-url: ./..
 
 # 六、day6
 
-今天学习如何使用std::future、std::async、std::promise。主要内容包括：
+今天学习如何使用std::future、std::async、std::promise，并通过std::promise和packaged_task构建一个线程池。
 
+参考：
 
+1. up主[恋恋风辰个人博客](https://llfc.club/category?catid=225RaiVNI8pFDD5L4m807g7ZwmF#!aid/2AgjUWYUdSmYrRKDxAnxoEDNBW1)
 
-
+3. up主[mq白的代码仓库]([ModernCpp-ConcurrentProgramming-Tutorial/README.md at main · Mq-b/ModernCpp-ConcurrentProgramming-Tutorial](https://github.com/Mq-b/ModernCpp-ConcurrentProgramming-Tutorial/blob/main/README.md))
 
 # 1. future与async
 
@@ -94,7 +97,7 @@ std::async(f, n);   // OK! 可以通过编译，不过引用的并非是局部�
 std::async(f2, n);  // Error! 无法通过编译
 ```
 
-n是一个左值，传入async之后的处理过程和thread一样。首先，async内部会将其cv修饰符和引用类型去除，然后保存到一个tuple元组中，这个元组存储了可调用对象和去除修饰后的参数，最后将元组中的参数通过`std::move`传递给可调用对象。
+n是一个左值，传入async之后的处理过程和thread一样。首先，async内部会将其cv修饰符和引用类型去除，然后保存到一个tuple元组中，这个元组存储了可调用对象和去除修饰后的参数副本，最后将元组中的参数副本通过`std::move`传递给可调用对象。
 
 所以，这里n是左值，传入async后变为右值，如果将该类型传入给`f`那么可以编译，因为`const int&`可以接受右值，但是`f2`不接受右值，只接受左值，所以`f2`会报错，表示传入类型错误。
 
@@ -826,7 +829,7 @@ join thread 25912
 
 随着线程池中的m被改变，但主线程中的m并没有被改变，并且地址也不同。其实和thread、async比较类似，但不完全相同，如果这里直接将m传入给thread，那么编译不会通过，因为lamda的参数是一个int&，但是thread传递给lambda的是一个int&&，左值引用不会接受右值引用。
 
-在这里，lambda函数和参数传递给commit函数，在commit函数中，经过引用转发和原样转发后（m在模板类型中会被推断为int&，注意m不会被模板推断为int，int只能表示右值，可用参考我写的[文章](https://www.aichitudou.cn/2024/11/03/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B%EF%BC%881%EF%BC%89%E2%80%94%E2%80%94%E7%BA%BF%E7%A8%8B/)），进入bind函数中的参数类型Args其实是**int&**。但在bind中，会将参数Args首先进行decay取出cv修饰符和引用，此时Args类型为**int**（右值），然后将decay处理后的调用对象和参数保存到pair类型中。如下：
+在这里，lambda函数和参数传递给commit函数，在commit函数中，经过引用转发和原样转发后（m在模板类型中会被推断为int&，注意m不会被模板推断为int，在类型推断中，左值会被推断为左值引用，而右值会被推断为对应的类型，比如int，可用参考我写的[文章](https://www.aichitudou.cn/2024/11/03/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B%EF%BC%881%EF%BC%89%E2%80%94%E2%80%94%E7%BA%BF%E7%A8%8B/)），进入bind函数中的参数类型Args其实是**int&**。但在bind中，会将参数Args首先进行decay取出cv修饰符和引用，此时Args类型为**int**，然后将decay处理后的调用对象和参数保存到pair类型对象中，其中保存的参数也是参数副本。如下：
 
 ```c++
     using _Seq    = index_sequence_for<_Types...>;
@@ -836,9 +839,7 @@ join thread 25912
     _Compressed_pair<_First, _Second> _Mypair;
 ```
 
-_Mypair 保存了取出修饰的可调用对象和参数。其中Args的类型是一个int右值，传递给可调用对象的参数也是这个int右值，但是会调用拷贝构造，相当于传递给的是一个副本，所以在bind内部的修改不会影响到外面的m。所以主线程的m和线程池中的m的地址不同。
-
-
+_Mypair 保存了取出修饰的可调用对象和参数。其中Args的类型是int，传递给可调用对象的参数也是这个int，但是会调用拷贝构造（这里并没有像thread、async内部一样通过`std::move`传递参数，所以即使可调用对象的形参类型是int&，但仍然可以接受pair中的参数副本 int，但不能接受int&&），相当于传递给的是一个副本，所以在bind内部的修改不会影响到外面的m。所以主线程的m和线程池中的m的地址不同。
 
 ```
 ThreadPool::instance().commit([](int& m) {
@@ -866,3 +867,4 @@ join thread 26476
 
 1. 线程池做得任务是并发的，并且无序，不能保证连续性。比如在网络编程中，你的接受线程必须要保证收到的消息顺序是有序的，所以这里就不能用线程池；还比如在逻辑线程中，我需要先处理消息A，再处理消息B，同样是有顺序的不能使用线程池，只能使用单线程来完成。
 2. 如果执行的任务互斥性很大，或者说是强关联，比如玩游戏：第一个任务是玩家A进入工会做任务增加工会贡献，第二个任务是工会会长使用这个贡献。而贡献是所有玩家共享的一个资源，有一个公共互斥量，这也不可以用线程池来用，这只能用一个线程来用。因为来回加锁会导致效率大幅度下降，还不如使用一个线程来完成。
+

@@ -2,6 +2,7 @@
 title: KMP算法
 date: 2024-11-03 11:52:02
 categories:
+- C++
 - 算法
 tags: 
 - KMP
