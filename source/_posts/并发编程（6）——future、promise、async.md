@@ -417,7 +417,6 @@ int main() {
 ```
 Waiting for the thread to set the exception...
 Exception set by the thread: 自定义异常
-
 ```
 
 ------
