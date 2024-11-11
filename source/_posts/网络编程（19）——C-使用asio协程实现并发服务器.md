@@ -65,7 +65,7 @@ enum MSG_ID {
 
 ## 2. 消息存储节点MsgNode
 
-### ***a. MsgNode.h\***
+### **a. MsgNode.h**
 
 ```cpp
 #pragma once
@@ -116,7 +116,7 @@ MsgNode类主要用于构建消息接收节点和消息发送节点
 - RecvNode节点作为接收节点，构造函数仅需最大长度和消息id，同时定义一个GetMsgID()函数用于返回消息id（在逻辑层根据消息id寻找对应已注册回调函数时需要用到）
 - SendNode节点作为发送节点，不仅需要知道最大长度和消息id，还需传入消息首地址msg
 
-### ***b. 成员函数实现\***
+### **b. 成员函数实现**
 
 ```cpp
 #include "MsgNode.h"
@@ -148,7 +148,7 @@ SendNode::SendNode(const char* msg, short max_len, short msg_id) :
 
 ## 3. CServer
 
-### ***a. CServer.h\***
+### **a. CServer.h**
 
 ```cpp
 #pragma once
@@ -261,7 +261,7 @@ void CServer::ClearSession(std::string uuid) {
 
 ## 4. 线程池AsioIOServicePool
 
-### ***a. AsioIOServicePool.h\***
+### **a. AsioIOServicePool.h**
 
 ```cpp
 #pragma once
@@ -335,7 +335,7 @@ public:
 
 [爱吃土豆：网络编程（13）——单例模式0 赞同 · 0 评论文章](https://zhuanlan.zhihu.com/p/774652701)
 
-### ***b. 成员函数实现\***
+### **b. 成员函数实现**
 
 ```cpp
 void SafeDeletor::operator()(AsioIOServicePool* st) {
@@ -430,7 +430,7 @@ std::shared_ptr<AsioIOServicePool> AsioIOServicePool::_instance = nullptr;
 
 而逻辑层是独立的，回调函数只需将数据投递给逻辑**队列**（回调函数将数据放入队列中之后系统会运行下一步，便不会被阻塞），逻辑系统会自动从队列中取数据并做相应操作，如果需要在执行完操作之后做相应回复，那么逻辑系统会调用写事件并注册写回调给asio网络层，网络层就是asio底层通信的网络层步骤。
 
-### ***a. LogicSystem.h\***
+### **a. LogicSystem.h**
 
 ```cpp
 #pragma once
@@ -501,7 +501,7 @@ FunCallBack使用了C++11新特性**std::function**来声明了一个函数签�
 
 因为逻辑队列存储的成员需要包含对应session和消息内容，所以需要重新定义一个逻辑节点，用于存储会话session中将对应消息投递至逻辑队列的内容，包括该session和消息内容。
 
-### *b. LogicNode*
+### **b. LogicNode**
 
 ```cpp
 class LogicNode {
@@ -528,7 +528,7 @@ _session(session), _recvnode(recvnode){}
 
 用于接收一个session会话和该会话投递的消息内容
 
-### ***c. 成员函数实现\***
+### **c. 成员函数实现**
 
 ```cpp
 LogicSystem::LogicSystem() :_b_stop(false) {
@@ -735,7 +735,7 @@ private:
 同样，CSession类的成员函数在后面定义时详细介绍，这里仅介绍成员变量：
 
 - boost::asio::io_context**&** _io_context：用于接收从线程池**AsioIOServicePool**中提取的ioc，注意，这里是引用而不是重新声明一个io_context新实例
-- **CServer\* _server**：接收CServer指针，当Session收发操作出错时，方便调用Server的Clear函数擦除该session会话任务
+- **CServer _server**：接收CServer指针，当Session收发操作出错时，方便调用Server的Clear函数擦除该session会话任务
 - **_socket**：每个session都有一个独立的套接字，负责异步收发
 - **_b_close**：session会话任务是否结束的标志位
 - **_send_que**：发送队列，逻辑层会调用session的Send发送函数，Send函数会将需要发送的消息添加到发送队列，保证发送的顺序性
@@ -743,7 +743,7 @@ private:
 - **_recv_head_node**：消息头节点，将收到消息的id和长度存储至该节点
 - **LogicNode**：逻辑节点，负责将session和消息内容投递至逻辑队列，逻辑队列元素的格式为LogicNode
 
-### ***b. 成员函数实现\***
+### **b. 成员函数实现**
 
 ```cpp
 CSession::CSession(boost::asio::io_context& io_context, CServer* server) :

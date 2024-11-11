@@ -48,7 +48,7 @@ IOServicePool 服务池中，IOServicePool 类会根据系统的 CPU 核数创�
 
 IOServicePool本质上是一个线程池，基本功能就是**根据构造函数传入的数量创建n个线程和iocontext，然后每个线程跑一个iocontext**，这样就可以并发处理不同iocontext读写事件了
 
-### ***a. IOServicePool.h\***
+### ***a. IOServicePool.h**
 
 ```cpp
 #pragma once
@@ -89,7 +89,7 @@ private:
 - _threads：存储指定数量的线程
 - _nextIOService：记录ioc在vector的下标，通过轮询返回ioc时，需要记录当前ioc的下标，累加，当超过vector的size时就归零，然后继续按轮询的方式返回
 
-### **b. \*IOServicePool构造函数\***
+### **b. IOServicePool构造函数**
 
 ```cpp
 AsioIOServicePool::AsioIOServicePool(std::size_t size) : _ioServices(size), _works(size), _nextIOService(0) {
@@ -133,7 +133,7 @@ boost::asio::io_context::work::work(boost::asio::io_context& io_context)
 
 最后，遍历多个ioservice，创建多个线程，每个线程内部启动ioservice。
 
-***c. GetIOService()\***
+***c. GetIOService()**
 
 ```cpp
 boost::asio::io_context& AsioIOServicePool::GetIOService() {
@@ -147,7 +147,7 @@ boost::asio::io_context& AsioIOServicePool::GetIOService() {
 
 该段代码用于从ioc存储容器_ioServices中获取io_context&，其中_nextIOService为索引，轮询获取io_context&
 
-### ***d. Stop()\***
+### ***d. Stop()**
 
 ```cpp
 void AsioIOServicePool::Stop(){
@@ -166,7 +166,7 @@ void AsioIOServicePool::Stop(){
 
 ## 3. 服务器修改
 
-### ***a. void CServer::start_accept()\***
+### ***a. void CServer::start_accept()**
 
 ```cpp
 void CServer::start_accept() {
@@ -188,7 +188,7 @@ std::shared_ptr<CSession> new_session = std::make_shared<CSession>(_ioc, this); 
 std::shared_ptr<CSession> new_session = std::make_shared<CSession>(ioc, this); // 修改后
 ```
 
-### ***b. AsyncServer_MsgNode.cpp\***
+### ***b. AsyncServer_MsgNode.cpp**
 
 主函数也需要修改，因为现在的ioc不止用于执行异步接受，还有线程池中的ioc，所以需要将二者均stop
 

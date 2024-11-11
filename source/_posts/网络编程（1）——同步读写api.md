@@ -335,7 +335,7 @@ buffer的结构
 
 每个vector存储的都是**mutable_buffer的地址**，每个mutable_buffer的第一个字节表示数据的长度，后面跟着数据内容。
 
-这么复杂的结构交给用户使用并不合适，所以asio提出了buffer()函数，**该函数接收多种形式的\**[字节流](https://zhida.zhihu.com/search?content_id=247993602&content_type=Article&match_order=1&q=字节流&zhida_source=entity)\**，该函数返回asio::mutable_buffers_1 o或者asio::const_buffers_1结构的对象**。如果传递给buffer()的参数是一个只读类型，则函数返回asio::const_buffers_1 类型对象。如果传递给buffer()的参数是一个可写类型，则返回asio::mutable_buffers_1 类型对象。
+这么复杂的结构交给用户使用并不合适，所以asio提出了buffer()函数，**该函数接收多种形式的*[字节流](https://zhida.zhihu.com/search?content_id=247993602&content_type=Article&match_order=1&q=字节流&zhida_source=entity)*，该函数返回asio::mutable_buffers_1 o或者asio::const_buffers_1结构的对象**。如果传递给buffer()的参数是一个只读类型，则函数返回asio::const_buffers_1 类型对象。如果传递给buffer()的参数是一个可写类型，则返回asio::mutable_buffers_1 类型对象。
 
 **asio::const_buffers_1和asio::mutable_buffers_1**是asio::mutable_buffer和asio::const_buffer的适配器，提供了符合MutableBufferSequence和ConstBufferSequence概念的接口，所以他们可以作为boost::asio的api函数的参数使用。
 

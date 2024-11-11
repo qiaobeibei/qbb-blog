@@ -15,7 +15,7 @@ typora-root-url: ./..
 
 ## **1）什么是protobuf？**
 
-rotocol Buffers（protobuf）是一种由谷歌开发的数据序列化格式，用于高效地序列化结构化数据。它可以用于将结构化数据序列化到***\*[二进制](https://zhida.zhihu.com/search?content_id=248600734&content_type=Article&match_order=1&q=二进制&zhida_source=entity)\**格式**，并广泛用于数据存储、通信协议、配置文件等领域。
+rotocol Buffers（protobuf）是一种由谷歌开发的数据序列化格式，用于高效地序列化结构化数据。它可以用于将结构化数据序列化到***[二进制](https://zhida.zhihu.com/search?content_id=248600734&content_type=Article&match_order=1&q=二进制&zhida_source=entity)*格式**，并广泛用于数据存储、通信协议、配置文件等领域。
 
 我们的逻辑是有类等抽象数据构成的，而tcp是面向字节流的，所以我们需要将类结构序列化为字符串来传输，这便需要借助protobuf。
 
@@ -75,7 +75,7 @@ protoc --cpp_out=. ./msg.proto
 
 ![img](/images/$%7Bfiilename%7D/format,png-1730604508787-26.png)
 
-在visual中，在项目属性中，配置选择Debug，**平台选择X64**，选择VC++目录， 在包含目录中添加 D:\cppsoft\**protoc\include** 在库目录中添加 D:\cppsoft\**protoc\bin**
+在visual中，在项目属性中，配置选择Debug，**平台选择X64**，选择VC++目录， 在包含目录中添加 D:\cppsoft*protoc\include** 在库目录中添加 D:\cppsoft*protoc\bin**
 
 在链接器的输入选项中添加protobuf用到的[lib库](https://zhida.zhihu.com/search?content_id=248600734&content_type=Article&match_order=1&q=lib库&zhida_source=entity)
 
