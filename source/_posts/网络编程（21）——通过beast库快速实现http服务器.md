@@ -575,25 +575,15 @@ int main()
 
 ![img](/images/$%7Bfiilename%7D/fcb6b03300f648f2bd30af7fc9f1adea.png)
 
-
-
-
-
 测试time，输入‘127.0.0.1:8080/time’，页面会显示当前的时间戳
 
-![img](/images/$%7Bfiilename%7D/37b9ca9d55634aaaaf9b8068d9755c51.png)编辑![img](/images/$%7Bfiilename%7D/21be6155db264b2bbb42bf94697abf71.png)编辑
-
-
-
-
+![img](/images/$%7Bfiilename%7D/37b9ca9d55634aaaaf9b8068d9755c51.png)![img](/images/$%7Bfiilename%7D/21be6155db264b2bbb42bf94697abf71.png)
 
 ### 2）测试post
 
 打开postman，按照图片进行如下操作
 
-![img](/images/$%7Bfiilename%7D/a1d9c57d65ac417e9913213e833b1159.png)编辑
-
-
+![img](/images/$%7Bfiilename%7D/a1d9c57d65ac417e9913213e833b1159.png)
 
 首先，创建一个新的请求，并设置位post，然后输入‘**127.0.0.1:8080/email**’，在raw中输入数据并点击发送
 
@@ -603,22 +593,14 @@ int main()
 }
 ```
 
-
-
 服务器返回相应数据
 
-![img](/images/$%7Bfiilename%7D/f338b249f79d44f4b8759aacd74e6097.png)编辑
+![img](/images/$%7Bfiilename%7D/f338b249f79d44f4b8759aacd74e6097.png)
 
-![img](/images/$%7Bfiilename%7D/82ff42db2ba04b14b00de8fe3f6aab90.png)编辑
-
-
-
-
+![img](/images/$%7Bfiilename%7D/82ff42db2ba04b14b00de8fe3f6aab90.png)
 
 同时，服务器这里也打印处POST的相应数据
 
-![img](/images/$%7Bfiilename%7D/c626ad88cae14b599498f55a7ed4a01e.png)编辑
-
-
+![img](/images/$%7Bfiilename%7D/c626ad88cae14b599498f55a7ed4a01e.png)
 
 同理，也可以用postman做get测试，我这里就不再演示了
