@@ -39,7 +39,7 @@ C++ 标准库有两种 future，都声明在 [`future`](https://zh.cppreference.
 
 ## 1.1 async与future的配合使用
 
-假设需要执行一个耗时任务并获取其返回值，但是并不急切的需要它。那么就可以启动新线程执行，但是***`std::thread` 不能直接从线程获取返回值（可以使用引用或指针直接将数据存储至指定内存，而不用显式返回**）*。不过我们可以使用 [`std::async`](https://zh.cppreference.com/w/cpp/thread/async) 函数模板。
+假设需要执行一个耗时任务并获取其返回值，但是并不急切的需要它。那么就可以启动新线程执行，但是***`std::thread` 不能直接从线程获取返回值（可以使用引用或指针直接将数据存储至指定内存，而不用显式返回）***。不过我们可以使用 [`std::async`](https://zh.cppreference.com/w/cpp/thread/async) 函数模板。
 
 使用 *`std::async` 启动一个**异步任务**（也就是创建一个子线程执行相关任务，主线程可以执行自己的任务），它会返回一个 `std::future` 对象*，这个对象和任务关联，将持有任务最终执行后的结果。当需要任务执行结果的时候，只需要调用 [`future.get()`](https://zh.cppreference.com/w/cpp/thread/future/get) 成员函数，就会**阻塞**当前线程直到 `future` 为就绪为止（即任务执行完毕），返回执行结果。[`future.valid()`](https://zh.cppreference.com/w/cpp/thread/future/valid) 成员函数检查 future 当前是否关联共享状态，即是否当前关联任务。如果还未关联，或者任务已经执行完（调用了 get()、set()），都会返回 **`false`**。
 
