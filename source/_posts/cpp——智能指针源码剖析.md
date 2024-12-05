@@ -363,7 +363,46 @@ void delfunc_shared()
 
 如果不传递delfuncint，会造成p被智能指针delete，因为p是栈空间的变量，用delete会导致崩溃。
 
-### 1.2.4 通过智能指针共享数据
+### 1.2.4 转移所有权
+
+`std::shared_ptr` 是一个共享式的智能指针，允许多个 `shared_ptr` 实例共同管理同一个资源。资源的所有权是通过 **引用计数** 来管理的，因此你可以有多个 `shared_ptr` 共享同一个资源。
+
+- **复制构造函数**：当一个 `shared_ptr` 被复制时，引用计数增加，所有权没有“转移”，只是增加了共享者。
+- **移动构造函数**：当一个 `shared_ptr` 被用作另一个 `shared_ptr` 的构造参数时，原 `shared_ptr` 的所有权转移给目标 `shared_ptr`，同时原 `shared_ptr` 的引用计数会减少。
+- **移动赋值运算符**：当一个 `shared_ptr` 被赋值给另一个 `shared_ptr` 时，所有权转移。
+
+举例说明：
+
+```cpp
+// 创建一个 shared_ptr，指向一个整型值
+std::shared_ptr<int> p1 = std::make_shared<int>(10);
+std::cout << "p1 use_count: " << p1.use_count() << std::endl;  // 输出 1
+
+// 通过移动构造函数将所有权转移给 p2
+std::shared_ptr<int> p2(std::move(p1));  // 移动构造
+std::cout << "p1 use_count after move: " << p1.use_count() << std::endl;  // 输出 0
+std::cout << "p2 use_count after move: " << p2.use_count() << std::endl;  // 输出 1
+```
+
+在 `p1` 到 `p2` 的转移过程中，`p2` 接管了原本由 `p1` 管理的资源，移动操作后，`p1` 的引用计数为 0，表示 `p1` 不再拥有资源，`p2` 的引用计数变为 1，表示 `p2` 成为唯一的所有者。
+
+```cpp
+// 创建一个 shared_ptr，指向一个整型值
+std::shared_ptr<int> p1 = std::make_shared<int>(20);
+std::cout << "p1 use_count: " << p1.use_count() << std::endl;  // 输出 1
+
+// 移动赋值
+std::shared_ptr<int> p2;
+p2 = std::move(p1);  // 移动赋值
+std::cout << "p1 use_count after move: " << p1.use_count() << std::endl;  // 输出 0
+std::cout << "p2 use_count after move: " << p2.use_count() << std::endl;  // 输出 1
+```
+
+`p1` 通过移动赋值操作将资源的所有权转移给了 `p2`。移动赋值后，`p1` 的引用计数变为 0，因为它不再管理该资源。`p2` 的引用计数变为 1，表示 `p2` 现在是该资源的唯一所有者。
+
+> **`shared_ptr`** 通过引用计数机制共享资源，`std::move()` 触发移动构造函数，转移所有权，且原指针不再管理资源，引用计数相应减少。
+
+### 1.2.5 通过智能指针共享数据
 
 我们定义一个 `StrBlob` 类，该类通过 `shared_ptr` 实现智能指针管理，用于共享一个 `vector<string>` 类型的容器。
 
@@ -507,7 +546,7 @@ void StrBlob::printCount()
 }
 ```
 
-### 1.2.5 shared_ptr是线程安全的吗？
+### 1.2.6 shared_ptr是线程安全的吗？
 
 现在我们可以很简单的回答这个问题：**并不是**。
 
@@ -980,3 +1019,4 @@ int main() {
   - 如果传递的是一个右值，会调用移动构造函数。
 
 在这里，函数返回一个临时的unique_ptr变量，是右值。而unique_ptr禁止拷贝或复制，但允许移动拷贝或移动赋值，所以编译器会自动调用unique_ptr的移动构造函数。因此，从函数返回时并不会违反 `std::unique_ptr` 的独占所有权规则。
+
