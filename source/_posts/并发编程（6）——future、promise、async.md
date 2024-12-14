@@ -705,9 +705,9 @@ template <class F, class... Args>
   - 如果是`True`，表示线程池关闭状态，直接返回一个使用默认构造函数构造的`std::future`对象
   - 如果是`False`，表示线程池开启状态，继续执行代码
 
-- ```C++
+  ```cpp
   auto task = std::make_shared<std::packaged_task<RetType()>>(
-       std::bind(std::forward<F>(f), std::forward<Args>(args)...));
+  std::bind(std::forward<F>(f), std::forward<Args>(args)...));
   ```
 
   - `std::packaged_task<RetType()>`：包装任务，任务的返回类型是`RetType()`；
