@@ -11,11 +11,9 @@ typora-root-url: ./..
 
  参考：
 
-[CMake 保姆级教程（上）subingwen.cn/cmake/CMake-primer/#2-6-3-%E6%80%BB%E7%BB%93![img](/images/$%7Bfiilename%7D/icon-default-1730608148428-331.png)https://link.zhihu.com/?target=https%3A//subingwen.cn/cmake/CMake-primer/%232-6-3-%25E6%2580%25BB%25E7%25BB%2593](https://link.zhihu.com/?target=https%3A//subingwen.cn/cmake/CMake-primer/%232-6-3-%E6%80%BB%E7%BB%93)
+[CMake 保姆级教程（上） | 爱编程的大丙](https://subingwen.cn/cmake/CMake-primer/#2-6-3-总结)
 
-[cmake使用详细教程（日常使用这一篇就足够了）_cmake教程-CSDN博客blog.csdn.net/iuu77/article/details/129229361?ops_request_misc=%257B%2522request%255Fid%2522%253A%25223BDC4C1F-AC50-4EB2-99A3-1FD7204C3A17%2522%252C%2522scm%2522%253A%252220140713.130102334..%2522%257D&request_id=3BDC4C1F-AC50-4EB2-99A3-1FD7204C3A17&biz_id=0&utm_medium=distribute.pc_search_result.none-task-blog-2~all~top_positive~default-2-129229361-null-null.142%5Ev100%5Epc_search_result_base8&utm_term=cmake&spm=1018.2226.3001.4187![img](/images/$%7Bfiilename%7D/icon-default-1730608148428-331.png)https://link.zhihu.com/?target=https%3A//blog.csdn.net/iuu77/article/details/129229361%3Fops_request_misc%3D%25257B%252522request%25255Fid%252522%25253A%2525223BDC4C1F-AC50-4EB2-99A3-1FD7204C3A17%252522%25252C%252522scm%252522%25253A%25252220140713.130102334..%252522%25257D%26request_id%3D3BDC4C1F-AC50-4EB2-99A3-1FD7204C3A17%26biz_id%3D0%26utm_medium%3Ddistribute.pc_search_result.none-task-blog-2~all~top_positive~default-2-129229361-null-null.142%255Ev100%255Epc_search_result_base8%26utm_term%3Dcmake%26spm%3D1018.2226.3001.4187](https://link.zhihu.com/?target=https%3A//blog.csdn.net/iuu77/article/details/129229361%3Fops_request_misc%3D%257B%2522request%255Fid%2522%253A%25223BDC4C1F-AC50-4EB2-99A3-1FD7204C3A17%2522%252C%2522scm%2522%253A%252220140713.130102334..%2522%257D%26request_id%3D3BDC4C1F-AC50-4EB2-99A3-1FD7204C3A17%26biz_id%3D0%26utm_medium%3Ddistribute.pc_search_result.none-task-blog-2~all~top_positive~default-2-129229361-null-null.142%5Ev100%5Epc_search_result_base8%26utm_term%3Dcmake%26spm%3D1018.2226.3001.4187)
-
-
+[cmake使用详细教程（日常使用这一篇就足够了）_cmake教程-CSDN博客](https://blog.csdn.net/iuu77/article/details/129229361?ops_request_misc={"request_id":"3BDC4C1F-AC50-4EB2-99A3-1FD7204C3A17","scm":"20140713.130102334.."}&request_id=3BDC4C1F-AC50-4EB2-99A3-1FD7204C3A17&biz_id=0&utm_medium=distribute.pc_search_result.none-task-blog-2~all~top_positive~default-2-129229361-null-null.142^v100^pc_search_result_base8&utm_term=cmake&spm=1018.2226.3001.4187)
 
 > **需要注意的是CMakeLists.txt文件中的指令不区分大小写**
 
@@ -350,6 +348,10 @@ add_executable(hello ${SRC_LIST1} ${SRC_LIST2} ${MAIN_DIR})
 
 ### *2.5.1 静态库*
 
+- 在Linux中静态库以~作为前缀, 以`.a`作为后缀, 中间是库的名字自己指定即可, 即: `libxxx.a`
+
+- 在Windows中静态库一般以`lib`作为前缀, 以`.lib`作为后缀, 中间是库的名字需要自己指定, 即: `libxxx.lib`
+
 静态库的生成需使用如下指令：
 
 ```
@@ -397,6 +399,10 @@ add_library(hello STATIC ${SRC_LIST})
 这样最终就会生成对应的静态库文件 **hello.a**或者**hello.lib**
 
 ### ***2.5.2 动态库***
+
+- 在Linux中动态库以`lib`作为前缀, 以`.so`作为后缀, 中间是库的名字自己指定即可, 即: `libxxx.so`
+
+- 在Windows中动态库一般以`lib`作为前缀, 以`.dll`作为后缀, 中间是库的名字需要自己指定, 即: `libxxx.dll`
 
 动态库的指令和静态库类似，只不过关键字**STATIC**需改为**SHARED**
 
