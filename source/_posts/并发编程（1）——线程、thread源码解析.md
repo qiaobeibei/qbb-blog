@@ -32,15 +32,15 @@ typora-root-url: ./..
 
 参考：
 
-[C++ 并发编程实战（第 2 版） - 知乎书店www.zhihu.com/pub/book/120284204![img](https://csdnimg.cn/release/blog_editor_html/release2.3.7/ckeditor/plugins/CsdnLink/icons/icon-default.png?t=O83A)https://www.zhihu.com/pub/book/120284204](https://www.zhihu.com/pub/book/120284204)
+[C++ 并发编程(1) 线程基础，为什么线程参数默认传参方式是值拷贝？_哔哩哔哩_bilibili](https://www.bilibili.com/video/BV1FP411x73X/?vd_source=cb95e3058c2624d2641da6f4eeb7e3a1)
 
-[https://www.bilibili.com/video/BV1FP411x73X?vd_source=cb95e3058c2624d2641da6f4eeb7e3a1www.bilibili.com/video/BV1FP411x73X?vd_source=cb95e3058c2624d2641da6f4eeb7e3a1![img](https://csdnimg.cn/release/blog_editor_html/release2.3.7/ckeditor/plugins/CsdnLink/icons/icon-default.png?t=O83A)https://link.zhihu.com/?target=https%3A//www.bilibili.com/video/BV1FP411x73X%3Fvd_source%3Dcb95e3058c2624d2641da6f4eeb7e3a1](https://link.zhihu.com/?target=https%3A//www.bilibili.com/video/BV1FP411x73X%3Fvd_source%3Dcb95e3058c2624d2641da6f4eeb7e3a1)
+[恋恋风辰官方博客](https://llfc.club/category?catid=225RaiVNI8pFDD5L4m807g7ZwmF#!aid/2TayNx5QxbGTaWW5s48vMjtuvCB)
 
-[恋恋风辰官方博客llfc.club/category?catid=225RaiVNI8pFDD5L4m807g7ZwmF#!aid/2TayNx5QxbGTaWW5s48vMjtuvCB![img](/images/$%7Bfiilename%7D/icon-default-1730609332540-411.png)https://link.zhihu.com/?target=https%3A//llfc.club/category%3Fcatid%3D225RaiVNI8pFDD5L4m807g7ZwmF%23%21aid/2TayNx5QxbGTaWW5s48vMjtuvCB](https://link.zhihu.com/?target=https%3A//llfc.club/category%3Fcatid%3D225RaiVNI8pFDD5L4m807g7ZwmF%23!aid/2TayNx5QxbGTaWW5s48vMjtuvCB)
+[命名空间 - this_thread | 爱编程的大丙](https://subingwen.cn/cpp/this_thread/#1-get-id)
 
-[ModernCpp-ConcurrentProgramming-Tutorial/md/详细分析/01thread的构造与源码解析.md at main · Mq-b/ModernCpp-ConcurrentProgramming-Tutorialgithub.com/Mq-b/ModernCpp-ConcurrentProgramming-Tutorial/blob/main/md/%E8%AF%A6%E7%BB%86%E5%88%86%E6%9E%90/01thread%E7%9A%84%E6%9E%84%E9%80%A0%E4%B8%8E%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90.md![img](/images/$%7Bfiilename%7D/icon-default-1730609332540-411.png)https://link.zhihu.com/?target=https%3A//github.com/Mq-b/ModernCpp-ConcurrentProgramming-Tutorial/blob/main/md/%25E8%25AF%25A6%25E7%25BB%2586%25E5%2588%2586%25E6%259E%2590/01thread%25E7%259A%2584%25E6%259E%2584%25E9%2580%25A0%25E4%25B8%258E%25E6%25BA%2590%25E7%25A0%2581%25E8%25A7%25A3%25E6%259E%2590.md](https://link.zhihu.com/?target=https%3A//github.com/Mq-b/ModernCpp-ConcurrentProgramming-Tutorial/blob/main/md/%E8%AF%A6%E7%BB%86%E5%88%86%E6%9E%90/01thread%E7%9A%84%E6%9E%84%E9%80%A0%E4%B8%8E%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90.md)
+[ModernCpp-ConcurrentProgramming-Tutorial/md/详细分析/01thread的构造与源码解析.md at main · Mq-b/ModernCpp-ConcurrentProgramming-Tutorial · GitHub](https://github.com/Mq-b/ModernCpp-ConcurrentProgramming-Tutorial/blob/main/md/详细分析/01thread的构造与源码解析.md)
 
-[信萌新：【C++并发编程实战】 thread 源码实现 && 向线程函数传递参数1 赞同 · 0 评论文章编辑![img](/images/$%7Bfiilename%7D/icon-default-1730609332540-411.png)https://zhuanlan.zhihu.com/p/717266327](https://zhuanlan.zhihu.com/p/717266327)
+[【C++并发编程实战】 thread 源码实现 && 向线程函数传递参数 - 知乎](https://zhuanlan.zhihu.com/p/717266327)
 
 ------
 
@@ -239,7 +239,7 @@ void move_oops() {
 
 > **注意，若参数的占有权被转移，那么该参数就不能管理之前保存的值，丧失了对该值的占有权**
 
-## 1.2 子线程需要被等待
+## 1.2 join()
 
 > 虽然使用 std::thread 创建的线程在结束时会自动释放其资源，但在主线程（或创建线程的线程）中仍需要等待其子线程结束。**我们需要在主线程中显示调用join()函数等待子线程的结束，**子线程结束后主线程才会继续运行。
 
@@ -261,7 +261,7 @@ std::this_thread::sleep_for(std::chrono::seconds(1));
 t1.join();
 ```
 
-## 1.3 detach
+## 1.3 detach()
 
 可以使用detach允许子线程采用分离的方式在后台**独自运行**，不受主线程影响。主线程和子线程执行各自的任务，使用各自的资源。
 
@@ -302,7 +302,39 @@ detach使用时有一些**风险**，比如上述代码。
 2. **按值传递**，将局部变量的值作为参数传递而不是按引用传递，这么做需要局部变量有拷贝复制的功能，而且拷贝耗费空间和效率。
 3. 使用 **join()** 确保局部变量的生命周期，保证局部变量被释放前线程已经运行结束，但是可能会影响运行逻辑。
 
-## 1.4. 异常处理
+## 1.4 get_id()
+
+应用程序启动之后默认只有一个线程，这个线程一般称之为**主线程或父线程**，通过线程类创建出的线程一般称之为**子线程**，每个被创建出的线程实例都对应一个**线程ID**，这个ID是**唯一**的，可以通过这个ID来区分和识别各个已经存在的线程实例，这个获取线程ID的函数叫做`get_id()`，函数原型如下：
+
+```cpp
+std::thread::id get_id() const noexcept;
+```
+
+线程 id 是 `thread` 类中唯一私有成员`_ Thr` 的公有成员`_Thrd_id_t _Id`;
+
+使用方法如下：
+
+```cpp
+#include <iostream>
+#include <thread>
+#include <chrono>
+using namespace std;
+
+void func1(int num, string str){return;}
+
+void func2(){return;}
+
+int main()
+{
+    cout << "主线程的线程ID: " << this_thread::get_id() << endl;
+    thread t1(func1, 1, "a");
+    thread t2(func2);
+    cout << "线程t1 的线程ID: " << t1.get_id() << endl;
+    cout << "线程t2 的线程ID: " << t2.get_id() << endl;
+}
+```
+
+## 1.5 异常处理&**joinable()** 
 
 当启动一个子线程时，子线程和主线程是并发运行的。如果主线程由于某种原因崩溃（例如未捕获的异常），则整个进程将会终止（主线程崩溃或者结束时，主进程会回收所有线程的资源），这意味着所有正在运行的线程，包括子线程（不管有没有被detach）都会被强制结束，导致子线程未完成的操作（如数据库写入）被中断。这可能会导致子线程待写入的信息丢失。
 
@@ -350,7 +382,7 @@ LogicSystem::~LogicSystem() {
 
 详细内容可参考：
 
-[爱吃土豆：网络编程（19）——C++使用asio协程实现并发服务器3 赞同 · 0 评论文章![img](/images/$%7Bfiilename%7D/icon-default-1730609332540-411.png)https://zhuanlan.zhihu.com/p/957175334](https://zhuanlan.zhihu.com/p/957175334)
+[网络编程（19）——C++使用asio协程实现并发服务器 - 知乎](https://zhuanlan.zhihu.com/p/957175334)
 
 那么，我们也可以使用相同的思维方法来对上面这段代码进行简化处理，即**线程守卫：**
 
@@ -391,7 +423,28 @@ auto_guard();
 
 如上例所示，通过thread_guard 构造一个新实例来保护线程t，那么即使在 auto_guard 函数中发生异常，thread_guard 也会确保线程t被正确管理，避免资源泄漏。
 
-## 1.5 慎重使用隐式转换
+## 1.6 hardware_concurrency()
+
+`thread `线程类还提供了一个**静态方法**，用于**获取当前计算机的CPU核心数**，我们可以根据这个结果在线程池中创建出数量相等的线程，每个线程独自占有一个CPU核心，这些线程就不用分时复用CPU时间片，此时程序的并发效率是最高的。函数原型为：
+
+```cpp
+static unsigned hardware_concurrency() noexcept;
+```
+
+使用方法：
+
+```cpp
+#include <iostream>
+#include <thread>
+
+int main()
+{
+    int num = std::thread::hardware_concurrency();
+    std::cout << "CPU number: " << num << std::endl;
+}
+```
+
+## 1.7 慎重使用隐式转换
 
 C++中经常可以看到一些隐式转换，比如short转换为int、char*转换为string等，但这些隐式转换在线程的调用上可能会造成崩溃问题。
 
@@ -426,7 +479,7 @@ void safe_oops(int some_param) {
 }
 ```
 
-## 1.6 如何在线程中使用引用
+## 1.8 如何在线程中使用引用
 
 > 在创建线程时，使用 std::thread 来传递参数时，***参数是以拷贝的方式传递的***。即使你传入的是一个左值（如一个变量），std::thread 会在内部创建该参数的拷贝。但是在main函数中，如果传入的实参是左值，形参类型是引用，那么函数**不会创建副本**，而是直接对传入的值进行修改。
 
@@ -539,9 +592,160 @@ void ref_oops(） {
 }
 ```
 
-线程调用中，左值同样要加ref显式变为引用。可以参考1.6刚开始。
+线程调用中，左值同样要加`ref`显式变为引用。可以参考1.8刚开始。
 
-# 2. thread参数传递和调用原理
+# 2. std::this_thread
+
+我们可以调用命名空间 `std::this_thread` 中的四个公共成员函数对我们创建的线程进行相关的操作。
+
+## 2.1 get_id()
+
+和 `thread` 类的公共成员函数 `get_id()` 相同，用于获取当前线程的 **ID**，函数原型同样为：
+
+```cpp
+thread::id get_id() noexcept;
+```
+
+使用方法：
+
+```cpp
+#include <iostream>
+#include <thread>
+
+void func()
+{
+    std::cout << "子线程: " << std::this_thread::get_id() << std::endl;
+}
+
+int main()
+{
+    std::cout << "主线程: " << std::this_thread::get_id() << std::endl;
+    std::thread t(func);
+    t.join();
+}
+```
+
+我们既即可通过调用 `t.get_id()` 在主线程中获取子线程 `t` 的线程**ID**，也可以在子线程任务中调用 `std::this_thread::get_id()` 获取子线程的线程**ID**。只不过前者返回给主线程中使用，后者返回给子线程使用。
+
+## 2.2 sleep_for()
+
+线程和进程的执行有很多相似之处，在计算机中启动的多个线程都需要占用CPU资源，但是CPU的个数是有限的并且每个CPU在同一时间点不能同时处理多个任务。为了能够实现**并发**处理，多个线程都是**分时复用CPU时间片**，快速的交替处理各个线程中的任务。因此多个线程之间需要**争抢CPU时间片**，抢到了就执行，抢不到则无法执行（因为默认所有的线程优先级都相同，内核也会从中调度，不会出现某个线程永远抢不到CPU时间片的情况）。
+
+命名空间 `this_thread` 中提供了一个休眠函数 `sleep_for()`，调用这个函数的线程会马上**从运行态变成阻塞态并在这种状态下休眠一定的时长**，因为阻塞态的线程已经让出了CPU资源，代码也不会被执行，所以线程休眠过程中对CPU来说没有任何负担。这个函数是函数原型如下，参数需要指定一个休眠时长，是一个时间段：
+
+```cpp
+template <class Rep, class Period>
+  void sleep_for (const chrono::duration<Rep,Period>& rel_time);
+```
+
+示例程序如下：
+
+```cpp
+#include <iostream>
+#include <thread>
+#include <chrono>
+using namespace std;
+
+void func()
+{
+    for (int i = 0; i < 10; ++i)
+    {
+        this_thread::sleep_for(chrono::seconds(1));
+        cout << "子线程: " << this_thread::get_id() << ", i = " << i << endl;
+    }
+}
+
+int main()
+{
+    thread t(func);
+    t.join();
+}
+```
+
+在`func()`函数中使用了`this_thread::sleep_for(chrono::seconds(1));`之后，每循环一次程序都会阻塞**1**秒钟，也就是说每隔**1**秒才会进行一次输出。需要注意的是：**程序休眠完成之后，会从阻塞态重新变成就绪态，就绪态的线程需要再次争抢CPU时间片，抢到之后才会变成运行态，这时候程序才会继续向下运行。**
+
+## 2.3 sleep_until()
+
+命名空间`this_thread`中提供了另一个休眠函数`sleep_until()`，和`sleep_for()`不同的是它的参数类型不一样
+
+- `sleep_until()`：指定线程阻塞到某一个指定的时间点`time_point`类型，之后解除阻塞
+- `sleep_for()`：指定线程阻塞一定的时间长度`duration` 类型，之后解除阻塞
+
+该函数的函数原型如下：
+
+```cpp
+template <class Clock, class Duration>
+  void sleep_until (const chrono::time_point<Clock,Duration>& abs_time);
+```
+
+示例程序如下：
+
+```cpp
+#include <iostream>
+#include <thread>
+#include <chrono>
+using namespace std;
+
+void func()
+{
+    for (int i = 0; i < 10; ++i)
+    {
+        // 获取当前系统时间点
+        auto now = chrono::system_clock::now();
+        // 时间间隔为2s
+        chrono::seconds sec(2);
+        // 当前时间点之后休眠两秒
+        this_thread::sleep_until(now + sec);
+    }
+}
+
+int main()
+{
+    thread t(func);
+    t.join();
+}
+```
+
+`sleep_until()`和`sleep_for()`函数的功能是一样的，只不过前者是基于时间点去阻塞线程，后者是基于时间段去阻塞线程，项目开发过程中根据实际情况选择最优的解决方案即可。
+
+## 2.4 yield()
+
+在线程中调用 `yield()` 函数之后，处于运行态的线程会主动让出自己已经抢到的CPU时间片，最终变为就绪态（就绪态的线程需要再次争抢CPU时间片，抢到之后才会变成运行态，这时候程序才会继续向下运行），这样其它的线程就有更大的概率能够抢到CPU时间片了。
+
+> 使用这个函数的时候需要注意一点，线程调用了`yield()`之后会主动放弃CPU资源，但是这个变为就绪态的线程会马上参与到下一轮CPU的抢夺战中，不排除它能继续抢到CPU时间片的情况，这是概率问题。
+
+```cpp
+void yield() noexcept;
+```
+
+函数对应的示例程序如下：
+
+```cpp
+#include <iostream>
+#include <thread>
+using namespace std;
+
+void func()
+{
+    for (int i = 0; i < 100000000000; ++i)
+    {
+        cout << "子线程: " << this_thread::get_id() << ", i = " << i << endl;
+        this_thread::yield();
+    }
+}
+
+int main()
+{
+    thread t(func);
+    thread t1(func);
+    t.join();
+    t1.join();
+}
+```
+
+在上面的程序中，执行`func()`中的for循环会占用大量的时间，在极端情况下，如果当前线程占用CPU资源不释放就会导致其他线程中的任务无法被处理，或者该线程每次都能抢到CPU时间片，导致其他线程中的任务没有机会被执行。解决方案就是每执行一次循环，让该线程主动放弃CPU资源，重新和其他线程再次抢夺CPU时间片，如果其他线程抢到了CPU时间片就可以执行相应的任务了。
+
+# 3. thread源码解析
 
 thread参数传递涉及到**引用折叠**问题，即
 
@@ -553,7 +757,7 @@ thread参数传递涉及到**引用折叠**问题，即
 
 在类型推断中，如果传入的是一个左值，模板类型会自动将其推断为一个左值引用；而传入右值，模板类型会将其推断为右值：
 
-```
+```cpp
 template <class F, class... Args>
 auto commit(F&& f, Args&&... args) -> std::future<decltype(f(args...))> {}
 
@@ -584,7 +788,7 @@ std::thread t(f, 3, "hello");
 
 请注意，尽管函数f的第二个形参为 std::string类型，但是"hello"仍然以指针char const *的形式传入到子线程的内存空间中，当指针被拷贝至子线程的内存以后， 才转换为std::string类型。
 
-## 2.1 数据成员
+## 3.1 数据成员
 
 std::thread 只有一个私有数据成员**_Thr**：
 
@@ -607,9 +811,9 @@ struct _Thrd_t { // thread identifier for Win32
 
 在64 位操作系统，因为**内存对齐**（**内存对齐要求通常是基于最大成员的对齐方式**，这里必须保证结构体的大小是最大成员大小的倍数，这里最大成员是指针8，所以结构体的大小必须是8的倍数），指针 8 ，无符号 int 4，这个结构体 _Thrd_t 就是占据 16 个字节（尽管成员总共只占用12字节，但为了使整个结构体的大小为16字节，编译器会在结构体末尾添加4个字节的填充）。也就是说 sizeof(std::thread) 的结果应该为 16。
 
-## 2.2 构造函数
+## 3.2 构造函数
 
-### ***2.2.1 函数原型***
+### ***3.2.1 函数原型***
 
 std::thread有四个[构造函数](https://link.zhihu.com/?target=https%3A//zh.cppreference.com/w/cpp/thread/thread/thread)，分别是：
 
@@ -687,7 +891,7 @@ template <class _Fn, class... _Args, enable_if_t<!is_same_v<_Remove_cvref_t<_Fn>
 
 - std::forward<_Fn>(_Fx) 和 std::forward<_Args>(_Ax)... 会保留参数的值类别（左值或右值），确保可以进行适当的移动或拷贝。
 
-### ***2.2.2 关于第四个构造函数的一些疑问***
+### ***3.2.2 关于第四个构造函数的一些疑问***
 
 > 1. 关于这个约束你可能有问题，因为`std::thread`他并没有`operator()`的重载，不是可调用类型，也就是说不能将 std::thread 作为可调用参数传入，那么这个`**enable_if_t**`的意义是什么呢？
 
@@ -733,7 +937,7 @@ note: “X::X(const X &)”: 已隐式删除函数
 
 **_NODISCARD_CTOR_THREA**是一个宏定义，防止线程在不适当的时候被销毁。也就是一段警告消息，用于提醒开发者，如果一个临时的 std::thread 对象在声明结束时既没有加入（joined）也没有分离（detached），程序将调用std::terminate终止执行。
 
-## 2.3 [_Start](https://link.zhihu.com/?target=https%3A//github.com/microsoft/STL/blob/8e2d724cc1072b4052b14d8c5f81a830b8f1d8cb/stl/inc/thread%23L72-L87)
+## 3.3 [_Start](https://link.zhihu.com/?target=https%3A//github.com/microsoft/STL/blob/8e2d724cc1072b4052b14d8c5f81a830b8f1d8cb/stl/inc/thread%23L72-L87)
 
 在第四个构造函数中，使用了[_Start](https://link.zhihu.com/?target=https%3A//github.com/microsoft/STL/blob/8e2d724cc1072b4052b14d8c5f81a830b8f1d8cb/stl/inc/thread%23L72-L87) 函数 ，该函数用于将构造函数的参数全部**完美转发**，是第四个构造函数的核心。⭐ ⭐⭐⭐ ⭐
 
@@ -764,7 +968,7 @@ void _Start(_Fn&& _Fx, _Args&&... _Ax) {
 }
 ```
 
-### *2.3.1 定义元组来存储函数对象和函数的参数*
+### *3.3.1 定义元组来存储函数对象和函数的参数*
 
 ```cpp
 using _Tuple = tuple<decay_t<_Fn>, decay_t<_Args>...>;
@@ -778,7 +982,7 @@ using _Tuple = tuple<decay_t<_Fn>, decay_t<_Args>...>;
 
 **_Tuple**：表示存储用户可调用对象及其参数的**元组类型**。
 
-### *2.3.2 创建元组实例*
+### *3.3.2 创建元组实例*
 
 ```cpp
 auto _Decay_copied = _STD make_unique<_Tuple>(_STD forward<_Fn>(_Fx), _STD forward<_Args>(_Ax)...);
@@ -796,7 +1000,7 @@ _STD forward<_Fn>(_Fx), _STD forward<_Args>(_Ax)...
 
 > 可调用对象的类型没有发生改变，但传给可调用对象的参数其实是形参的**副本**，而不是形参
 
-### *2.3.3 定义线程启动函数*
+### *3.3.3 定义线程启动函数*
 
 ```cpp
 constexpr auto _Invoker_proc = _Get_invoke<_Tuple>(make_index_sequence<1 + sizeof...(_Args)>{})
@@ -925,7 +1129,7 @@ change_param(int&& _Arg1)
 
 > 所以，传给可调用对象的实参并不是用户传给thread的参数，而是线程内部会将传入的参数先进行delay（解除cv和引用）并保存到_Decay_copied （tuple）实例中，然后在_Invoke 函数调用可调用对象时，使用 std::move 将其以**右值的方式**传递至可调用对象。也就是说，**传给可调用对象的参数是二手(经过一系列处理)的，并不是传给thread的参数**。
 
-### *2.3.4 启动线程*
+### *3.3.4 启动线程*
 
 ```cpp
 _Thr._Hnd = reinterpret_cast<void*>(_CSTD _beginthreadex(nullptr, 0, _Invoker_proc, _Decay_copied.get(), 0, &_Thr._Id))
@@ -935,7 +1139,7 @@ _Thr._Hnd = reinterpret_cast<void*>(_CSTD _beginthreadex(nullptr, 0, _Invoker_pr
 
 > 这行代码的整体作用是使用 **_beginthreadex** 创建一个新线程，执行 **_Invoker_proc** 函数，并将相关的参数传递给它，新线程的句柄被存储在 _Thr._Hnd 中，以便后续对线程进行管理。
 
-### 2.3.5 其他
+### 3.3.5 其他
 
 ```cpp
 if (_Thr._Hnd) { // ownership transferred to the thread
@@ -961,7 +1165,7 @@ if (_Thr._Hnd) { // ownership transferred to the thread
   - 将线程ID设置为0
   - 抛出一个 C++ 错误，表示资源不可用，请再次尝试
 
-## 2.4 std::ref
+## 3.4 std::ref
 
 > 为什么`std::ref`可以保存参数的引用呢？实现在thread修改参数值，影响到外部传入参数值的效果？
 
@@ -994,7 +1198,7 @@ _NODISCARD _CONSTEXPR20 _Ty& get() const noexcept {
 
 所以我们可以这么理解通过s`std::ref`传递给thread构造函数的参数：`std::Ref`传入的参数仍然作为**右值**被保存，如`ref(int)`实际是作为`reference_wrapper(int)`对象保存在threa的类成员里。而调用的时候触发了**仿函数`()`**进而获取到**外部实参的地址内**的数据。
 
-## 2.5 总结
+## 3.5 总结
 
 通过对thread源码的解读，也就明白了为什么1.6的疑问：
 
@@ -1003,3 +1207,4 @@ _NODISCARD _CONSTEXPR20 _Ty& get() const noexcept {
 因为thread的实现中将类型先经过 **decay（解除cv、引用）** 处理，如果要传递引用，则必须用类包装一下才行，使用**std::ref**（不会被decay解除）函数就会返回一个包装对象。
 
 然后传给可调用对象的实参并不是用户传给thread的参数，而是线程内部会将传入的参数先进行delay（解除cv和引用）并保存到_Decay_copied （tuple）实例中，然后在_Invoke 函数调用可调用对象时，使用 std::move 将其以**右值的方式**传递至可调用对象。也就是说，**传给可调用对象的参数是二手(经过一系列处理，最后传入我们构造元组实例中的数据副本)的，并不是传给thread的参数**。
+

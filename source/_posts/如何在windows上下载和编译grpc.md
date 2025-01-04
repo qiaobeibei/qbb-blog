@@ -2,7 +2,7 @@
 title: 如何在windows上下载和编译grpc
 date: 2024-11-03 12:20:39
 categories:
-- windoes
+- windows
 tags: 
 - 配置环境
 typora-root-url: ./..

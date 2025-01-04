@@ -19,7 +19,7 @@ typora-root-url: ./..
 
 # 六、day6
 
-今天学习如何使用std::future、std::async、std::promise，并通过std::promise和packaged_task构建一个线程池。
+今天学习如何使用`std::future`、`std::async`、`std::promise`，并通过`std::promise`和`packaged_task`构建一个线程池。
 
 参考：
 
@@ -29,9 +29,9 @@ typora-root-url: ./..
 
 # 1. future与async
 
-在上一节中，我们等待地铁到站的过程中可以通过条件变量提醒我们是否到站，而本节中我们可以通过`std::future`处理地铁到站的情况。举个例子：我们在车站等车，可能会做一些别的事情打发时间，比如玩手机、和友人聊天等。不过，我们始终在等待一件事情：***车到站***。
+在上一节中，我们等待地铁到站的过程中可以通过条件变量提醒我们是否到站，而本节中我们可以通过`std::future`处理地铁到站的情况。举个例子：我们在车站等车，可能会做一些别的事情打发时间，比如玩手机、和朋友聊天等。不过，我们始终在等待一件事情：***车到站***。
 
-C++ 标准库将这种事件称为 [future](https://zh.cppreference.com/w/cpp/thread#.E6.9C.AA.E6.9D.A5.E4.BD.93)。它用于处理线程中需要等待某个事件的情况，线程知道预期结果。等待的同时也可以执行其它的任务。
+C++ 标准库将这种事件称为 [future](https://zh.cppreference.com/w/cpp/thread#.E6.9C.AA.E6.9D.A5.E4.BD.93)。它用于处理线程中需要等待某个事件的情况，**线程知道预期结果**。等待的同时也可以执行其它的任务。
 
 C++ 标准库有两种 future，都声明在 [`future`](https://zh.cppreference.com/w/cpp/header/future) 头文件中：独占的 [`std::future`](https://zh.cppreference.com/w/cpp/thread/future) 、共享的 [`std::shared_future`](https://zh.cppreference.com/w/cpp/thread/shared_future)。它们的区别与 `std::unique_ptr` 和 `std::shared_ptr` 类似。同一事件仅仅允许关联唯一一个`std::future` 实例，但可以关联多个 `std::shared_future` 实例。它们都是模板，它们的模板类型参数，就是其关联的事件（函数）的**返回类型**。当多个线程需要访问一个独立 `future` 对象时， 必须使用互斥量或类似同步机制进行保护。而多个线程访问同一共享状态，若每个线程都是通过其自身的 `shared_future` 对象副本进行访问，则是安全的。
 
@@ -39,7 +39,7 @@ C++ 标准库有两种 future，都声明在 [`future`](https://zh.cppreference.
 
 ## 1.1 async与future的配合使用
 
-假设需要执行一个耗时任务并获取其返回值，但是并不急切的需要它。那么就可以启动新线程执行，但是***`std::thread` 不能直接从线程获取返回值（可以使用引用或指针直接将数据存储至指定内存，而不用显式返回）***。不过我们可以使用 [`std::async`](https://zh.cppreference.com/w/cpp/thread/async) 函数模板。
+假设需要执行一个耗时任务并获取其返回值，但是并不急切的需要它。那么就可以启动新线程执行，但是***`std::thread` 不能直接从线程获取返回值（可以使用引用或指针直接将数据存储至指定内存，而不用显式返回）***。不过我们可以使用 [`std::async`](https://zh.cppreference.com/w/cpp/thread/async) 函数模板显式获取返回值。
 
 使用 *`std::async` 启动一个**异步任务**（也就是创建一个子线程执行相关任务，主线程可以执行自己的任务），它会返回一个 `std::future` 对象*，这个对象和任务关联，将持有任务最终执行后的结果。当需要任务执行结果的时候，只需要调用 [`future.get()`](https://zh.cppreference.com/w/cpp/thread/future/get) 成员函数，就会**阻塞**当前线程直到 `future` 为就绪为止（即任务执行完毕），返回执行结果。[`future.valid()`](https://zh.cppreference.com/w/cpp/thread/future/valid) 成员函数检查 future 当前是否关联共享状态，即是否当前关联任务。如果还未关联，或者任务已经执行完（调用了 get()、set()），都会返回 **`false`**。
 

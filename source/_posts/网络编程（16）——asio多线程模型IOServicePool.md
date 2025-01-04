@@ -6,7 +6,7 @@ categories:
 - 网络编程
 tags: 
 - IOServicePool
-- 多线程
+- 多线程模式
 - 线程池
 typora-root-url: ./..
 ---
