@@ -24,7 +24,7 @@ typora-root-url: ./..
 
 在类型推断中，如果传入的是一个左值，模板类型会自动将其**推断**为一个左值引用；而传入右值，模板类型会将其**推断**为右值：
 
-```text
+```cpp
 template <class F, class... Args>
 auto commit(F&& f, Args&&... args) -> std::future<decltype(f(args...))> {}
 
@@ -35,10 +35,10 @@ commit([](int& m){}, std::ref(m)); // 3
 commit([](int& m){}, std::move(m)); // 4
 ```
 
-- 对于1：Args推断m是int&类型，经过折叠后，int& &&->int&，仍然是int&。（注意，不会将其推断为int，虽然m确实是int类型，但是**左值的类型在模板参数中会被视为它本身的引用类型**）
-- 对于2：Args推断m是int类型，经过折叠后，int&&->int&&，是int&&，右值引用。（注意，**右值会被推断为int类型而不是int&&**，int&&是右值引用类型而不是右值类型）
-- 对于3：Args推断m是int&类型，并且经过ref包装后，thread和async内部不会对其使用delay解除cv修饰符和引用。
-- 对于4：Args推断m是int&&类型，经过折叠后，int&& &&->int&，仍然是int&&。
+- 对于1：`Args`推断m是`int&`类型，经过折叠后，`int& &&->int&`，仍然是`int&`。（注意，不会将其推断为int，虽然m确实是int类型，但是**左值的类型在模板参数中会被视为它本身的引用类型**）
+- 对于2：`Args`推断m是`int`类型，经过折叠后，`int&&->int&&`，是`int&&`，右值引用。（注意，**右值会被推断为int类型而不是int&&**，int&&是右值引用类型而不是右值类型）
+- 对于3：`Args`推断m是`int&`类型，并且经过ref包装后，thread和async内部不会对其使用delay解除cv修饰符和引用。
+- 对于4：`Args`推断m是`int&&`类型，经过折叠后，`int&& &&->int&`，仍然是`int&&`。
 
 ------
 
@@ -48,8 +48,7 @@ commit([](int& m){}, std::move(m)); // 4
 //接受左值引用的模板函数
 template <typename T>
 void f1(T &t)
-{
-}
+{}
 ```
 
 也可以用模板类型定义一个**右值引用**时，但是传递给该类型的实参类型，会根据C++标准进行**引用折叠**：
@@ -58,8 +57,7 @@ void f1(T &t)
 //接受右值引用的模板函数
 template <typename T>
 void f2(T &&t)
-{
-}
+{}
 ```
 
 简而言之，当**模板函数**（或者**模板类**）的实参是一个**T**类型的**右值引用**：
@@ -128,18 +126,18 @@ template <class _Fn, class... _Args, enable_if_t<!is_same_v<_Remove_cvref_t<_Fn>
     }
 ```
 
-- _Fn&& 和 _Args&& 被称为**转发引用**，它们会根据传入参数的类型自动推断为左值引用或右值引用
-  - 如果传入的参数是右值（比如使用 std::move），则 _Fn&& 和 _Args&& 会因为**引用折叠**被推导为右值引用；如果是左值，则会被推导为左值引用。
-    - 当传入_Args的类型是int&（左值）时，后面加&&->int& &&折叠为int&
+- `_Fn&&` 和 `_Args&&` 被称为**转发引用**，它们会根据传入参数的类型自动推断为左值引用或右值引用
+  - 如果传入的参数是右值（比如使用 `std::move`），则 `_Fn&&` 和 `_Args&&` 会因为**引用折叠**被推导为右值引用；如果是左值，则会被推导为左值引用。
+    - 当传入`_Args`的类型是`int&`（左值）时，后面加`&&->int& &&`折叠为`int&`
       - 如果传递的是左值，类型 `T` 会被推导为**左值引用**类型，即 `int&`。这是因为左值的类型在模板参数中会被视为它本身的引用类型。
-    - 当传入_Args的类型是int&（左值引用）时，后面加&&->int& &&折叠为int&
-    - 当传入_Args的类型是int（右值）时，后面加&&->int&&折叠为int&&
-    - 当传入_Args的类型是int&&（右值引用）时，后面加&&->int&&折叠为int&&
-- std::forward<*Fn>(*Fx) 和 std::forward<*Args>(*Ax)... 会保留参数的值类别（左值或右值），确保可以进行适当的移动或拷贝。
+    - 当传入`_Args`的类型是`int&`（左值引用）时，后面加`&&->int& &&`折叠`为int&`
+    - 当传入`_Args`的类型是`int`（右值）时，后面加`&&->int&&`折叠为`int&&`
+    - 当传入`_Args`的类型是`int&&`（右值引用）时，后面加`&&->int&&`折叠为`int&&`
+- `std::forward<Fn>(Fx)` 和 `std::forward<Args>(Ax)...` 会保留参数的值类别（左值或右值），确保可以进行适当的移动或拷贝。
 
 ------
 
-> STL 的 `std::move`其实是“去引用”的实现，为了将传入参数转换为右值引用，实现引用拷贝。但有时我们也需要**保留传入参数的原本类型不变**（左值、右值或引用），进行原样转发，`std::forward`就是为了实现此功能而定义的。
+> STL 的 `std::move`其实是“去引用”的实现，为了将传入参数转换为右值引用，实现移动拷贝。但有时我们也需要**保留传入参数的原本类型不变**（左值、右值或引用），进行原样转发，`std::forward`就是为了实现此功能而定义的。
 
 **举例说明：**
 
@@ -235,7 +233,9 @@ int i = 99;
 cout << "i is " << i << " j is " << j << endl;
 ```
 
-当我们将实参`42`传递给`flip2`的第二个参数时，`T2`被推断为`int`类型，`t2`经过引用折叠变为`int&&`类型。`t2`作为参数传递给`gtemp`的第一个参数时会报错。因为 `42` 是一个右值常量，当它被传递到 `flip2` 时，它的生命周期只存在于 `flip2` 调用开始的那一瞬间，而在 `flip2` 内部，`42` 被传递到 `f(t2, t1);` 时，已经不能保证其原有的右值特性。这会导致编译器无法确定如何安全地将 `42` 转换为一个右值引用传递给 `gtemp`。
+当我们将实参`42`传递给`flip2`的第二个参数时，`T2`被推断为`int`类型，`t2`经过引用折叠变为`int&&`类型。`t2`作为参数传递给`gtemp`的第一个参数时会报错。`t2` 此时的类型是 `int&&`，而 `gtemp` 函数第一个参数的类型也是  `int&&`，那么为什么会编译报错呢？
+
+因为 `42` 是一个右值常量，当它被传递到 `flip2` 时，它的生命周期只存在于 `flip2` 调用开始的那一瞬间，而在 `flip2` 内部，`42` 被传递到 `f(t2, t1);` 时，已经不能保证其原有的右值特性。这会导致编译器无法确定如何安全地将 `42` 转换为一个右值引用传递给 `gtemp`。
 
 具体来说，`42` 被传递到 `flip2` 时，`T2` 会被推导为 `int&&`，所以 `t2` 的类型变成 `int&&`。但当 `flip2` 内部调用 `f(t2, t1);` 时，`t2` 被直接传递给 `gtemp` 的第一个参数，而 `t2` 已经不再是一个临时的右值表达式，而是一个左值（因为 `t2` 是 `flip2` 的形参）。而`gtemp`第一个参数为右值引用类型，他需要接收右值，导致失败。
 
@@ -299,13 +299,13 @@ int&& k = std::move(m);
 ```cpp
 // 修改前
 template <typename F, typename T1, typename T2>
-void flip1(F f, T1 t1, T2 t2) // 默认模板参数
+void flip(F f, T1 t1, T2 t2) // 默认模板参数
 {
     f(t2, t1);
 }
 // 修改前
 template <typename F, typename T1, typename T2>
-void flip2(F f, T1 &&t1, T2 &&t2) // 右值引用模板参数
+void flip(F f, T1 &&t1, T2 &&t2) // 右值引用模板参数
 {
     f(t2, t1);
 }
@@ -333,12 +333,38 @@ _NODISCARD constexpr _Ty&& forward(remove_reference_t<_Ty>&& _Arg) noexcept { //
 }
 ```
 
-- forward的精髓在配合模板时才能挥发出来，上层函数给个类型T，forward函数返回个T&&，这是个万能类型。作为对比move函数返回remove_reference_t<T>&&，**只能**是个右值引用类型。如果程序员将代码写成std::forward<MyClass>(my_obj)的形式，完美转发是不发挥作用的，无论my_obj的性质是左还是右。
-- forward的返回值是根据`_Ty`决定的，如果我们`std::forward<Args&>(args)`那么返回的是`Args& &&`，最后肯定还是`Args&`，返回一个左值引用；如果我们`std::forward<Args>(args)`那么返回的其实是`Args&&`，最后还是`Args&&`。所以 forward 才会实现传进来的左值返回也是左值引用，传进来右值返回是右值引用。而且**forward 必须配合引用折叠**（万能引用）才能实现进来的左值返回也是左值，传进来右值返回是右值。
+- `std::forward`的精髓在配合模板时才能挥发出来，上层函数给个类型T，forward函数返回个`T&&`，这是个万能类型。作为对比, `std::move`函数返回`remove_reference_t<T>&&`，**只能**是个右值引用类型，而不可能能返回左值引用类型。如果程序员将代码写成`std::forward<MyClass>(my_obj)`的形式，完美转发是不发挥作用的，无论`my_obj`的性质是左还是右。
+- `forward`的返回值是根据`_Ty`决定的，如果我们`std::forward<Args&>(args)`那么返回的是`Args& &&`，最后肯定还是`Args&`，返回一个左值引用；如果我们`std::forward<Args>(args)`那么返回的其实是`Args&&`，最后还是`Args&&`。所以 forward 才会实现传进来的左值返回也是左值引用，传进来右值返回是右值引用。而且**forward 必须配合引用折叠**（万能引用）才能实现进来的左值返回也是左值，传进来右值返回是右值。
+- remove_reference_t 是一个模板类，用于去除变量的引用，它可以接受左值、左值引用、右值引用三类，并将后面两个的引用去除，返回原本的类型：
 
-> std::forward<T>只是单纯的返回一个T&&，但是T的类型需要上层函数传入，如果T是int&，那么返回的其实也是int&;如果T是int&&或者int（右值引用模板参数中，右值会被推断为int，所以这里的int代表右值），返回的其实还是int&&。
+```cpp
+template <class _Ty>
+using remove_reference_t = typename remove_reference<_Ty>::type;
+```
 
+很简单，我们使用 `remove_reference_t<_Ty>& _Arg` 时，其实是返回 `remove_reference<_Ty>`的成员`type`，`type`会将引用去掉，仅返回推断的原本类型：
 
+```cpp
+template <class _Ty>
+struct remove_reference {
+    using type                 = _Ty;
+    using _Const_thru_ref_type = const _Ty;
+};
+
+template <class _Ty>
+struct remove_reference<_Ty&> {
+    using type                 = _Ty;
+    using _Const_thru_ref_type = const _Ty&;
+};
+
+template <class _Ty>
+struct remove_reference<_Ty&&> {
+    using type                 = _Ty;
+    using _Const_thru_ref_type = const _Ty&&;
+};
+```
+
+> `std::forward<T>`只是单纯的返回一个T&&，但是T的类型需要上层函数传入，如果T是int&，那么返回的其实也是int&；如果T是int&&或者int（右值引用模板参数中，右值会被推断为int，所以这里的int代表右值），返回的其实还是int&&。
 
 # 3. 模板推导的基本规则
 

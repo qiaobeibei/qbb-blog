@@ -583,7 +583,8 @@ public:
     }
 	// 该函数用于插入新任务至队列，并返回新任务的future
     template <class F, class... Args>
-    auto commit(F&& f, Args&&... args) -> std::future<decltype(f(args...))> {
+    auto commit(F&& f, Args&&... args) -> 
+    std::future<decltype(std::forward<F>(f)(std::forward<Args>(args)...))>{
         using RetType = decltype(f(args...));
         if (stop_.load())
             return std::future<RetType>{};
@@ -603,11 +604,11 @@ public:
     }
 private:
     // 默认构造函数。定义线程池的容量大小
-    ThreadPool(unsigned int num = 5)
+    ThreadPool(unsigned int num = std::thread::hardware_concurrency())
         : stop_(false) {
             {
-                if (num < 1)
-                    thread_num_ = 1;
+                if (num <= 1)
+                    thread_num_ = 2;
                 else
                     thread_num_ = num;
             }
@@ -665,7 +666,8 @@ private:
 
 ```c++
 template <class F, class... Args>
-    auto commit(F&& f, Args&&... args) -> std::future<decltype(f(args...))> {
+    auto commit(F&& f, Args&&... args) -> 
+    std::future<decltype(std::forward<F>(f)(std::forward<Args>(args)...))> {
         using RetType = decltype(f(args...)); // 使用RetType作为可调用对象返回类型的别名
         if (stop_.load()) // 线程池是否处于关闭状态
             return std::future<RetType>{};
