@@ -270,14 +270,14 @@ http_connection类就是负责服务器与客户端的联系，如果server接�
 
 ```cpp
         auto self = shared_from_this(); // 伪闭包
-        _deadline.async_wait([sel,thisf](boost::system::error_code ec) {
+        _deadline.async_wait([sel,this](boost::system::error_code ec) {
             if (!ec) {
                 this->_socket.close(ec);
             }
             });
 ```
 
-还有，如果将self显式放在捕获列表中，那么无论是否在 lambda 体内使用，引用计数都会增加，因为捕获行为本身就会创建一个 shared_ptr 的拷贝。
+还有，如果将self显式放在捕获列表中，那么无论是否在 lambda 体内使用，引用计数都会增加，因为捕获行为本身就会创建一个 `shared_ptr` 的拷贝。
 
 **注意【self】和【=】的区别，后者虽然也会捕获self，但如果在函数体没有使用到的话，编译器会优化，不让其创建实例。**
 
