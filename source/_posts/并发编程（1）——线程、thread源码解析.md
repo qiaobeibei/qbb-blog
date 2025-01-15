@@ -54,7 +54,7 @@ typora-root-url: ./..
 
 ## 1.1 线程如何发起
 
-C++线程自C++11及以后的版本中被统一，在包含头文件**<thread>**之后，通过使用 **std::thread** 定义线程对象（该对象可以通过构造函数接受一个可调用对象，比如**函数、仿函数、lambda函数等**），该对象可以启动线程执行回调逻辑（执行传入的可调用对象），**线程的发起是在创建对象的同时被启动。**
+C++线程自C++11及以后的版本中被统一，在包含头文件`<thread>`之后，通过使用 **std::thread** 定义线程对象（该对象可以通过构造函数接受一个可调用对象，比如**函数、仿函数、lambda函数等**），该对象可以启动线程执行回调逻辑（执行传入的可调用对象），**线程的发起是在创建对象的同时被启动。**
 
 **std::thread()** 的原型为：
 
@@ -66,7 +66,7 @@ explicit thread(F&& f, Args&&... args);
 - **F**：可调用对象的类型，可以是函数指针、函数对象、lambda 表达式等。
 - **Args**：可变参数模板，表示传递给可调用对象的参数，比如参数列表中的形参。
 
-###   ***1.1.1 普通函数***
+###   1.1.1 普通函数
 
 可以使用普通函数作为可调用对象传入给线程对象。
 
@@ -81,7 +81,7 @@ std::string str = "hello world!";
 std::thread t(thread_hello, str); // 发起线程
 ```
 
-### ***1.1.2 仿函数***
+### 1.1.2 仿函数
 
 可以使用仿函数作为可调用对象传入给线程对象。
 
@@ -174,7 +174,7 @@ t2.join();
 
 2）这样并没有创建一个可调用对象。因为 background_task() 并没有创建对象（这样是在**调用仿函数，而不是把仿函数作为对象**），t2 线程实际上没有被正确初始化。
 
-### ***1.1.3 lambda函数***
+### 1.1.3 lambda函数
 
 可以使用lambda函数作为可调用对象传入给线程对象。
 
@@ -185,7 +185,7 @@ std::thread t4([](std::string  str) {
 t4.join();
 ```
 
-### ***1.1.4 类的成员函数***
+### 1.1.4 类的成员函数
 
 ```cpp
 class X
@@ -217,7 +217,7 @@ std::thread t2(&thead_work1, hellostr);
 
 > **但是如果是绑定类的成员函数，必须添加& （还得传入类的指针，因为类的成员函数会调用类的成员变量）**
 
-### **1.1.5 move**
+### 1.1.5 move
 
 若传递给线程的参数是独占的，也就是不支持拷贝赋值和构造，但我们可以通过 std::move 的方式将参数的所有权转移给线程，如下
 
@@ -294,7 +294,7 @@ std::this_thread::sleep_for(std::chrono::seconds(1));
 
 detach使用时有一些**风险**，比如上述代码。
 
-当主线程调用oops时，会创建一个线程执行myfunc的重载()运算符，然后将主线程将oops创建的一个线程分离。但注意，当oops执行到 **'}'** 时，局部变量 some_local_state 会被释放，但**引用（这里是引用传递而不是按值传递，按值传递不会引起该错误，因为线程中已经有一个自己的拷贝副本了**）该局部资源的子线程 functhread 却仍然在后台运行，容易发生错误。
+当主线程调用oops时，会创建一个线程执行myfunc的重载()运算符，然后将主线程将oops创建的一个线程分离。但注意，当oops执行到 `'}'` 时，局部变量 some_local_state 会被释放，但**引用（这里是引用传递而不是按值传递，按值传递不会引起该错误，因为线程中已经有一个自己的拷贝副本了**）该局部资源的子线程 functhread 却仍然在后台运行，容易发生错误。
 
 我们可以采取一些措施解决该问题：
 
@@ -466,7 +466,7 @@ void danger_oops(int som_param) {
 }
 ```
 
-buffer 是一个局部变量，在线程 t 启动后，danger_oops 函数会继续执行并最终结束。当 danger_oops 函数返回后，buffer 会被销毁，导致线程在执行 print_str 时尝试访问一个无效的内存地址。因为当定义一个线程变量thread **t** 时，传递给线程 **t** 的参数buffer会被保存到thread的成员变量中。而在线程对象t内部启动并运行线程时，参数才会被传递给调用函数print_str，但此时danger_oops 函数可能已经返回，局部变量 buffer 被销毁，导致线程在执行 print_str 时尝试访问一个无效的内存**地址（传入的是char，即字符串首地址，如果传入的不是地址，也不是按引用传递**，**而是按值传递，那么子线程会创建一个拷贝副本，即使局部变量被释放，子线程仍然可以继续工作）**，虽然我们确实是按值传递，接收的类型是string，而不是string&和string，但因为传入的是char恰好可以通过隐式转换变为string，所以此时相当于传入的是string*，而形参类型也是string*。这部分内容可以参考上面1.3将的detach。
+buffer 是一个局部变量，在线程 t 启动后，danger_oops 函数会继续执行并最终结束。当 danger_oops 函数返回后，buffer 会被销毁，导致线程在执行 print_str 时尝试访问一个无效的内存地址。因为当定义一个线程变量thread **t** 时，传递给线程 **t** 的参数buffer会被保存到thread的成员变量中。而在线程对象t内部启动并运行线程时，参数才会被传递给调用函数print_str，但此时danger_oops 函数可能已经返回，局部变量 buffer 被销毁，导致线程在执行 print_str 时尝试访问一个无效的内存地址**（传入的是char，即字符串首地址，如果传入的不是地址，也不是按引用传递，而是按值传递，那么子线程会创建一个拷贝副本，即使局部变量被释放，子线程仍然可以继续工作）**，虽然我们确实是按值传递，接收的类型是string，而不是string&和string，但因为传入的是 char 恰好可以通过**隐式**转换变为string，所以此时相当于传入的是string*，而形参类型也是string*。这部分内容可以参考上面1.3将的detach。
 
 所以我们只需**将隐式转换变为显示转换**即可，将char*字符串显示转换为string，那么传入的就是一个string对象，此时，子线程会创建一个拷贝对象，即使danger_oops函数返回，子线程也不会指向空的对象。
 
@@ -786,7 +786,7 @@ std::thread t(f, 3, "hello");
 
 在上述例子中，即使函数f有引用参数 std::string const& s，参数仍然以复制的方式传递。
 
-请注意，尽管函数f的第二个形参为 std::string类型，但是"hello"仍然以指针char const *的形式传入到子线程的内存空间中，当指针被拷贝至子线程的内存以后， 才转换为std::string类型。
+请注意，尽管函数f的第二个形参为 std::string类型，但是"hello"仍然以指针`char const *`的形式传入到子线程的内存空间中，当指针被拷贝至子线程的内存以后， 才转换为std::string类型。
 
 ## 3.1 数据成员
 
@@ -809,11 +809,11 @@ struct _Thrd_t { // thread identifier for Win32
 
 这个结构体的 **_Hnd** 成员是指向线程的句柄，句柄允许 C++ 程序与底层操作系统线程进行交互，如等待线程结束、获取线程信息等；**_Id** 成员就是保有线程的 ID。
 
-在64 位操作系统，因为**内存对齐**（**内存对齐要求通常是基于最大成员的对齐方式**，这里必须保证结构体的大小是最大成员大小的倍数，这里最大成员是指针8，所以结构体的大小必须是8的倍数），指针 8 ，无符号 int 4，这个结构体 _Thrd_t 就是占据 16 个字节（尽管成员总共只占用12字节，但为了使整个结构体的大小为16字节，编译器会在结构体末尾添加4个字节的填充）。也就是说 sizeof(std::thread) 的结果应该为 16。
+在64 位操作系统，因为**内存对齐**（**内存对齐要求通常是基于最大成员的对齐方式**，这里必须保证结构体的大小是最大成员大小的倍数，这里最大成员是指针8，所以结构体的大小必须是8的倍数），指针 8 ，无符号 int 4，这个结构体 _Thrd_t 就是占据 16 个字节（尽管成员总共只占用12字节，但为了使整个结构体的大小为16字节，编译器会在结构体末尾添加4个字节的填充）。也就是说 `sizeof(std::thread)` 的结果应该为 16。
 
 ## 3.2 构造函数
 
-### ***3.2.1 函数原型***
+### 3.2.1 函数原型
 
 std::thread有四个[构造函数](https://link.zhihu.com/?target=https%3A//zh.cppreference.com/w/cpp/thread/thread/thread)，分别是：
 
@@ -823,7 +823,7 @@ std::thread有四个[构造函数](https://link.zhihu.com/?target=https%3A//zh.c
 thread() noexcept : _Thr{} {}
 ```
 
-[值初始化](https://link.zhihu.com/?target=https%3A//zh.cppreference.com/w/cpp/language/value_initialization%23%3A~%3Atext%3D%E5%87%BD%E6%95%B0%E7%9A%84%E7%B1%BB%EF%BC%89%EF%BC%8C-%2C%E9%82%A3%E4%B9%88%E9%9B%B6%E5%88%9D%E5%A7%8B%E5%8C%96%E5%AF%B9%E8%B1%A1%2C-%EF%BC%8C%E7%84%B6%E5%90%8E%E5%A6%82%E6%9E%9C%E5%AE%83)了数据成员 _Thr ，这里的效果相当于给其成员**_Hnd**和**`_Id`**都进行[零初始化](https://link.zhihu.com/?target=https%3A//zh.cppreference.com/w/cpp/language/zero_initialization)。
+[值初始化](https://link.zhihu.com/?target=https%3A//zh.cppreference.com/w/cpp/language/value_initialization%23%3A~%3Atext%3D%E5%87%BD%E6%95%B0%E7%9A%84%E7%B1%BB%EF%BC%89%EF%BC%8C-%2C%E9%82%A3%E4%B9%88%E9%9B%B6%E5%88%9D%E5%A7%8B%E5%8C%96%E5%AF%B9%E8%B1%A1%2C-%EF%BC%8C%E7%84%B6%E5%90%8E%E5%A6%82%E6%9E%9C%E5%AE%83)了数据成员 `_Thr` ，这里的效果相当于给其成员`_Hnd`和`_Id`都进行[零初始化](https://link.zhihu.com/?target=https%3A//zh.cppreference.com/w/cpp/language/zero_initialization)。
 
 这里的默认构造函数不接受任何参数，并且被标记为 **noexcept**，这意味着它保证不抛出异常。它能创建但不立即执行任何线程的thread对象，这样的对象通常称为**空线程对象**。在C++中创建线程时，可以先声明一个空的线程对象，**稍后**再将其与实际的执行函数关联起来。
 
@@ -833,7 +833,7 @@ thread() noexcept : _Thr{} {}
 thread(thread&& _Other) noexcept : _Thr(_STD exchange(_Other._Thr, {})) {}
 ```
 
-[_STD](https://link.zhihu.com/?target=https%3A//github.com/microsoft/STL/blob/8e2d724cc1072b4052b14d8c5f81a830b8f1d8cb/stl/inc/yvals_core.h%23L1934)是一个宏，展开就是 **::std::**，也就是 ***[::std::exchange](https://link.zhihu.com/?target=https%3A//zh.cppreference.com/w/cpp/utility/exchange)*** ，将 **_Other._Thr** 赋为 **{}**（也就是置空，通常是一个无效的线程状态），返回**_Other._Thr** 的旧值用以初始化当前对象的数据成员 **_Thr（转移所有权）**。
+[_STD](https://link.zhihu.com/?target=https%3A//github.com/microsoft/STL/blob/8e2d724cc1072b4052b14d8c5f81a830b8f1d8cb/stl/inc/yvals_core.h%23L1934)是一个宏，展开就是 **::std::**，也就是 ***[::std::exchange](https://link.zhihu.com/?target=https%3A//zh.cppreference.com/w/cpp/utility/exchange)*** ，将 `_Other._Thr` 赋为 `{}`（也就是置空，通常是一个无效的线程状态），返回`_Other._Thr` 的旧值用以初始化当前对象的数据成员 **`_Thr`（转移所有权）**。
 
 ***std::exchange*** 是C++14引入的一个实用函数，它用于交换两个值并返回被交换掉的旧值。
 
@@ -858,7 +858,7 @@ int main() {
 a: 20, result: 10
 ```
 
-a的值和b的值进行交换，所以a的值为10，std::exchange(a, b);的返回结果是**左操作数**，即**旧值**。
+a的值和b的值进行交换，所以a的值为10，`std::exchange(a, b);`的返回结果是**左操作数**，即**旧值**。
 
 **3）复制构造函数被定义为弃置的**，std::thread 不可复制。两个 std::thread 不可表示一个线程，std::thread 对线程资源是**独占所有权**。
 
@@ -879,7 +879,7 @@ template <class _Fn, class... _Args, enable_if_t<!is_same_v<_Remove_cvref_t<_Fn>
 
 - **_Fn**：这是传递给线程的**可调用对象类型**。它可以是普通函数、lambda表达式、函数对象等。
 - **_Args…**：这是一个「参数包」，代表可变参数类型，包含传递给 _Fn 的参数，允许传入任意数量和类型的参数。
-- **enable_if_t**：这是一个 ***[SFINAE](https://link.zhihu.com/?target=https%3A//zh.cppreference.com/w/cpp/language/sfinae)***（Substitution Failure Is Not An Error）技术，用于在模板实例化过程中进行**条件编译**。这里的条件 **!is_same_v<_Remove_cvref_t<_Fn>, thread>** 确保 **_Fn** 的类型在去除 **const/volatile 修饰和引用**后，不是 std::thread 类型本身，从而**避免将 std::thread 对象作为函数参数**，进一步**避免线程的拷贝。**
+- **enable_if_t**：这是一个 ***[SFINAE](https://link.zhihu.com/?target=https%3A//zh.cppreference.com/w/cpp/language/sfinae)***（Substitution Failure Is Not An Error）技术，用于在模板实例化过程中进行**条件编译**。这里的条件 `!is_same_v<_Remove_cvref_t<_Fn>, thread>` 确保 **_Fn** 的类型在去除 **const/volatile 修饰和引用**后，不是 std::thread 类型本身，从而**避免将 std::thread 对象作为函数参数**，进一步**避免线程的拷贝。**
 - _Fn&& 和 _Args&& 被称为**转发引用**，它们会根据传入参数的类型自动推断为左值引用或右值引用
   - 如果传入的参数是右值（比如使用 std::move），则 _Fn&& 和 _Args&& 会因为**引用折叠**被推导为右值引用；如果是左值，则会被推导为左值引用。
     - 当传入_Args的类型是int&（左值）时，后面加&&->int& &&折叠为int&
@@ -889,11 +889,11 @@ template <class _Fn, class... _Args, enable_if_t<!is_same_v<_Remove_cvref_t<_Fn>
     - 当传入_Args的类型是int（右值）时，后面加&&->int&&折叠为int&&
     - 当传入_Args的类型是int&&（右值引用）时，后面加&&->int&&折叠为int&&
 
-- std::forward<_Fn>(_Fx) 和 std::forward<_Args>(_Ax)... 会保留参数的值类别（左值或右值），确保可以进行适当的移动或拷贝。
+- `std::forward<_Fn>(_Fx) 和 std::forward<_Args>(_Ax)...` 会保留参数的值类别（左值或右值），确保可以进行适当的移动或拷贝。
 
-### ***3.2.2 关于第四个构造函数的一些疑问***
+### 3.2.2 关于第四个构造函数的一些疑问
 
-> 1. 关于这个约束你可能有问题，因为`std::thread`他并没有`operator()`的重载，不是可调用类型，也就是说不能将 std::thread 作为可调用参数传入，那么这个`**enable_if_t**`的意义是什么呢？
+> 1. 关于这个约束你可能有问题，因为`std::thread`他并没有`operator()`的重载，不是可调用类型，也就是说不能将 `std::thread` 作为可调用参数传入，那么这个`enable_if_t`的意义是什么呢？
 
 ```cpp
 struct X{
@@ -968,7 +968,7 @@ void _Start(_Fn&& _Fx, _Args&&... _Ax) {
 }
 ```
 
-### *3.3.1 定义元组来存储函数对象和函数的参数*
+### 3.3.1 定义元组来存储函数对象和函数的参数
 
 ```cpp
 using _Tuple = tuple<decay_t<_Fn>, decay_t<_Args>...>;
@@ -982,7 +982,7 @@ using _Tuple = tuple<decay_t<_Fn>, decay_t<_Args>...>;
 
 **_Tuple**：表示存储用户可调用对象及其参数的**元组类型**。
 
-### *3.3.2 创建元组实例*
+### 3.3.2 创建元组实例
 
 ```cpp
 auto _Decay_copied = _STD make_unique<_Tuple>(_STD forward<_Fn>(_Fx), _STD forward<_Args>(_Ax)...);
@@ -1000,7 +1000,7 @@ _STD forward<_Fn>(_Fx), _STD forward<_Args>(_Ax)...
 
 > 可调用对象的类型没有发生改变，但传给可调用对象的参数其实是形参的**副本**，而不是形参
 
-### *3.3.3 定义线程启动函数*
+### 3.3.3 定义线程启动函数
 
 ```cpp
 constexpr auto _Invoker_proc = _Get_invoke<_Tuple>(make_index_sequence<1 + sizeof...(_Args)>{})
@@ -1029,7 +1029,7 @@ static unsigned int __stdcall _Invoke(void* _RawVals) noexcept /* terminates */ 
 }
 ```
 
-#### *a. _Get_invoke*
+#### a.  _Get_invoke
 
 ```cpp
 // _Get_invoke 函数的实现
@@ -1042,10 +1042,10 @@ template <class _Tuple, size_t... _Indices>
 
 _Get_invoke 函数很简单，就是接受一个元组类型，和形参包的索引，传递给 _Invoke 静态成员函数模板，实例化，获取它的函数指针（并没有传递给`_Invoke`任何实参参数，仅仅只是实例化了这个模板函数，并获取它的指针返回）。
 
-> 注意：return&_Invoke<_Tuple, _Indices...>; 实际上没有直接给 _Invoke 函数提供参数，这是因为它是在返回一个实例化后的函数指针，而不是调用这个函数。返回的函数指针在线程启动时会被调用，并传递一个参数（void* _RawVals），在 _Invoke 中进行处理。
->  Get_invoke 中没有调用_Invoke函数，_Invoke函数只在线程启动时会被调用
+> 注意：`return&_Invoke<_Tuple, _Indices...>;` 实际上没有直接给 `_Invoke` 函数提供参数，这是因为它是在返回一个实例化后的函数指针，而不是调用这个函数。返回的函数指针在线程启动时会被调用，并传递一个参数`（void* _RawVals）`，在 `_Invoke` 中进行处理。
+>  Get_invoke 中没有调用`_Invoke`函数，`_Invoke`函数只在线程启动时会被调用
 
-**std::index_sequence** 是一个类型，表示一个由一系列整数（索引）构成的序列，常用于参数包展开，让我们能**够在模板中以索引方式访问和操作参数。std::index_sequence 经常和 std::make_index_sequence<N> 和 std::index_sequence_for<Ts...>**一起配套使用，前者用于生成一个 std::index_sequence，其中包含从 0 到 N-1 的索引，后者用于生成一个 std::index_sequence，其大小与类型参数包 Ts 相同，并且索引顺序与类型参数的顺序相同，比如：
+**std::index_sequence** 是一个类型，表示一个由一系列整数（索引）构成的序列，常用于参数包展开，让我们能**够在模板中以索引方式访问和操作参数。std::index_sequence 经常和 `std::make_index_sequence<N>` 和 `std::index_sequence_for<Ts...>`**一起配套使用，前者用于生成一个 std::index_sequence，其中包含从 0 到 N-1 的索引，后者用于生成一个 std::index_sequence，其大小与类型参数包 Ts 相同，并且索引顺序与类型参数的顺序相同，比如：
 
 ```cpp
 // std::make_index_sequence<3> 生成的类型为：
@@ -1086,7 +1086,7 @@ Argument 2: Hello
 Argument 3: A
 ```
 
-#### *b. _Invoke*
+#### b. _Invoke
 
 当线程启动时，`_Invoke`会被调用；而在Get_invoke函数中，只会获得一个实例化的 `_Invoke`指针，并没有调用该`_Invoke`函数（没有给`_Invoke`赋予参数，仅仅只实例化）。
 
@@ -1103,9 +1103,9 @@ static unsigned int __stdcall _Invoke(void* _RawVals) noexcept /* terminates */ 
 }
 ```
 
-_Invoke 是重中之重，它是线程实际执行的函数。当线程启动时，`_Invoke `函数被调用并传入一个_Tuple对象(`_RawVals`就相当于我们构造的元组实例，只不过将它的类型转换为了`void*`)，包含了可调用对象及其参数。如你所见它的形参类型是 void* ，这是必须的，要符合 _beginthreadex 执行函数的类型要求。虽然是 void*，但是我可以将它转换为 _Tuple* 类型，构造一个独占智能指针指向包含可调用对象及其参数的元组，然后调用 get() 成员函数获取底层指针，解引用指针，得到元组的引用初始化_ `_Tup `(我们一开始构造的元组实例)。此时，我们就**可以调用可调用对象**（用户传给thread的可调用对象）
+`_Invoke` 是重中之重，它是线程实际执行的函数。当线程启动时，`_Invoke `函数被调用并传入一个`_Tuple`对象(`_RawVals`就相当于我们构造的元组实例，只不过将它的类型转换为了`void*`)，包含了可调用对象及其参数。如你所见它的形参类型是 `void*` ，这是必须的，要符合 `_beginthreadex` 执行函数的类型要求。虽然是 `void*`，但是我可以将它转换为 `_Tuple*` 类型，构造一个独占智能指针指向包含可调用对象及其参数的元组，然后调用 get() 成员函数获取底层指针，解引用指针，得到元组的引用初始化_ `_Tup `(我们一开始构造的元组实例)。此时，我们就**可以调用可调用对象**（用户传给thread的可调用对象）
 
-这里有一个形参包展开，`_STD get<_Indices>(_Tup))...`，_Tup 就是 std::tuple 的引用，我们使用 std::get<> 获取元组存储的数据，需要传入一个索引，这里就用到了 _Indices。展开之后，就等于 invoke 就接受了我们构造 std::thread 传入的可调用对象，调用可调用对象的参数，invoke 就可以执行了。
+这里有一个形参包展开，`_STD get<_Indices>(_Tup))...`，`_Tup` 就是 `std::tuple` 的引用，我们使用 `std::get<>` 获取元组存储的数据，需要传入一个索引，这里就用到了 `_Indices`。展开之后，就等于 invoke 就接受了我们构造 std::thread 传入的可调用对象，调用可调用对象的参数，invoke 就可以执行了。
 
 ```cpp
 _STD invoke(_STD move(_STD get<_Indices>(_Tup))...);
@@ -1127,17 +1127,17 @@ change_param(int&& _Arg1)
 
 这与`change_param`的定义不符合，`change_param`参数为左值引用， 不能绑定右值，也就是编译错误的原因。
 
-> 所以，传给可调用对象的实参并不是用户传给thread的参数，而是线程内部会将传入的参数先进行delay（解除cv和引用）并保存到_Decay_copied （tuple）实例中，然后在_Invoke 函数调用可调用对象时，使用 std::move 将其以**右值的方式**传递至可调用对象。也就是说，**传给可调用对象的参数是二手(经过一系列处理)的，并不是传给thread的参数**。
+> 所以，传给可调用对象的实参并不是用户传给thread的参数，而是线程内部会将传入的参数先进行delay（解除cv和引用）并保存到`_Decay_copied （tuple）`实例中，然后在_Invoke 函数调用可调用对象时，使用 std::move 将其以**右值的方式**传递至可调用对象。也就是说，**传给可调用对象的参数是二手(经过一系列处理)的，并不是传给thread的参数**。
 
-### *3.3.4 启动线程*
+### 3.3.4 启动线程
 
 ```cpp
 _Thr._Hnd = reinterpret_cast<void*>(_CSTD _beginthreadex(nullptr, 0, _Invoker_proc, _Decay_copied.get(), 0, &_Thr._Id))
 ```
 
-调用 ****[_beginthreadex](https://link.zhihu.com/?target=https%3A//learn.microsoft.com/zh-cn/cpp/c-runtime-library/reference/beginthread-beginthreadex%3Fview%3Dmsvc-170)**** 函数来启动一个线程，并将线程句柄存储到 _Thr._Hnd 中。传递给线程的参数为 _Invoker_proc（之前通过 _Get_invoke 生成的一个函数指针，指向用于执行用户可调用对象的 _Invoke 函数）和 _Decay_copied.get()（存储了函数对象和参数的副本的指针）。
+调用 `_beginthreadex` 函数来启动一个线程，并将线程句柄存储到 `_Thr._Hnd` 中。传递给线程的参数为 `_Invoker_proc`（之前通过 `_Get_invoke` 生成的一个函数指针，指向用于执行用户可调用对象的 `_Invoke` 函数）和 `_Decay_copied.get()`（存储了函数对象和参数的副本的指针）。
 
-> 这行代码的整体作用是使用 **_beginthreadex** 创建一个新线程，执行 **_Invoker_proc** 函数，并将相关的参数传递给它，新线程的句柄被存储在 _Thr._Hnd 中，以便后续对线程进行管理。
+> 这行代码的整体作用是使用 `_beginthreadex` 创建一个新线程，执行 `_Invoker_proc` 函数，并将相关的参数传递给它，新线程的句柄被存储在 `_Thr._Hnd` 中，以便后续对线程进行管理。
 
 ### 3.3.5 其他
 
@@ -1206,5 +1206,5 @@ _NODISCARD _CONSTEXPR20 _Ty& get() const noexcept {
 
 因为thread的实现中将类型先经过 **decay（解除cv、引用）** 处理，如果要传递引用，则必须用类包装一下才行，使用**std::ref**（不会被decay解除）函数就会返回一个包装对象。
 
-然后传给可调用对象的实参并不是用户传给thread的参数，而是线程内部会将传入的参数先进行delay（解除cv和引用）并保存到_Decay_copied （tuple）实例中，然后在_Invoke 函数调用可调用对象时，使用 std::move 将其以**右值的方式**传递至可调用对象。也就是说，**传给可调用对象的参数是二手(经过一系列处理，最后传入我们构造元组实例中的数据副本)的，并不是传给thread的参数**。
+然后传给可调用对象的实参并不是用户传给thread的参数，而是线程内部会将传入的参数先进行delay（解除cv和引用）并保存到`_Decay_copied （tuple）`实例中，然后在`_Invoke` 函数调用可调用对象时，使用 std::move 将其以**右值的方式**传递至可调用对象。也就是说，**传给可调用对象的参数是二手(经过一系列处理，最后传入我们构造元组实例中的数据副本)的，并不是传给thread的参数**。
 

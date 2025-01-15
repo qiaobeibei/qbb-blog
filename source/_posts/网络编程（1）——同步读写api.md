@@ -9,11 +9,17 @@ tags:
 typora-root-url: ./..
 ---
 
-## 一、day1
+# 一、day1
 
-学习了服务器和客户端socket的建立、监听以及连接。
+学习了服务器和客户端 socket 的建立、监听以及连接。
 
-### （1）socket的监听和连接
+参考：
+
+[恋恋风辰官方博客](https://llfc.club/category?catid=225RaiVNI8pFDD5L4m807g7ZwmF#!aid/2LifP1RzCnDxtbaepFJkHVdr2ce)
+
+[visual studio配置C++ boost库_哔哩哔哩_bilibili](https://www.bilibili.com/video/BV1FY4y1S7QW/?spm_id_from=333.999.0.0&vd_source=29868cdbb6b2fb1514ce3c7c31892d68)
+
+# 1. socket的监听和连接
 
 服务端
  1）socket——创建socket对象。
@@ -34,11 +40,11 @@ typora-root-url: ./..
 
 3）write、read——建立连接后，就可发收消息了。
 
-boost库网络编程的基本流程（阻塞）：
+boost库网络编程的基本流程（阻塞）如下所示。
 
-### 1）终端节点创建
+## 1.1 终端节点创建
 
-终端节点代表一个[网络通信](https://zhida.zhihu.com/search?content_id=247993602&content_type=Article&match_order=1&q=网络通信&zhida_source=entity)的端点，由 IP 地址和端口号组成。该函数创建一个 TCP 客户端的终端节点。如果我们是客户端，我们可以通过对端的ip和端口构造一个endpoint，用这个endpoint和其通信。
+终端节点代表一个网络通信的端点，由 ip 地址和端口号组成。该函数创建一个 TCP 客户端的终端节点。如果我们是客户端，我们可以通过对端的 ip 和端口构造一个 endpoint，用这个 endpoint和其通信。
 
 客户端端点的建立：
 
@@ -63,8 +69,6 @@ int client_end_point() {
 }
 ```
 
-![点击并拖拽以移动](data:image/gif;base64,R0lGODlhAQABAPABAP///wAAACH5BAEKAAAALAAAAAABAAEAAAICRAEAOw==)
-
 服务器端端点的建立：
 
 ```cpp
@@ -84,13 +88,11 @@ int server_end_point() {
 }
 ```
 
-![点击并拖拽以移动](data:image/gif;base64,R0lGODlhAQABAPABAP///wAAACH5BAEKAAAALAAAAAABAAEAAAICRAEAOw==)
+## 1.2 建立socket
 
-### 2）建立socket
+客户端 `socket_v4` 的建立：
 
-客户端socket_v4的建立：
-
-上下文iocontext->选择协议->生成socke->打开socket
+上下文 `iocontext`->选择协议->生成socket->打开socket
 
 ```cpp
 // 客户端socket_v4的建立
@@ -112,9 +114,7 @@ int create_tcp_socket() {
 }
 ```
 
-![点击并拖拽以移动](data:image/gif;base64,R0lGODlhAQABAPABAP///wAAACH5BAEKAAAALAAAAAABAAEAAAICRAEAOw==)
-
-上述socket只是通信的socket，需在服务端建立acceptor的socket，用于接收新的连接：
+上述 socket 只是通信的 socket，需在服务端建立 acceptor 的 socket，用于接收新的连接：
 
 ```cpp
 // 创建一个服务器用于接受客户端连接的TCP监听器
@@ -139,9 +139,7 @@ int create_acceptor_socket() {
 }
 ```
 
-![点击并拖拽以移动](data:image/gif;base64,R0lGODlhAQABAPABAP///wAAACH5BAEKAAAALAAAAAABAAEAAAICRAEAOw==)
-
-### 3）绑定socket
+## 1.3 绑定socket
 
 对于acceptor类型的socket，服务器要将其绑定到指定的端点，所有连接这个端点的连接都可以被接收到
 
@@ -163,9 +161,7 @@ int bind_acceptor_socket() {
 }
 ```
 
-![点击并拖拽以移动](data:image/gif;base64,R0lGODlhAQABAPABAP///wAAACH5BAEKAAAALAAAAAABAAEAAAICRAEAOw==)
-
-### 4）连接指定的端点
+## 1.4 连接指定的端点
 
 作为客户端可以连接服务器指定的端点
 
@@ -229,9 +225,7 @@ int dns_connect_to_end() {
 }
 ```
 
-![点击并拖拽以移动](data:image/gif;base64,R0lGODlhAQABAPABAP///wAAACH5BAEKAAAALAAAAAABAAEAAAICRAEAOw==)
-
-### 5）服务器接收连接
+## 1.5 服务器接收连接
 
 当有客户端连接时，服务器需要接收连接
 
@@ -263,17 +257,15 @@ int accept_new_connection() {
 }
 ```
 
-![点击并拖拽以移动](data:image/gif;base64,R0lGODlhAQABAPABAP///wAAACH5BAEKAAAALAAAAAABAAEAAAICRAEAOw==)
-
 第一日总结：
 
 1.网络层的“ip地址”可以唯一标识网络中的主机，而传输层的“协议+端口”可以唯一标识主机中的应用程序（进程）。利用[三元组](https://zhida.zhihu.com/search?content_id=247993602&content_type=Article&match_order=1&q=三元组&zhida_source=entity)（ip地址，协议，端口）就可以标识网络的进程，网络中的[进程通信](https://zhida.zhihu.com/search?content_id=247993602&content_type=Article&match_order=1&q=进程通信&zhida_source=entity)可以利用这个标志与其它进程进行交互。
 
-2.什么是socket? socket起源于Unix，而Unix/Linux基本哲学之一就是“一切皆文件”，都可以用“打开open –> 读写write/read –> 关闭close”模式来操作。我的理解就是Socket就是该模式的一个实现，socket即是一种特殊的文件，一些socket函数就是对其进行的操作（读/写IO、打开、关闭）。
+2.**什么是socket?** socket起源于Unix，而Unix/Linux基本哲学之一就是“一切皆文件”，都可以用“打开open –> 读写write/read –> 关闭close”模式来操作。我的理解就是Socket就是该模式的一个实现，socket即是一种特殊的文件，一些socket函数就是对其进行的操作（读/写IO、打开、关闭）。
 
 3.acceptor和socket有什么区别，分别有什么作用?
 
-1)acceptor
+**1)acceptor**
 
 **作用**: `acceptor` 是一个服务器端的对象，用于接收来自客户端的连接请求。
 
@@ -292,9 +284,7 @@ boost::asio::ip::tcp::socket socket(io_context);
 acceptor.accept(socket);
 ```
 
-![点击并拖拽以移动](data:image/gif;base64,R0lGODlhAQABAPABAP///wAAACH5BAEKAAAALAAAAAABAAEAAAICRAEAOw==)
-
-2)socket
+**2)socket**
 
 **作用**: `socket` 是用于实际数据传输的对象。它代表了一个[网络连接](https://zhida.zhihu.com/search?content_id=247993602&content_type=Article&match_order=1&q=网络连接&zhida_source=entity)的端点。
 
@@ -311,42 +301,32 @@ socket.connect(endpoint);
 boost::asio::write(socket, boost::asio::buffer("Hello, World!"));
 ```
 
-![点击并拖拽以移动](data:image/gif;base64,R0lGODlhAQABAPABAP///wAAACH5BAEKAAAALAAAAAABAAEAAAICRAEAOw==)
+# 二、day2
 
-
-
-## 二、day2
-
-### 1）buffer
+## 2.1 buffer
 
 任何网络库都有提供buffer的数据结构，所谓buffer就是接收和发送数据时缓存数据的结构。
 
-boost::asio提供了asio::mutable_buffer 和 asio::const_buffer这两个结构，他们是一段连续的空间，**首字节存储了后续数据的长度。**asio::mutable_buffer用于写服务，asio::const_buffer用于读服务。但是这**两个结构都没有被asio的api直接使用**。对于api的buffer参数，asio提出了MutableBufferSequence和ConstBufferSequence概念，他们是由多个asio::mutable_buffer和asio::const_buffer组成的。**也就是说boost::asio为了节省空间，将一部分连续的空间组合起来，作为参数交给api使用。**
+`boost::asio`提供了`asio::mutable_buffer` 和 `asio::const_buffer`这两个结构，他们是一段连续的空间，**首字节存储了后续数据的长度。**`asio::mutable_buffer`用于写服务，`asio::const_buffer`用于读服务。但是这**两个结构都没有被asio的api直接使用**。对于api的`buffer`参数，asio提出了`MutableBufferSequence`和`ConstBufferSequence`概念，他们是由多个`asio::mutable_buffer`和`asio::const_buffer`组成的。**也就是说`boost::asio`为了节省空间，将一部分连续的空间组合起来，作为参数交给api使用。**
 
-我们可以理解为**MutableBufferSequence的数据结构为std::vector<asio::mutable_buffer>**
-
-
+我们可以理解为`MutableBufferSequence`的数据结构为`std::vector<asio::mutable_buffer>`
 
 ![img](/images/$%7Bfiilename%7D/format,png.png)
 
-![点击并拖拽以移动](data:image/gif;base64,R0lGODlhAQABAPABAP///wAAACH5BAEKAAAALAAAAAABAAEAAAICRAEAOw==)编辑
+<center>buffer的结构</center>
 
-buffer的结构
+每个 vector 存储的都是 `mutable_buffer`的地址，每个`mutable_buffer`的第一个字节表示数据的长度，后面跟着数据内容。
 
-每个vector存储的都是**mutable_buffer的地址**，每个mutable_buffer的第一个字节表示数据的长度，后面跟着数据内容。
+这么复杂的结构交给用户使用并不合适，所以`asio`提出了`buffer()`函数，**该函数接收多种形式的*[字节流](https://zhida.zhihu.com/search?content_id=247993602&content_type=Article&match_order=1&q=字节流&zhida_source=entity)*，该函数返回`asio::mutable_buffers_1` 或者`asio::const_buffers_1`结构的对象**。如果传递给`buffer()`的参数是一个**只读**类型，则函数返回`asio::const_buffers_1` 类型对象。如果传递给`buffer()`的参数是一个**可写**类型，则返回`asio::mutable_buffers_1` 类型对象。
 
-这么复杂的结构交给用户使用并不合适，所以asio提出了buffer()函数，**该函数接收多种形式的*[字节流](https://zhida.zhihu.com/search?content_id=247993602&content_type=Article&match_order=1&q=字节流&zhida_source=entity)*，该函数返回asio::mutable_buffers_1 o或者asio::const_buffers_1结构的对象**。如果传递给buffer()的参数是一个只读类型，则函数返回asio::const_buffers_1 类型对象。如果传递给buffer()的参数是一个可写类型，则返回asio::mutable_buffers_1 类型对象。
+`asio::const_buffers_1`和`asio::mutable_buffers_1`是`asio::mutable_buffer`和`asio::const_buffer`的适配器，提供了符合`MutableBufferSequence`和`ConstBufferSequence`概念的接口，所以他们可以作为`boost::asio`的api函数的参数使用。
 
-**asio::const_buffers_1和asio::mutable_buffers_1**是asio::mutable_buffer和asio::const_buffer的适配器，提供了符合MutableBufferSequence和ConstBufferSequence概念的接口，所以他们可以作为boost::asio的api函数的参数使用。
+简单概括一下，我们可以用`buffer()`函数生成我们要用的缓存存储数据。比如boost的发送接口send要求的参数为`ConstBufferSequence`类型
 
-简单概括一下，我们**可以用buffer()函数生成我们要用的缓存存储数据**。比如boost的发送接口send要求的参数为ConstBufferSequence类型
-
-```
+```cpp
 template<typename ConstBufferSequence>
 std::size_t send(const ConstBufferSequence & buffers);
 ```
-
-![点击并拖拽以移动](data:image/gif;base64,R0lGODlhAQABAPABAP///wAAACH5BAEKAAAALAAAAAABAAEAAAICRAEAOw==)
 
 如果将“Hello World”转换成该类型：
 
@@ -363,8 +343,6 @@ void use_const_buffer() {
 }
 ```
 
-![点击并拖拽以移动](data:image/gif;base64,R0lGODlhAQABAPABAP///wAAACH5BAEKAAAALAAAAAABAAEAAAICRAEAOw==)
-
  实际中我们使用并没有这么复杂，简化上述函数，用buffer函数将其转化为send需要的参数类型，output_buf可以直接传递给send接口使用，充当ConstBufferSequence类型：
 
 ```C++
@@ -374,10 +352,6 @@ void use_buffer_str() {
 	boost::asio::const_buffers_1 optput_buf = boost::asio::buffer("hello world");
 }
 ```
-
-![点击并拖拽以移动](data:image/gif;base64,R0lGODlhAQABAPABAP///wAAACH5BAEKAAAALAAAAAABAAEAAAICRAEAOw==)
-
-
 
 也可以将数组转换为send需要的类型（ConstBufferSequence）：
 
@@ -399,7 +373,7 @@ void use_buffer_array() {
 
 对于流式操作，我们可以用streambuf，将输入输出流和streambuf绑定，可以实现流式输入和输出：
 
-```
+```cpp
 void use_stream_buffer() {
     asio::streambuf buf;
     std::ostream output(&buf);
@@ -417,11 +391,9 @@ void use_stream_buffer() {
 }
 ```
 
-![点击并拖拽以移动](data:image/gif;base64,R0lGODlhAQABAPABAP///wAAACH5BAEKAAAALAAAAAABAAEAAAICRAEAOw==)
+## 2.2 同步写write_some
 
-### 2）**同步写write_some**
-
-boost::asio提供了几种同步写的api，write_some可以每次向**指定的空间（socket）**写入固定的字节数，如果写缓冲区满了，就只写一部分，返回写入的字节数。举个栗子，用户buffer发送缓冲区长度为5，TCP发送缓冲区长度为12，虽然下面的write_some一开始希望发送buf.length() - total_bytes_written = 12 - 0=12个长度，但是用户buffer只有5个，所以只能先发送5个，剩下的7个循环继续发送：
+`boost::asio`提供了几种同步写的api，`write_some`可以每次向**指定的空间（socket）**写入固定的字节数，如果写缓冲区满了，就只写一部分，返回写入的字节数。举个栗子，用户buffer发送缓冲区长度为**5**，TCP发送缓冲区长度为**12**，虽然下面的`write_some`一开始希望发送`buf.length() - total_bytes_written = 12 - 0=12`个长度，但是用户buffer只有**5**个，所以只能先发送**5**个，剩下的**7**个循环继续发送：
 
 ```c++
 // 写函数
@@ -467,9 +439,7 @@ int send_data_by_write_some() {
 }
 ```
 
-![点击并拖拽以移动](data:image/gif;base64,R0lGODlhAQABAPABAP///wAAACH5BAEKAAAALAAAAAABAAEAAAICRAEAOw==)
-
-### 3）同步写send
+## 2.3 同步写send
 
 write_some使用起来比较麻烦，需要**多次调用（while）**，asio提供了send函数。send函数会**一次性**将buffer中的内容发送给对端，如果有部分字节因为发送缓冲区满无法发送，则阻塞等待，直到发送缓冲区可用，则继续发送完成。
 
@@ -507,9 +477,7 @@ int send_data_by_send() {
 }
 ```
 
-![点击并拖拽以移动](data:image/gif;base64,R0lGODlhAQABAPABAP///wAAACH5BAEKAAAALAAAAAABAAEAAAICRAEAOw==)
-
-### 4）同步写write
+## 2.4 同步写write
 
 类似send方法，asio还提供了一个write函数，可以**一次性**将所有数据发送给对端，如果发送缓冲区满了则阻塞，直到发送缓冲区可用，将数据发送完成。
 
@@ -541,9 +509,7 @@ int send_data_by_write() {
 }
 ```
 
-![点击并拖拽以移动](data:image/gif;base64,R0lGODlhAQABAPABAP///wAAACH5BAEKAAAALAAAAAABAAEAAAICRAEAOw==)
-
-### 5）同步读read_some
+## 2.5 同步读read_some
 
 同步读和同步写类似，提供了读取指定字节数的接口read_some，但read_some可能会被多次调用，比较麻烦。
 
@@ -583,9 +549,7 @@ int read_data_by_read_some() {
 }
 ```
 
-![点击并拖拽以移动](data:image/gif;base64,R0lGODlhAQABAPABAP///wAAACH5BAEKAAAALAAAAAABAAEAAAICRAEAOw==)
-
-### 6）同步读receive
+## 2.6 同步读receive
 
 可以一次性同步接收对方发送的数据：
 
@@ -616,9 +580,7 @@ int read_data_by_receive() {
 }
 ```
 
-![点击并拖拽以移动](data:image/gif;base64,R0lGODlhAQABAPABAP///wAAACH5BAEKAAAALAAAAAABAAEAAAICRAEAOw==)
-
-### 7）同步读read
+## 2.7 同步读read
 
 可以一次性同步读取对方发送的数据：
 
@@ -648,9 +610,7 @@ int read_data_by_read() {
 }
 ```
 
-![点击并拖拽以移动](data:image/gif;base64,R0lGODlhAQABAPABAP///wAAACH5BAEKAAAALAAAAAABAAEAAAICRAEAOw==)
-
-### 8）读取直到指定字符
+## 2.8 读取直到指定字符
 
 我们可以一直读取，直到读取指定字符结束：
 
@@ -670,9 +630,9 @@ std::string  read_data_by_until(boost::asio::ip::tcp::socket& sock) {
 }
 ```
 
-![点击并拖拽以移动](data:image/gif;base64,R0lGODlhAQABAPABAP///wAAACH5BAEKAAAALAAAAAABAAEAAAICRAEAOw==)
 
-总结：
+
+**总结：**
 
 1.c++中，sock.receive和boost::asio::read有什么区别？
 

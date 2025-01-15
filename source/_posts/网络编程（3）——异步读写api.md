@@ -13,7 +13,13 @@ typora-root-url: ./..
 
 今天学习异步读写操作的常用api
 
-## 1）MsgNode类
+参考：
+
+[恋恋风辰官方博客](https://llfc.club/category?catid=225RaiVNI8pFDD5L4m807g7ZwmF)
+
+[visual studio配置C++ boost库_哔哩哔哩_bilibili](https://www.bilibili.com/video/BV1FY4y1S7QW/?spm_id_from=333.999.0.0&vd_source=29868cdbb6b2fb1514ce3c7c31892d68)
+
+# 1. MsgNode类
 
 封装一个Node结构，用来管理要发送和接收的数据，该结构包含数据域首地址，数据的总长度，以及已经处理的长度(已读的长度或者已写的长度)
 
@@ -37,9 +43,7 @@ public:
 };
 ```
 
-![点击并拖拽以移动](data:image/gif;base64,R0lGODlhAQABAPABAP///wAAACH5BAEKAAAALAAAAAABAAEAAAICRAEAOw==)
-
-## 2）Session类
+# 2. Session类
 
 定义Session类，表示服务器处理[客户端](https://zhida.zhihu.com/search?content_id=248112810&content_type=Article&match_order=1&q=客户端&zhida_source=entity)连接的管理类
 
@@ -84,13 +88,11 @@ public:
 };
 ```
 
-![点击并拖拽以移动](data:image/gif;base64,R0lGODlhAQABAPABAP///wAAACH5BAEKAAAALAAAAAABAAEAAAICRAEAOw==)
-
 接下来详细介绍Session类中的每一个api。
 
 ------
 
-### **1.WriteCallBackErr()**
+## 2.1 WriteCallBackErr()
 
 **WriteCallBackErr** 函数是一个[回调函数](https://zhida.zhihu.com/search?content_id=248112810&content_type=Article&match_order=1&q=回调函数&zhida_source=entity)，在**每次异步写操作完成后调用**。它的作用是检查是否所有数据都已发送，如果没有，则继续发送剩余的数据。
 
@@ -115,13 +117,11 @@ void Session::WriteCallBackErr(const boost::system::error_code& ec, std::size_t 
 }
 ```
 
-![点击并拖拽以移动](data:image/gif;base64,R0lGODlhAQABAPABAP///wAAACH5BAEKAAAALAAAAAABAAEAAAICRAEAOw==)
+难点是理解`_send_node`和`msg_node`的区别、`bind()`函数的应用、回调函数中的`ec`、`bytes_transferred`等参数为什么不用显示更新以及在bind函数中this的作用，这些问题在总结中都会回答。
 
-难点是理解_send_node和msg_node的区别、bind()函数的应用、回调函数中的ec、bytes_transferred等参数为什么不用显示更新以及在bind函数中this的作用，这些问题在总结中都会回答。
+## 2.2 WriteToSocketErr()
 
-### **2.WriteToSocketErr()**
-
-**WriteToSocketErr**函数负责**执行一次异步写操作**，但它不负责检查和处理数据是否全部发送完毕，不需要判断是否发完，当这次写操作完成后，回调函数 **WriteCallBackErr** 会被调用，用来判断信息是否发送完全。所以在**WriteToSocketErr**函数中不需要像**WriteCallBackErr** 函数一样判断信息是否发送完全。
+`WriteToSocketErr`函数负责**执行一次异步写操作**，但它不负责检查和处理数据是否全部发送完毕，不需要判断是否发完，当这次写操作完成后，回调函数 `WriteCallBackErr` 会被调用，用来判断信息是否发送完全。所以在`WriteToSocketErr`函数中不需要像`WriteCallBackErr` 函数一样判断信息是否发送完全。
 
 ```C++
 // 开始一次异步写操作，但它不负责检查和处理数据是否全部发送完毕，不需要判断是否发完
@@ -139,9 +139,9 @@ void Session::WriteToSocketErr(const std::string buf) {
 
 ------
 
-### **3.WriteCallBack()**
+## 2.3 WriteCallBack()
 
-WriteCallBack函数虽然和WriteCallBackErr函数一样都是回调函数，但是有一定的区别，我会在在总结中进行解释。
+`WriteCallBack`函数虽然和`WriteCallBackErr`函数一样都是回调函数，但是有一定的区别，我会在在总结中进行解释。
 
 ```C++
 void  Session::WriteCallBack(const boost::system::error_code& ec, std::size_t bytes_transferred) {
@@ -174,11 +174,9 @@ void  Session::WriteCallBack(const boost::system::error_code& ec, std::size_t by
 }
 ```
 
-![点击并拖拽以移动](data:image/gif;base64,R0lGODlhAQABAPABAP///wAAACH5BAEKAAAALAAAAAABAAEAAAICRAEAOw==)
+## 2.4 WriteToSocket()
 
-### **4.WriteToSocket()**
-
-Session::WriteToSocket 函数的主要作用是将一个新的消息添加到发送队列中，并启动异步写操作。如果已经有挂起的发送操作，它不会启动新的异步写操作。这个设计确保了异步写操作不会重叠，从而保证数据的有序发送。
+`Session::WriteToSocket` 函数的主要作用是将一个新的消息添加到发送队列中，并启动异步写操作。如果已经有挂起的发送操作，它不会启动新的异步写操作。这个设计确保了异步写操作不会重叠，从而保证数据的有序发送。
 
 ```C++
 void  Session::WriteToSocket(const std::string buf) {
@@ -194,15 +192,13 @@ void  Session::WriteToSocket(const std::string buf) {
 }
 ```
 
-![点击并拖拽以移动](data:image/gif;base64,R0lGODlhAQABAPABAP///wAAACH5BAEKAAAALAAAAAABAAEAAAICRAEAOw==)
-
-但注意到_send_pending被挂起时会阻止下一个加入队列消息的发送操作。具体区别我在总结部分作了解释。
+但注意到`_send_pending`被挂起时会阻止下一个加入队列消息的发送操作。具体区别我在总结部分作了解释。
 
 ------
 
-### **5.WriteAllToSocket()**
+## 2.5 WriteAllToSocket()
 
-async_write_some函数不能保证每次回调函数触发时发送的长度为要总长度，这样我们每次都要在回调函数判断发送数据是否完成，asio提供了一个更简单的发送函数**async_send**，这个函数**在发送的长度未达到我们要求的长度时就不会触发回调**，所以触发回调函数时要么时发送出错了要么是发送完成了,其内部的实现原理就是帮我们**不断的调用async_write_some直到完成发送**，所以async_send**不能**和async_write_some混合使用，我们基于async_send封装另外一个发送函数.
+`async_write_some`函数不能保证每次回调函数触发时发送的长度为要总长度，这样我们每次都要在回调函数判断发送数据是否完成，asio提供了一个更简单的发送函数`async_send`，这个函数**在发送的长度未达到我们要求的长度时就不会触发回调**，所以触发回调函数时要么时发送出错了要么是发送完成了,其内部的实现原理就是帮我们**不断的调用`async_write_some`直到完成发送**，所以`async_send`**不能**和`async_write_some`混合使用，我们基于`async_send`封装另外一个发送函数.
 
 ```C++
 void Session::WriteAllToSocket(const std::string buf) {
@@ -219,11 +215,9 @@ void Session::WriteAllToSocket(const std::string buf) {
 }
 ```
 
-![点击并拖拽以移动](data:image/gif;base64,R0lGODlhAQABAPABAP///wAAACH5BAEKAAAALAAAAAABAAEAAAICRAEAOw==)
+`async_send`是否发送完全由错误码ec判断，当ec不为0时，发送错误，当ec=0时，发送完全。
 
-async_send是否发送完全由错误码ec判断，当ec不为0时，发送错误，当ec=0时，发送完全。
-
-### **6.WriteAllCallBack()**
+## 2.6 WriteAllCallBack()
 
 由于async_send发送函数的基本原理，在该回调函数中，只有发送成功和发送错误两种可能性。
 
@@ -256,9 +250,9 @@ void Session::WriteAllCallBack(const boost::system::error_code& ec, std::size_t 
 
 ------
 
-### **7.ReadFromSocket()**
+## 2.7 ReadFromSocket()
 
-接下来介绍异步读操作，异步读操作和异步的写操作类似同样有async_read_some和async_receive函数，前者触发的回调函数获取的读数据的长度可能会小于要求读取的总长度，后者触发的回调函数读取的数据长度等于读取的总长度或读取错误。
+接下来介绍异步读操作，异步读操作和异步的写操作类似同样有`async_read_some`和`async_receive`函数，前者触发的回调函数获取的读数据的长度可能会小于要求读取的总长度，后者触发的回调函数读取的数据长度等于读取的总长度或读取错误。
 
 ```C++
 // 从套接字中异步读取数据
@@ -276,9 +270,9 @@ void Session::ReadFromSocket() {
 }
 ```
 
-### **8.ReadCallBack()**
+## 2.8 ReadCallBack()
 
-/异步读取的回调函数，在调用 async_read_some 进行数据读取后触发。回调函数根据读取的字节数来判断数据是否全部接收完毕，如果数据未完全接收则继续读取，直到所有数据都被读取完成。
+异步读取的回调函数，在调用 `async_read_some` 进行数据读取后触发。回调函数根据读取的字节数来判断数据是否全部接收完毕，如果数据未完全接收则继续读取，直到所有数据都被读取完成。
 
 ```C++
 void Session::ReadCallBack(const boost::system::error_code& ec, std::size_t bytes_transferred) {
@@ -300,9 +294,9 @@ void Session::ReadCallBack(const boost::system::error_code& ec, std::size_t byte
 
 ------
 
-### **9.ReadAllFromSocket()**
+## 2.9 ReadAllFromSocket()
 
-async_receive内部就是执行多次async_read_some，async_receive只有当数据全部读完或者读取错误才会调用回调函数，基于async_receive再封装一个[接收数据](https://zhida.zhihu.com/search?content_id=248112810&content_type=Article&match_order=1&q=接收数据&zhida_source=entity)的函数，同样**async_read_some和async_receive不能混合使用**
+`async_receive`内部就是执行多次`async_read_some`，`async_receive`只有当数据全部读完或者读取错误才会调用回调函数，基于`async_receive`再封装一个[接收数据](https://zhida.zhihu.com/search?content_id=248112810&content_type=Article&match_order=1&q=接收数据&zhida_source=entity)的函数，同样**`async_read_some`和`async_receive`不能混合使用**
 
 ```C++
 void Session::ReadAllFromSocket() {
@@ -325,19 +319,17 @@ void Session::ReadAllCallBack(const boost::system::error_code& ec, std::size_t b
 }
 ```
 
-![点击并拖拽以移动](data:image/gif;base64,R0lGODlhAQABAPABAP///wAAACH5BAEKAAAALAAAAAABAAEAAAICRAEAOw==)
-
 ------
 
 ## 总结
 
-1. **同步和异步的区别？**
+> **同步和异步的区别？**
 
 同步就是指一个进程在执行某个请求的时候，若该请求需要一段时间才能返回信息，那么这个进程将会一直等待下去，直到收到返回信息才继续执行下去;同步就相当于是 当客户端发送请求给服务端，在等待服务端响应的请求时，客户端不做其他的事情。当服务端做完了才返回到客户端。这样的话客户端需要一直等待。用户使用起来会有不友好。
 
 异步是指进程不需要一直等下去，而是继续执行下面的操作，不管其他进程的状态。当有消息返回时系统会通知进程进行处理，这样可以提高执行的效率。异步就相当于当客户端发送给服务端请求时，在等待服务端响应的时候，客户端可以做其他的事情，这样节约了时间，提高了效率。
 
-**2.bind()函数**
+> **bind()函数**
 
 将[原函数](https://zhida.zhihu.com/search?content_id=248112810&content_type=Article&match_order=1&q=原函数&zhida_source=entity)的几个参数通过bind绑定传值，返回一个新的可调用对象
 
@@ -355,7 +347,7 @@ auto newfun3 = bind(globalFun2, "zack", placeholders::_2, 100, placeholders::_1)
 newfun3("coder", 33);
 ```
 
-**3. 在WriteCallBackErr()函数中，_send_node和msg_node有什么区别？**
+> **在WriteCallBackErr()函数中，_send_node和msg_node有什么区别？**
 
 **`_send_node`**
 
@@ -369,7 +361,7 @@ newfun3("coder", 33);
 - **作用**: 代表当前函数回调时传递进来的消息节点，即正在处理的消息。
 - **目的**: 它是一个局部变量，用于在回调函数中表示当前异步写操作处理的数据节点。它的值可能来自 `_send_node`，也可能是其他数据源。
 
-**4.在WriteCallBackErr()中，bind()绑定的回调函数为什么没有显示的更新ec、bytes_transferred，而只是用占位符1、2代替？为什么需要绑定this?**
+> **在WriteCallBackErr()中，bind()绑定的回调函数为什么没有显示的更新ec、bytes_transferred，而只是用占位符1、2代替？为什么需要绑定this?**
 
 **1）**在 WriteCallBackErr 回调函数中，bytes_transferred 参数不用被显式更新，因为 bytes_transferred 的值是由异步写操作的结果自动传递给回调函数。在异步写操作的回调函数中，bytes_transferred 是只读的，它表示当前这次写操作成功写入的字节数；在每次异步写操作完成后，boost::asio 会重新调用回调函数 WriteCallBackErr，并提供新的 bytes_transferred 值（表示该次操作的写入字节数）。
 
@@ -411,8 +403,6 @@ void Session::WriteCallBackErr(const boost::system::error_code& ec, std::size_t 
 }
 ```
 
-![点击并拖拽以移动](data:image/gif;base64,R0lGODlhAQABAPABAP///wAAACH5BAEKAAAALAAAAAABAAEAAAICRAEAOw==)
-
 第一步：异步写操作的开始：async_write_some 被调用，开始一个异步写操作，将 _send_node 中的数据写入套接字。
 
 第二步：异步操作完成时调用回调函数：当异步写操作完成时，boost::asio 自动调用 WriteCallBackErr 回调函数。bytes_transferred 被设置为该次操作成功写入的字节数。
@@ -427,13 +417,11 @@ void Session::WriteCallBackErr(const boost::system::error_code& ec, std::size_t 
 std::bind(&Session::WriteCallBackErr, this, std::placeholders::_1, std::placeholders::_2, _send_node)
 ```
 
-![点击并拖拽以移动](data:image/gif;base64,R0lGODlhAQABAPABAP///wAAACH5BAEKAAAALAAAAAABAAEAAAICRAEAOw==)
-
 - `std::bind` 是用于将函数或成员函数与特定参数绑定在一起的[标准库](https://zhida.zhihu.com/search?content_id=248112810&content_type=Article&match_order=1&q=标准库&zhida_source=entity)工具。
 - `&Session::WriteCallBackErr` 表示你要绑定的函数是 `Session`[类的成员函数](https://zhida.zhihu.com/search?content_id=248112810&content_type=Article&match_order=1&q=类的成员函数&zhida_source=entity)。
 - `this` 指针是指向当前对象实例的指针。它将当前的 `Session` 实例与 `WriteCallBackErr` 函数绑定，这样在调用时，`WriteCallBackErr` 知道要操作哪个 `Session` 对象的成员变量。
 
-**5.WriteCallBack函数和WriteCallBackErr函数的区别？**
+> **WriteCallBack函数和WriteCallBackErr函数的区别？**
 
 **1）WriteCallBackErr 函数**
 
@@ -479,7 +467,7 @@ std::bind(&Session::WriteCallBackErr, this, std::placeholders::_1, std::placehol
 - `WriteCallBackErr`：需要传入一个 `std::shared_ptr<MsgNode>`，以确保 `MsgNode` 在异步操作期间不被销毁。
 - `WriteCallBack`：不需要额外的 `MsgNode` 参数，直接使用 `_send_queue` 进行消息管理。
 
-**6.布尔类型_send_pending的作用？**
+> **布尔类型_send_pending的作用？**
 
 虽然在 WriteToSocket 函数中，当 _send_pending 为 true 时不会启动新的异步写操作，但这并不意味着队列中只有一个元素。实际上，新的消息仍然会被添加到 _send_queue 中，只是当前异步写操作完成后，回调函数 WriteCallBack 会负责处理队列中的消息，并启动下一个消息的异步写操作。通过这种机制，确保了消息的有序发送，并避免了重叠的异步写操作。
 
@@ -506,7 +494,8 @@ std::bind(&Session::WriteCallBackErr, this, std::placeholders::_1, std::placehol
   - 然后，回调函数更新当前消息的已发送字节数。如果当前消息没有发送完毕，则继续发送剩余部分。
   - 如果当前消息发送完毕，从队列中移除该消息。如果队列不为空，则启动下一个消息的发送；如果队列为空，则将 `_send_pending` 设置为 `false`。
 
-**7.为什么async_read_some和async_receive不能混合使用，async_send和async_write_some不能混合使用？**
+> **为什么async_read_some和async_receive不能混合使用，async_send和async_write_some不能混合使用？**
+>
 
 1）async_read_some和async_receive
 

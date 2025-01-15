@@ -24,6 +24,12 @@ typora-root-url: ./..
 
 ![img](/images/$%7Bfiilename%7D/4c8c6ab8d03942b8b8dbb1bbfb623baa.png)
 
+参考：
+
+[恋恋风辰官方博客](https://llfc.club/category?catid=225RaiVNI8pFDD5L4m807g7ZwmF)
+
+[visual studio配置C++ boost库_哔哩哔哩_bilibili](https://www.bilibili.com/video/BV1FY4y1S7QW/?spm_id_from=333.999.0.0&vd_source=29868cdbb6b2fb1514ce3c7c31892d68)
+
 ## 1. 官方案例
 
 asio官网提供了一个协程并发编程的案例，如下
@@ -84,7 +90,7 @@ int main()
 }
 ```
 
-### ***a. 声明***
+### a. 声明
 
 ```cpp
 using boost::asio::ip::tcp;
@@ -112,7 +118,7 @@ namespace this_coro = boost::asio::this_coro;
   - co_await 会自动获取异步操作的结果并将其返回给调用者。例如，如果等待的是一个返回值的异步操作，结果会被赋给相应的变量。
   - 如果在 co_await 等待的异步操作中发生异常，协程可以捕获这些异常，方便进行错误处理。
 
-### ***b. echo()***
+### b. echo()
 
 ```cpp
 awaitable<void> echo(tcp::socket socket) {
@@ -129,11 +135,11 @@ awaitable<void> echo(tcp::socket socket) {
 }
 ```
 
-**awaitable<void>**类型允许函数在执行时可以被暂停和恢复，这使得它能够与 co_await 一起使用，所以函数返回类型必须是**awaitable<void>。**
+`awaitable<void>`类型允许函数在执行时可以被暂停和恢复，这使得它能够与 co_await 一起使用，所以函数返回类型必须是`awaitable<void>`。
 
 **echo** 函数能够高效处理多个客户端连接而不阻塞线程，主要是因为：
 
-- echo 函数使用 socket.async_read_some 和 async_write 方法进行**异步读写操作**。这意味着当函数执行这些操作时，它不会阻塞当前线程，而是可以在等待 I/O 完成时让出控制权。
+- echo 函数使用 `socket.async_read_some` 和 async_write 方法进行**异步读写操作**。这意味着当函数执行这些操作时，它不会阻塞当前线程，而是可以在等待 I/O 完成时让出控制权。
 - 使用协程和 co_await，当 I/O 操作挂起时，协程会被暂停并释放线程。这使得同一线程可以处理其他任务或更多的连接，而不需要为每个连接创建新的线程。
 - 服务器的主循环（io_context.run()）会持续运行，处理所有已准备好的异步操作。这样一来，多个连接可以并发处理，而不需要多个线程同时活跃。
 - 当协程通过 co_await 等待 I/O 操作时，它不会占用 CPU 资源。主线程可以继续接受新的连接或处理其他已完成的操作，从而提高并发能力。
@@ -152,7 +158,7 @@ co_await async_write(socket, boost::asio::buffer(data, n), use_awaitable);
 
 同理，异步写函数也以同步的方式使用，不需要显示bind回调函数，**co_await** 关键字会等待异步读取操作完成，而**适配器use_awaitable**允许将异步操作的结果直接与协程的执行流结合
 
-### ***c. listener()***
+### c. listener()
 
 ```cpp
 awaitable<void> listener() {
@@ -184,9 +190,9 @@ co_spawn(executor, echo(std::move(socket)), detached);
   - **co_spawn** 启动一个新的协程
   - **executor** 指定了新的协程的执行上下文
   - **echo**(std::move(socket)) 创建一个新的 echo 协程来处理该连接。std::move(socket) 将 socket 移动到 echo 协程中，避免不必要的拷贝。移动socket之后，上面的socket便无法发挥作用，因为该socket已经被移动至echo中。
-  - detached 表示新协程的执行不需要主协程等待其完成。
+  - **detached** 表示新协程的执行不需要主协程等待其完成。
 
-### ***d. main()***
+### d. main()
 
 ```cpp
 int main()

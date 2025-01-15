@@ -17,13 +17,11 @@ typora-root-url: ./..
 
 其实官网以及给出了如何通过beast快速搭建服务器的示例，可以参考boost官网“
 
-[Chapter 1. Boost.Beastwww.boost.org/doc/libs/1_86_0/libs/beast/doc/html/index.html](https://link.zhihu.com/?target=https%3A//www.boost.org/doc/libs/1_86_0/libs/beast/doc/html/index.html)
+[Chapter 1. Boost.Beast - 1.86.0](https://www.boost.org/doc/libs/1_86_0/libs/beast/doc/html/index.html)
 
 视频参考：
 
-【C++ 网络编程(22) beast网络库实现http服务器】
-
-[https://www.bilibili.com/video/BV1Ck4y1T7na?vd_source=cb95e3058c2624d2641da6f4eeb7e3a1www.bilibili.com/video/BV1Ck4y1T7na?vd_source=cb95e3058c2624d2641da6f4eeb7e3a1](https://link.zhihu.com/?target=https%3A//www.bilibili.com/video/BV1Ck4y1T7na%3Fvd_source%3Dcb95e3058c2624d2641da6f4eeb7e3a1)
+[C++ 网络编程(22) beast网络库实现http服务器_哔哩哔哩_bilibili](https://www.bilibili.com/video/BV1Ck4y1T7na/?vd_source=cb95e3058c2624d2641da6f4eeb7e3a1)
 
 ## 1. 头文件和作用域重命名
 
@@ -111,29 +109,21 @@ public:
 };
 ```
 
-http_connection类继承std::enable_shared_from_this<T>模板类，便于使用**shared_from_this()**函数实现伪闭包。http_connection类成员变量的解释如下：
+`http_connection`类继承`std::enable_shared_from_this<T>`模板类，便于使用`shared_from_this()`函数实现伪闭包。`http_connection`类成员变量的解释如下：
 
-- _buffer：定义一个缓存区，缓存区大小不超过8k
+- _buffer：定义一个缓存区，缓存区大小不超过`8k`
 
-- _request：构造一个请求头，类型为http::request<http::
-
-  dynamic_body
-
-  \> 
+- _request：构造一个请求头，类型为 `http::request<http::dynamic_body>`
 
   - **dynamic_body：**允许发送各种类型的请求
   - **string_body：**只允许发文本类型的请求
-
+  
 - _response：响应，同样也是dynamic_body类型
 
-- _deadline：定时器，用于异步操作时的
-
-  超时控制或延时任务
-
-  ，使用的是steady_timer定时器对象，即使系统时间被改变，定时器仍能够按照预期的时间触发 
+- _deadline：定时器，用于异步操作时的超时控制或延时任务，使用的是`steady_timer`定时器对象，即使系统时间被改变，定时器仍能够按照预期的时间触发 
 
   - get_executor()：获取于socket相关的执行器，也就是说，定时器和socket共享相同的IO线程资源
-  - std::chrono::seconds(60)：定时器在60s后被触发
+- std::chrono::seconds(60)：定时器在60s后被触发
 
 成员函数的实现如下：
 
@@ -151,9 +141,9 @@ http_connection(tcp::socket socket) : _socket(socket) {}
 http_connection(tcp::socket&& socket) : _socket(std::move(socket)) {}
 ```
 
-**为什么http_connection(tcp::socket socket)中按值传递不会调用复制构造函数，而是在初始化成员变量_socket(socket)时才调用复制构造函数？**
+> **为什么http_connection(tcp::socket socket)中按值传递不会调用复制构造函数，而是在初始化成员变量_socket(socket)时才调用复制构造函数？**
 
-http_connection(tcp::socket socket) 中的参数 socket 是按值传递的，这意味着它是从调用者那里“拷贝”进来的。由于 tcp::socket **禁止复制，但支持移动**，所以编译器会**自动**尝试使用**移动构造函数**来初始化这个按值传递的参数。如果调用者传入的是一个临时对象（例如 std::move(socket) 或新创建的对象），那么这个按值传递的 socket 实际上是“移动”进来的，而不是复制进来的。
+`http_connection(tcp::socket socket)` 中的参数 socket 是按值传递的，这意味着它是从调用者那里“拷贝”进来的。由于 tcp::socket **禁止复制，但支持移动**，所以编译器会**自动**尝试使用**移动构造函数**来初始化这个按值传递的参数。如果调用者传入的是一个临时对象（例如 std::move(socket) 或新创建的对象），那么这个按值传递的 socket 实际上是“移动”进来的，而不是复制进来的。
 
 **为什么仅在 _socket(socket) 这里出错？**
 
@@ -216,16 +206,16 @@ http_connection类就是负责服务器与客户端的联系，如果server接�
 其中，read_request()函数的实现如下
 
 ```cpp
-    void read_request() {
-        auto self = shared_from_this(); // 伪闭包
-        http::async_read(_socket, _buffer, _request,
-            [self](beast::error_code ec, std::size_t bytes_transferred) {
-                boost::ignore_unused(bytes_transferred); // 没用到bytes_transferred参数，编译器会警告，这里直接忽略掉
-                if (!ec) {
-                    self->process_request();
-                }
-            });
-    }
+void read_request() {
+    auto self = shared_from_this(); // 伪闭包
+    http::async_read(_socket, _buffer, _request,
+        [self](beast::error_code ec, std::size_t bytes_transferred) {
+            boost::ignore_unused(bytes_transferred); // 没用到bytes_transferred参数，编译器会警告，这里直接忽略掉
+            if (!ec) {
+                self->process_request();
+            }
+        });
+}
 ```
 
 调用异步读async_read函数从socket读取HTTP请求，数据存储至_buffer，解析后的数据存储至_request
@@ -237,14 +227,14 @@ http_connection类就是负责服务器与客户端的联系，如果server接�
 读取成功后调用lambda函数，因为async_read的回调函数中必须有**error_code** 和 **bytes_transferred**参数，但后者我们并没有在lambda函数体中使用到，为了避免编译器警告，通过**boost::ignore_unused**函数忽略该参数。当HTTP请求被成功读取后，调用**process_request**函数处理请求头。
 
 ```cpp
-    void check_deadline() {
-        auto self = shared_from_this(); // 伪闭包
-        _deadline.async_wait([self](boost::system::error_code ec) {
-            if (!ec) {
-                self->_socket.close(ec);
-            }
-            });
-    }
+void check_deadline() {
+    auto self = shared_from_this(); // 伪闭包
+    _deadline.async_wait([self](boost::system::error_code ec) {
+        if (!ec) {
+            self->_socket.close(ec);
+        }
+        });
+}
 ```
 
 **check_deadline()** 通常用于实现超时处理。比如在一个网络服务中，客户端可能需要在一定时间内完成请求或响应。如果超过了这个时间（如60秒），定时器会触发，然后关闭客户端的连接。这样可以避免占用资源过久，确保服务器的稳定运行。
@@ -253,63 +243,63 @@ http_connection类就是负责服务器与客户端的联系，如果server接�
 
 通过调用异步等待async_wait函数，用于等待定时器的超时事件发生。这个函数不会阻塞当前线程，而是让程序继续执行其他任务，当定时器时间到时，执行给定的回调函数。该回调函数用于关闭套接字，断开客户端与服务器的通信连接。
 
-**该函数还有另外一种写法，你觉得对吗？**
+> **该函数还有另外一种写法，你觉得对吗？**
 
 ```cpp
-    void check_deadline() {
-        auto self = shared_from_this(); // 伪闭包
-        _deadline.async_wait([this](boost::system::error_code ec) {
-            if (!ec) {
-                this->_socket.close(ec);
-            }
-            });
-    }
+void check_deadline() {
+    auto self = shared_from_this(); // 伪闭包
+    _deadline.async_wait([this](boost::system::error_code ec) {
+        if (!ec) {
+            this->_socket.close(ec);
+        }
+        });
+}
 ```
 
 其实这个函数有风险存在，因为当调用check_deadline()时，需要过60s后判断超时后才会执行lambda函数，但是比如在58s在执行这个lambda函数时，http_connection因为某种原因（网络断开，引用计数减为0）被回收，那么lambda就会出错（this->_socket.close(ec);中this指向的空间发生了改变，那么这个close的执行是无效的，系统会崩溃）。所以必须将self传进来，让lambda捕获该参数，使其引用计数加一，实现伪闭包。
 
 ```cpp
-        auto self = shared_from_this(); // 伪闭包
-        _deadline.async_wait([sel,this](boost::system::error_code ec) {
-            if (!ec) {
-                this->_socket.close(ec);
-            }
-            });
+auto self = shared_from_this(); // 伪闭包
+_deadline.async_wait([sel,this](boost::system::error_code ec) {
+    if (!ec) {
+        this->_socket.close(ec);
+    }
+    });
 ```
 
 还有，如果将self显式放在捕获列表中，那么无论是否在 lambda 体内使用，引用计数都会增加，因为捕获行为本身就会创建一个 `shared_ptr` 的拷贝。
 
 **注意【self】和【=】的区别，后者虽然也会捕获self，但如果在函数体没有使用到的话，编译器会优化，不让其创建实例。**
 
-### **c. process_request()**
+### c. process_request()
 
 该函数用于处理不同的HTTP请求类型（GET或POST），并根据请求的具体方法生成相应的响应数据，返回给客户端。
 
 ```cpp
-    void process_request() {
-        _response.version(_request.version());
-        _response.keep_alive(false); // true是长连接,false是短连接
-        switch (_request.method()) {
-        case http::verb::get:
-            _response.result(http::status::ok);
-            _response.set(http::field::server, "Beast");
-            create_response();
-            break;
-        case http::verb::post:
-            _response.result(http::status::ok);
-            _response.set(http::field::server, "Beast");
-            create_post_response();
-            break;
-        default:
-            _response.result(http::status::bad_request);
-            _response.set(http::field::content_type, "text/plain");
-            beast::ostream(_response.body()) << "Invalid request-method"
-                << std::string(_request.method_string()) << "'";
-            break;
-        }
-
-        write_response();
+void process_request() {
+    _response.version(_request.version());
+    _response.keep_alive(false); // true是长连接,false是短连接
+    switch (_request.method()) {
+    case http::verb::get:
+        _response.result(http::status::ok);
+        _response.set(http::field::server, "Beast");
+        create_response();
+        break;
+    case http::verb::post:
+        _response.result(http::status::ok);
+        _response.set(http::field::server, "Beast");
+        create_post_response();
+        break;
+    default:
+        _response.result(http::status::bad_request);
+        _response.set(http::field::content_type, "text/plain");
+        beast::ostream(_response.body()) << "Invalid request-method"
+            << std::string(_request.method_string()) << "'";
+        break;
     }
+
+    write_response();
+}
 ```
 
 首先，将响应对象**_response**的HTTP版本设置为与请求对象**_request**相同的版本**。**HTTP 请求和响应都包含一个版本号，通常是 HTTP/1.1 或 HTTP/1.0，该操作确保响应与请求的协议版本匹配。
@@ -344,46 +334,46 @@ http_connection类就是负责服务器与客户端的联系，如果server接�
 该函数生成GET请求的响应数据。
 
 ```cpp
-    void create_response() {
-        if (_request.target() == "/count") {
-            _response.set(http::field::content_type, "text/html");
-            beast::ostream(_response.body())
-                << "<html>\n"
-                << "<head><title>Request count</title></head>\n"
-                << "<body>\n"
-                << "<h1>Request count</h1>\n"
-                << "<p>There have been "
-                << my_program_state::request_count()
-                << " requests so far.</p>\n"
-                << "</body>\n"
-                << "</html>\n";
-        }
-        else if (_request.target() == "/time") {
-            _response.set(http::field::content_type, "text/html");
-            beast::ostream(_response.body())
-                << "<html>\n"
-                << "<head><title>Current time</title></head>\n"
-                << "<body>\n"
-                << "<h1>Current time</h1>\n"
-                << "<p>The current time is "
-                << my_program_state::now()
-                << " seconds since the epoch.</p>\n"
-                << "</body>\n"
-                << "</html>\n";
-        }
-        else {
-            _response.result(http::status::not_found);
-            _response.set(http::field::content_type, "text/plain");
-            beast::ostream(_response.body()) << "File not found\r\n";
-        }
+void create_response() {
+    if (_request.target() == "/count") {
+        _response.set(http::field::content_type, "text/html");
+        beast::ostream(_response.body())
+            << "<html>\n"
+            << "<head><title>Request count</title></head>\n"
+            << "<body>\n"
+            << "<h1>Request count</h1>\n"
+            << "<p>There have been "
+            << my_program_state::request_count()
+            << " requests so far.</p>\n"
+            << "</body>\n"
+            << "</html>\n";
     }
+    else if (_request.target() == "/time") {
+        _response.set(http::field::content_type, "text/html");
+        beast::ostream(_response.body())
+            << "<html>\n"
+            << "<head><title>Current time</title></head>\n"
+            << "<body>\n"
+            << "<h1>Current time</h1>\n"
+            << "<p>The current time is "
+            << my_program_state::now()
+            << " seconds since the epoch.</p>\n"
+            << "</body>\n"
+            << "</html>\n";
+    }
+    else {
+        _response.result(http::status::not_found);
+        _response.set(http::field::content_type, "text/plain");
+        beast::ostream(_response.body()) << "File not found\r\n";
+    }
+}
 ```
 
-1）判断请求的URL目标路径是否为**‘/count’**，表示客户端请求获取请求计数
+1）判断请求的URL目标路径是否为`/count`，表示客户端请求获取请求计数
 
 - 在这种情况下，响应将设置内容类型为 text/html，表示返回的是一个 HTML 页面
-- 然后通过 **beast::ostream(_response.body())** 将 HTML 数据写入到响应的正文中，内容包括页面的标题“Request count”和请求计数
-- **my_program_state::request_count()** 返回当前的请求计数，该值会被插入到响应的 HTML 中，显示在页面上
+- 然后通过 `beast::ostream(_response.body())` 将 HTML 数据写入到响应的正文中，内容包括页面的标题`Request count`和请求计数
+- `my_program_state::request_count()` 返回当前的请求计数，该值会被插入到响应的 HTML 中，显示在页面上
 
 生成的HTML如下：
 
@@ -397,10 +387,10 @@ http_connection类就是负责服务器与客户端的联系，如果server接�
 </html>
 ```
 
-2）判断请求的URL目标路径是否为**‘/time’**，表示客户端请求当前的系统时间
+2）判断请求的URL目标路径是否为`/time`，表示客户端请求当前的系统时间
 
 - 响应同样设置内容类型为 text/html
-- 生成一个 HTML 页面，显示当前时间。时间通过 **my_program_state::now()** 来获取，返回自 Unix 纪元以来的秒数
+- 生成一个 HTML 页面，显示当前时间。时间通过 `my_program_state::now()` 来获取，返回自 Unix 纪元以来的秒数
 
 生成的HTML如下：
 
@@ -416,7 +406,7 @@ http_connection类就是负责服务器与客户端的联系，如果server接�
 
 3）判断请求的URL目标路径既不是/count，也不是/time，则认为该资源不存在
 
-- 设置响应状态为 http::status::not_found，即 HTTP 404 Not Found
+- 设置响应状态为 `http::status::not_found`，即 HTTP 404 Not Found
 - 设置内容类型为 text/plain，表示返回的是纯文本
 - 然后向响应正文写入一条简单的错误消息：File not found\r\n
 
@@ -426,40 +416,40 @@ http_connection类就是负责服务器与客户端的联系，如果server接�
 
 ```cpp
 void create_post_response() {
-        if (_request.target() == "/email") {
-            // 读取并打印收到的request
-            auto& body = this->_request.body();
-            auto body_str = boost::beast::buffers_to_string(body.data());
-            std::cout << "receive body is " << body_str << std::endl;
-            // 构造返回的response
-            this->_response.set(http::field::content_type, "text/json");
-            Json::Value root; // 发送的根
-            Json::Reader reader;
-            Json::Value src_root; // 原始的根
-            // 解析数据
-            bool parse_success = reader.parse(body_str, src_root);
-            if (!parse_success) { // 解析失败
-                std::cout << "Failed to parse JSON data!" << std::endl;
-                root["error"] = 1001;
-                std::string jsonstr = root.toStyledString();
-                beast::ostream(this->_response.body()) << jsonstr; // 将数据写入body
-                return;
-            }
-            // 解析成功
-            auto email = src_root["email"].asString(); // 将收到的email转为string
-            std::cout << "email is " << email << std::endl;
-            root["error"] = 0;
-            root["email"] = src_root["email"];
-            root["msg"] = "recevie email post success";
-            std::string jsonstr = root.toStyledString(); // 序列化root数据
+    if (_request.target() == "/email") {
+        // 读取并打印收到的request
+        auto& body = this->_request.body();
+        auto body_str = boost::beast::buffers_to_string(body.data());
+        std::cout << "receive body is " << body_str << std::endl;
+        // 构造返回的response
+        this->_response.set(http::field::content_type, "text/json");
+        Json::Value root; // 发送的根
+        Json::Reader reader;
+        Json::Value src_root; // 原始的根
+        // 解析数据
+        bool parse_success = reader.parse(body_str, src_root);
+        if (!parse_success) { // 解析失败
+            std::cout << "Failed to parse JSON data!" << std::endl;
+            root["error"] = 1001;
+            std::string jsonstr = root.toStyledString();
             beast::ostream(this->_response.body()) << jsonstr; // 将数据写入body
+            return;
         }
-        else {
-            _response.result(http::status::not_found);
-            _response.set(http::field::content_type, "text/plain");
-            beast::ostream(_response.body()) << "File not found\r\n";
-        }
+        // 解析成功
+        auto email = src_root["email"].asString(); // 将收到的email转为string
+        std::cout << "email is " << email << std::endl;
+        root["error"] = 0;
+        root["email"] = src_root["email"];
+        root["msg"] = "recevie email post success";
+        std::string jsonstr = root.toStyledString(); // 序列化root数据
+        beast::ostream(this->_response.body()) << jsonstr; // 将数据写入body
     }
+    else {
+        _response.result(http::status::not_found);
+        _response.set(http::field::content_type, "text/plain");
+        beast::ostream(_response.body()) << "File not found\r\n";
+    }
+}
 ```
 
 1）如果客户端发送的POST请求的目标路径是**‘/email’：**
@@ -496,15 +486,15 @@ void create_post_response() {
 当系统解析完请求后并执行过GET/POST的相应操作生成响应后，执行write_response函数，将生成的 HTTP 响应异步写回客户端，并在发送完成后执行一些清理操作。
 
 ```cpp
-    void write_response() {
-        auto self = shared_from_this(); // 伪闭包
-        _response.content_length(_response.body().size()); // 响应的长度
-        http::async_write(_socket, _response, [self](beast::error_code ec, std::size_t) {
-            // 只关闭服务器发送端，客户端收到服务器的响应后，也关闭客户端的发送端
-            self->_socket.shutdown(tcp::socket::shutdown_send, ec);
-            self->_deadline.cancel();
-            });
-    }
+void write_response() {
+    auto self = shared_from_this(); // 伪闭包
+    _response.content_length(_response.body().size()); // 响应的长度
+    http::async_write(_socket, _response, [self](beast::error_code ec, std::size_t) {
+        // 只关闭服务器发送端，客户端收到服务器的响应后，也关闭客户端的发送端
+        self->_socket.shutdown(tcp::socket::shutdown_send, ec);
+        self->_deadline.cancel();
+        });
+}
 ```
 
 首先，设置响应的 Content-Length，即响应正文的长度，表示服务器将要发送的内容大小，并将该长度赋值到 HTTP 头部的 Content-Length 字段。

@@ -23,7 +23,7 @@ typora-root-url: ./..
 
 CMake通过**‘#’**进行单行注释，比如
 
-```
+```yaml
 # Cmake版本至少为3.1
 cmake_minimum_required(VERSION 3.1)
 ```
@@ -32,7 +32,7 @@ cmake_minimum_required(VERSION 3.1)
 
 CMake通过**‘if(FALSE)’**进行块注释，比如
 
-```
+```yaml
 if(FALSE)
     # CMake版本至少为3.1
     # CMake版本至少为3.1
@@ -60,7 +60,7 @@ int main()
 
 那么CMakeLists.txt可以这样写：
 
-```
+```yaml
 cmake_minimum_required(VERSION 3.1)
 project (LearnCMake LANGUAGES CXX)
 add_executable(hello hello.cpp)
@@ -70,7 +70,7 @@ add_executable(hello hello.cpp)
 - project：定义工程名称，并可指定工程的版本、工程描述、web主页地址、支持的语言（默认情况支持所有语言），如果不需要这些都是可以忽略的，只需要指定出工程名字即可； 
   - 这里项目名称为 LearnCMake ，项目使用的语言是 C++，CXX表示C++
 
-```
+```yaml
 # PROJECT 指令的语法是：
 project(<PROJECT-NAME> [<language-name>...])
 project(<PROJECT-NAME>
@@ -89,7 +89,7 @@ project(GrpcServer
 
 - add_executable：定义工程会生成一个可执行程序，可执行程序名为hello，源文件名称为hello.cpp
 
-```
+```yaml
 # 单个源文件
 add_executable(可执行程序名 源文件名称)
 # 多个源文件名（空格隔开）
@@ -107,7 +107,7 @@ add_executable(hello  add.c;div.c;main.c;mult.c;sub.c)
 
 我们这里创建一个build文件夹，进入之后执行cmake并编译
 
-```
+```yaml
 mkdir build
 cd ./build/
 cmake ..
@@ -121,7 +121,7 @@ build文件夹内会生成以下文件：
 
 执行make命令，使用makefile进行编译
 
-```
+```yaml
 make
 ```
 
@@ -129,7 +129,7 @@ make
 
 生成可执行程序hello，并运行
 
-```
+```yaml
 ./hello
 ```
 
@@ -143,13 +143,13 @@ make
 
 如果我们有五个源文件需要添加：
 
-```
+```yaml
 add_executable(hello add.c;div.c;main.c;mult.c;sub.c)
 ```
 
 如果有多个源文件，我们可以定义一个变量，将文件名对应的字符串存储起来，在cmake里定义变量需要使用**set**
 
-```
+```yaml
 # SET 指令的语法是：
 # [] 中的参数为可选项, 如不需要可以不写
 SET(VAR [VALUE] [CACHE TYPE DOCSTRING [FORCE]])
@@ -157,7 +157,7 @@ SET(VAR [VALUE] [CACHE TYPE DOCSTRING [FORCE]])
 
 我们使用SET指令将这五个文件名和自定义的变量联系起来，通过添加这个变量名即可同时调用这五个文件
 
-```
+```yaml
 set(SRC_LIST add.c;div.c;main.c;mult.c;sub.c)
 add_executable(hello  ${SRC_LIST})
 ```
@@ -181,7 +181,7 @@ add_executable(hello  ${SRC_LIST})
 
 C++标准对应有一宏叫做**DCMAKE_CXX_STANDAR**，我们可以通过SET指令指定我们使用的C++标准：
 
-```
+```yaml
 #增加-std=c++11
 set(CMAKE_CXX_STANDARD 11)
 #增加-std=c++14
@@ -224,7 +224,7 @@ file(GLOB/GLOB_RECURSE 变量名 要搜索的文件路径和文件类型)
 
 如果我们有一个目录如下：
 
-```
+```yaml
 project/  
 ├── CMakeLists.txt  
 ├── src/  
@@ -235,7 +235,7 @@ project/
 
 如果我们像包含src/目录下的所有.cpp文件，只需：
 
-```
+```yaml
 # 使用 GLOB 只搜索 src 目录下的文件（不递归），并存储至变量SRC_FILES 
 file(GLOB SRC_FILES "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp")  
   
@@ -255,7 +255,7 @@ add_executable(MyExecutable ${SRC_FILES_RECURSIVE})
 
 在CMake中通过命令 **include_directories** 设置要包含的目录。
 
-```
+```yaml
 # 在指定 dir目录下寻找头文件
 include_directories ( dir )
 ```
@@ -287,7 +287,7 @@ include_directories(${PROJECT_SOURCE_DIR}/include)
 
 该目录下的CMakeLists.txt文件这样写：
 
-```
+```yaml
 cmake_minimum_required(VERSION 3.1)
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -319,7 +319,7 @@ LEARN_CMAKE
 
 该目录下的CMakeLists.txt文件这样写：
 
-```
+```yaml
 cmake_minimum_required(VERSION 3.1)
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -366,7 +366,7 @@ add_library(库名称 STATIC 源文件1 [源文件2] ...)
 
 假设我们有如下目录结构：
 
-```
+```yaml
 $ tree
 .
 ├── build
@@ -384,7 +384,7 @@ $ tree
 
 如果我们要将其生成为静态库，该目录下的CMakeLists.txt文件这样写：
 
-```
+```yaml
 cmake_minimum_required(VERSION 3.1)
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -496,7 +496,7 @@ link_directories(<lib path>)
 
 该目录下的CMakeLists.txt文件这样写：
 
-```
+```yaml
 cmake_minimum_required(VERSION 3.1)
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -529,14 +529,12 @@ target_link_libraries(
     [<PRIVATE|PUBLIC|INTERFACE> <item>...]...)
 ```
 
-- target
-
-  ：指定要加载的库的文件的名字 	
+- target：指定要加载的库的文件的名字 	
 
   - 该文件可能是一个源文件
   - 该文件可能是一个动态库/静态库文件
   - 该文件可能是一个可执行文件
-
+  
 - PRIVATE/PUBLIC/INTERFACE：动态库的访问权限，默认为PUBLIC 
 
   - 如果各个动态库之间没有依赖关系，无需做任何设置，三者没有没有区别，一般无需指定，使用默认的 PUBLIC 即可。
@@ -552,7 +550,7 @@ target_link_libraries(
 
 该目录下的CMakeLists.txt文件这样写：
 
-```
+```yaml
 cmake_minimum_required(VERSION 3.1)
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -645,12 +643,12 @@ endif()
 list(REMOVE_ITEM <list> <value1> [<value2> ...])
 ```
 
-- <list> 是要操作的列表的名称。
-- <value1>, <value2>, ... 是希望从列表中移除的元素
+- `<list>` 是要操作的列表的名称。
+- `<value1>`, `<value2>`, ... 是希望从列表中移除的元素
 
 举例：
 
-```
+```yaml
 # 假设我有一个列表包含以下元素
 set(my_list "a" "b" "c" "d" "e")
 # 删除b和d
@@ -677,7 +675,7 @@ $ tree
 
 若源文件不包含sub.cpp，该目录的CMakeLists.txt文件这样写：
 
-```
+```yaml
 cmake_minimum_required(VERSION 3.1)
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -700,7 +698,7 @@ add_executable(hello ${SRC_LIST})
 
 **find_library**用于查找指定目录下的指定文件，并将其存储至变量中。
 
-```
+```yaml
 # 第一个参数：变量，用于存储查找到的库文件   第二个参数：要查找的库文件  第三个参考：指定目录下查找
 find_library(HELLO_LIB libhello.so ${PROJECT_SOURCE_DIR}/lib)
 ```
@@ -711,7 +709,7 @@ find_library(HELLO_LIB libhello.so ${PROJECT_SOURCE_DIR}/lib)
 find_package(<PackageName> [version] [REQUIRED] [COMPONENTS components...])
 ```
 
-- <PackageName>: 需要查找的软件包的名称，例如 Boost、OpenCV 等。
+- `<PackageName>`: 需要查找的软件包的名称，例如 Boost、OpenCV 等。
 - [version]: 可选，指定软件包的版本号。如果需要特定版本，可以指定版本号，例如 1.70.0。
 - [REQUIRED]: 可选，表示该包是必需的。如果 CMake 找不到该包，它会停止并报错。
 - [COMPONENTS components...]: 可选，指定要查找的组件或模块。例如，某些库可能有多个子模块（如 Boost 中的 system、filesystem 模块），你可以通过此选项指定只查找需要的部分。
@@ -744,7 +742,7 @@ find_package(Boost 1.70 REQUIRED COMPONENTS system filesystem)
 
 这是我们之前在linux上编译grpc通信代码用到的CMakeLists.txt文件，现在可以分析每条指令的作用是什么：
 
-```
+```yaml
 # 指定cmake版本最低为3.1
 cmake_minimum_required(VERSION 3.1)
 # 项目名称为GrpcServer，编程语言C++

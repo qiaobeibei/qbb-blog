@@ -13,6 +13,12 @@ typora-root-url: ./..
 
 这几天参加数模比赛没有时间学习，今天提交完论文赶忙过来学习**protobuf的配置和使用。**
 
+参考：
+
+[恋恋风辰官方博客](https://llfc.club/category?catid=225RaiVNI8pFDD5L4m807g7ZwmF)
+
+[visual studio配置C++ boost库_哔哩哔哩_bilibili](https://www.bilibili.com/video/BV1FY4y1S7QW/?spm_id_from=333.999.0.0&vd_source=29868cdbb6b2fb1514ce3c7c31892d68)
+
 ## **1）什么是protobuf？**
 
 rotocol Buffers（protobuf）是一种由谷歌开发的数据序列化格式，用于高效地序列化结构化数据。它可以用于将结构化数据序列化到***[二进制](https://zhida.zhihu.com/search?content_id=248600734&content_type=Article&match_order=1&q=二进制&zhida_source=entity)*格式**，并广泛用于数据存储、通信协议、配置文件等领域。
@@ -57,13 +63,13 @@ message MsgData
 protoc --cpp_out=. ./msg.proto
 ```
 
-会生成如下两个文件，msg.http://pb.cc和msg.pb.h，其中msg.pb.h中定义了我们需要的MsgData类，[http://msg.pb.cc](https://link.zhihu.com/?target=http%3A//msg.pb.cc)中定义的MsgData[成员函数](https://zhida.zhihu.com/search?content_id=248600734&content_type=Article&match_order=1&q=成员函数&zhida_source=entity)
+会生成如下两个文件，`msg.http://pb.cc`和`msg.pb.h`，其中`msg.pb.h`中定义了我们需要的MsgData类，`http://msg.pb.cc`中定义的MsgData[成员函数](https://zhida.zhihu.com/search?content_id=248600734&content_type=Article&match_order=1&q=成员函数&zhida_source=entity)
 
 ![img](/images/$%7Bfiilename%7D/format,png-1730604508787-23.png)
 
 然后，在当前项目中将这两个文件添加进来。
 
-右键项目→属性→C/C++→常规→附加包含目录，将msg.http://pb.cc和msg.pb.h文件所处目录包含进去
+右键项目→属性→C/C++→常规→附加包含目录，将`msg.http://pb.cc`和`msg.pb.h`文件所处目录包含进去
 
 ![img](/images/$%7Bfiilename%7D/format,png-1730604508787-24.png)
 
@@ -75,7 +81,7 @@ protoc --cpp_out=. ./msg.proto
 
 ![img](/images/$%7Bfiilename%7D/format,png-1730604508787-26.png)
 
-在visual中，在项目属性中，配置选择Debug，**平台选择X64**，选择VC++目录， 在包含目录中添加 D:\cppsoft*protoc\include** 在库目录中添加 D:\cppsoft*protoc\bin**
+在visual中，在项目属性中，配置选择Debug，**平台选择X64**，选择VC++目录， 在包含目录中添加 `D:\cppsoft*protoc\include`在库目录中添加 `D:\cppsoft*protoc\bin`
 
 在链接器的输入选项中添加protobuf用到的[lib库](https://zhida.zhihu.com/search?content_id=248600734&content_type=Article&match_order=1&q=lib库&zhida_source=entity)
 

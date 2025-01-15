@@ -19,6 +19,12 @@ typora-root-url: ./..
 
 ![img](/images/$%7Bfiilename%7D/format,png-1730605565645-66.png)
 
+参考：
+
+[恋恋风辰官方博客](https://llfc.club/category?catid=225RaiVNI8pFDD5L4m807g7ZwmF)
+
+[visual studio配置C++ boost库_哔哩哔哩_bilibili](https://www.bilibili.com/video/BV1FY4y1S7QW/?spm_id_from=333.999.0.0&vd_source=29868cdbb6b2fb1514ce3c7c31892d68)
+
 # 1. IOThreadPool实现
 
 ## 1) IOThreadPool.h
@@ -75,7 +81,7 @@ _service.run内部在Linux环境下调用的是epoll_wait返回所有就绪的�
 
 二者的流程如下：
 
-***a. IOCP**
+### a. IOCP
 
 - IOCP的使用主要分为以下几步：
    1 创建完成端口(iocp)对象
@@ -83,7 +89,7 @@ _service.run内部在Linux环境下调用的是epoll_wait返回所有就绪的�
    3 Socket关联iocp对象，在Socket上投递网络事件
    4 工作线程调用GetQueuedCompletionStatus函数获取完成通知封包，取得事件信息并进行处理。该函数会阻塞，直到有I/O操作完成并返回相应的事件信息，线程接收到通知后就可以处理对应的I/O请求。
 
-***b. epoll**
+### b. epoll
 
 - 调用epoll_creat在内核中创建一张epoll表，这张 epoll 表用于管理要监视的文件描述符
 - 开辟一片包含n个epoll_event大小的连续空间，这个空间的大小是预期要监听的事件数量 n，以便存放准备好的事件信息。
@@ -114,7 +120,7 @@ IOThreadPool模式有一个**隐患**，同一个socket的就绪后，触发的�
 
 **注**：**但如果回调函数被派发到逻辑队列中或者进行加锁，那么就不会存在不同线程访问同一个socket数据的线程安全问题。这里的隐患是不通过队列或者加锁，处理逻辑问题会存在线程安全问题。**
 
-## **1）通过strand改进**
+## 2.1 通过strand改进
 
 在多线程环境中触发回调函数时，我们可以使用 asio 提供的串行类 strand 来进行封装，从而实现串行调用。其基本原理是：**每个线程在调用函数时，不直接执行该函数，而是将要调用的函数投递到由 strand 管理的队列中；随后，由一个统一的线程从队列中取出并调用这些回调函数。**通过这种方式，函数调用是串行进行的，从而解决由于线程并发带来的安全问题。
 
@@ -128,13 +134,13 @@ IOThreadPool模式有一个**隐患**，同一个socket的就绪后，触发的�
 
 strand 实际上是将回调函数放入**同一个队列（如果有逻辑层或者通过加锁处理回调，那么就不需要strand）**，以确保线程安全。因此，在描述符就绪后，相应的回调会被放入该队列中进行处理。虽然使用 strand 可以保证在多线程环境下的安全性，但在触发时仍然是单线程的，这限制了整体性能。因此，尽管多线程可以提高读写事件的派发效率，但整体性能通常不**如IOService_pool** 这种方式更优。在实际工作中，我们通常选择使用 **IOService_pool**，因为它能够更好地平衡并发和性能。
 
-### ***a. CSession类中新增成员变量_strand**
+### a. CSession类中新增成员变量_strand
 
 ```cpp
 boost::asio::strand<boost::asio::io_context::executor_type> _strand;
 ```
 
-### ***b. 修改CSession的构造函数**
+### b. 修改CSession的构造函数
 
 ```cpp
 CSession::CSession(boost::asio::io_context& io_context, CServer* server):
@@ -173,8 +179,6 @@ void CSession::Start() {
 	//		std::bind(&CSession::headle_read, this, std::placeholders::_1, std::placeholders::_2,shared_from_this())));
 }
 ```
-
-
 
 同样的道理，在所有收发的地方，都将调度器绑定为**_strand**， 比如发送部分我们需要修改为如下
 
@@ -252,7 +256,7 @@ CServer s(pool->GetIOService(), 10086);
 
 # 4. 总结
 
-***1. 在IOServicePool示例中，使用main函数中定义的io_context来监听异常信号signal，并且用于初始化Server来监听接收信号；但在IOThreadPool示例中，main函数定义的ioc仅仅用于监听异常信号，而初始化Server启动异步接收async_accept是通过线程池中的ioc。**
+> **1. 在IOServicePool示例中，使用main函数中定义的io_context来监听异常信号signal，并且用于初始化Server来监听接收信号；但在IOThreadPool示例中，main函数定义的ioc仅仅用于监听异常信号，而初始化Server启动异步接收async_accept是通过线程池中的ioc。**
 
 这是因为
 
@@ -266,7 +270,8 @@ CServer s(pool->GetIOService(), 10086);
 - **第一种方式**：信号处理函数在 `ioc` 上注册，当收到信号时，会调用 `ioc.stop()` 停止 `io_context`，并调用线程池的 `Stop` 方法停止线程池的运行。这种方式不需要额外的同步机制，因为主线程就是 `ioc.run()` 的执行线程，一旦停止，就会退出。
 - **第二种方式**：信号处理函数在主线程的 `ioc` 上注册，但实际处理的 I/O 事件由线程池中的 `io_context` 完成。为了协调多线程退出，需要使用 `mutex` 和条件变量（`cond_quit`）来确保所有线程安全地退出。信号处理函数在停止 `io_context` 后，会通知等待在条件变量上的线程退出，从而确保整个程序能够正确结束。
 
-***2. 哪一种多线程模式的效率最高？**
+> **2. 哪一种多线程模式的效率最高？**
+>
 
 直观上来说可能二者的效率都差不多？其实IOServicePool的效率略高于IOThreadPool。
 

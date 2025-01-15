@@ -24,13 +24,13 @@ windows环境下编译好grpc库之后，学习如何将grpc库配置到所用�
 
 参考：
 
-[一文掌握gRPC-CSDN博客blog.csdn.net/qq_43456605/article/details/138647102![img](../images/$%7Bfiilename%7D/icon-default-1730607732042-290.png)https://link.zhihu.com/?target=https%3A//blog.csdn.net/qq_43456605/article/details/138647102](https://link.zhihu.com/?target=https%3A//blog.csdn.net/qq_43456605/article/details/138647102)
+[一文掌握gRPC-CSDN博客](https://blog.csdn.net/qq_43456605/article/details/138647102)
 
-[protobuf简介_protbuf-CSDN博客blog.csdn.net/qq_62321047/article/details/140466202![img](../images/$%7Bfiilename%7D/icon-default-1730607732042-290.png)https://link.zhihu.com/?target=https%3A//blog.csdn.net/qq_62321047/article/details/140466202](https://link.zhihu.com/?target=https%3A//blog.csdn.net/qq_62321047/article/details/140466202)
+[protobuf简介_protbuf-CSDN博客](https://blog.csdn.net/qq_62321047/article/details/140466202)
 
-[恋恋风辰官方博客llfc.club/category?catid=225RaiVNI8pFDD5L4m807g7ZwmF#!aid/2QSEHcC1he1RgiewYG93ilaAMiY![img](../images/$%7Bfiilename%7D/icon-default-1730607732042-290.png)https://link.zhihu.com/?target=https%3A//llfc.club/category%3Fcatid%3D225RaiVNI8pFDD5L4m807g7ZwmF%23%21aid/2QSEHcC1he1RgiewYG93ilaAMiY](https://link.zhihu.com/?target=https%3A//llfc.club/category%3Fcatid%3D225RaiVNI8pFDD5L4m807g7ZwmF%23!aid/2QSEHcC1he1RgiewYG93ilaAMiY)
+[恋恋风辰官方博客](https://llfc.club/category?catid=225RaiVNI8pFDD5L4m807g7ZwmF#!aid/2QSEHcC1he1RgiewYG93ilaAMiY)
 
-## 1.grpc
+## 1. grpc
 
 ### 1）概念
 
@@ -47,7 +47,7 @@ grpc的设计思路：
 - 代理的创建 ：让调用者像调本地方法一样去调用远端的方法
 - 跨语言
 
-***a. 跨语言**
+**a. 跨语言**
 
 > grpc可以实现**跨语言的通信**，比如服务器通过C++实现，客户端通过python实现，但二者仍然可以通信，实现了跨语言。
 
@@ -81,7 +81,7 @@ protoc -I. --cpp_out=cpp_output --grpc_out=cpp_output --plugin=protoc-gen-grpc=g
 python -m grpc_tools.protoc -I. --python_out=. --grpc_python_out=. demo.proto
 ```
 
-这样，通过“cpp_out”和“--grpc_out”不仅会生成C++数据结构代码，而且还会生成C++的grpc服务代码。python同理，通过“python_out”和“grpc_python_out”生成对应类型的代码。也可以将命令分成两步分别执行：
+这样，通过`cpp_out`和`--grpc_out`不仅会生成C++数据结构代码，而且还会生成C++的grpc服务代码。python同理，通过`python_out`和`grpc_python_out`”生成对应类型的代码。也可以将命令分成两步分别执行：
 
 ```
 # 生成grpc代码
@@ -92,7 +92,7 @@ D:\cppsoft\grpc\visualpro\third_party\protobuf\Debug\protoc.exe --cpp_out=. "dem
 
 我们可以自己选择指定目录下的proto编译器和插件编译代码。
 
-***b. 代理的创建**
+**b. 代理的创建**
 
 > **此外，grpc还非常适合服务之间的通信。一般有两种情况：1）分布式；2）不同的服务功能不同，需要进行服务直接的调用**
 
@@ -113,7 +113,7 @@ D:\cppsoft\grpc\visualpro\third_party\protobuf\Debug\protoc.exe --cpp_out=. "dem
 
 同时，每个服务之间也可以**使用不同的编程语言写**，因为grpc支持跨语言的服务。
 
-### 2）HTTP2.0协议
+### 2）三种HTTP协议
 
 **Http1.0协议**：
 
@@ -143,20 +143,20 @@ D:\cppsoft\grpc\visualpro\third_party\protobuf\Debug\protoc.exe --cpp_out=. "dem
 - 双工通信：服务器可以主动向客户端推送资源，而不需要客户端先请求；
 - 单一连接：通过单一连接与服务器进行通信
 
-***为什么Http2.0可以实现多路复用？**
+> **为什么Http2.0可以实现多路复用？**
 
 Http2.0抽取了3个重要的概念，分别是数据流（Stream）、消息（Message）和帧（Frame），这三个概念有机的整合在一起就可以实现多路复用。如下图所示
 
 ![img](../images/$%7Bfiilename%7D/6cff6349858f41b59a6216525a4a9a03.png)
 
-图片来源：https://blog.csdn.net/qq_43456605/article/details/138647102
+<center>图片来源：https://blog.csdn.net/qq_43456605/article/details/138647102</center>
 
 - 在HTTP/2.0中，数据传输以Stream为基本单位，允许在一个连接上同时处理多个请求。例如，当请求一个页面时，可以通过一个连接复用三个Stream：一个Stream用于获取HTML页面，另两个分别用于请求CSS和JS资源。这种方式消除了在HTTP/1.x中需要为每个请求建立多个连接的需求。
 - 每个Stream包含一个或多个Message，而每个Message又由两个或多个Frame组成。其中，一个Frame用于存放请求头，另一个Frame则包含请求体。响应也可以通过多个Stream发送，进一步提升了数据传输的效率和灵活性。通过这种复用机制，HTTP/2.0显著降低了延迟并提高了资源利用率。
 
 ![img](../images/$%7Bfiilename%7D/70a361c73cfc4bff8ff2c5f6a587cf3b.png)
 
-图片来源：https://blog.csdn.net/qq_43456605/article/details/138647102
+<center>图片来源：https://blog.csdn.net/qq_43456605/article/details/138647102</center>
 
 - 在请求Stream1中，包含了一个Message（RequestMessage），该Message包含了两个frame，其中一个帧保存了请求头，另一个帧中保存了请求体；
 - 同样，响应Stream1中也包含了一个Message（ResponseMessage），该Message包含了两个frame，其中一个帧保存了响应头，另一个帧中保存了响应体；
@@ -174,19 +174,19 @@ Protobuf是一种与编程语言无关且与平台无关的序列化协议，使
 
 ![img](../images/$%7Bfiilename%7D/b07cee461dc545ec8490a4d4b59a89d6.png)
 
-图片来源：https://blog.csdn.net/qq_62321047/article/details/140466202
+<center>图片来源：https://blog.csdn.net/qq_62321047/article/details/140466202</center>
 
-- 编写 .proto ⽂件，定义结构对象（message）及属性内容。
-- 使⽤ protoc 编译器编译 .proto ⽂件，⽣成⼀系列接⼝代码，存放在新⽣成头⽂件和源⽂件中。
+- 编写 `.proto` ⽂件，定义结构对象（message）及属性内容。
+- 使⽤ protoc 编译器编译 `.proto` ⽂件，⽣成⼀系列接⼝代码，存放在新⽣成头⽂件和源⽂件中。
 - 依赖⽣成的接⼝，将编译⽣成的头⽂件包含进我们的代码中，实现对 .proto ⽂件中定义的字段进行设置和获取，和对 message 对象进行序列化和反序列化
 
-#### **.proto文件写法**
+#### .proto文件写法
 
 可在官网查看详细内容：
 
-[Language Guide (proto 3)protobuf.dev/programming-guides/proto3/![img](../images/$%7Bfiilename%7D/icon-default-1730607732042-290.png)https://link.zhihu.com/?target=https%3A//protobuf.dev/programming-guides/proto3/](https://link.zhihu.com/?target=https%3A//protobuf.dev/programming-guides/proto3/)
+[Language Guide (proto 3) | Protocol Buffers Documentation](https://protobuf.dev/programming-guides/proto3/)
 
-##### *a. 指定 proto3*
+##### a. 指定 proto3
 
 ```
 syntax = "proto3";
@@ -194,7 +194,7 @@ syntax = "proto3";
 
 显示指定proto3为proto语法，默认为proto2.
 
-##### *b. package 声明符*
+##### b. package 声明符
 
 ```
 package hello;
@@ -204,7 +204,7 @@ package 是⼀个可选的声明符，能表示 .proto ⽂件的**命名空间**
 
 > **导入**：在实际的开发中我们可能有多个.proto，每个.proto管理自己的内容，现在可能出现一个问题，其中一个.proto依赖另一个.proto的内容，这里就需要使用导入语法：**import "xxx/Userservice.proto"**
 
-##### *c. 定义消息（message）*
+##### c. 定义消息（message）
 
 protobuf可以支持很多类型，比如基本数据类型、枚举类型、消息类型以及复合类型。
 
@@ -252,7 +252,7 @@ message Book {
 
 在这个Book消息中，authors和tags都是repeated字段，允许分别存储多个作者和标签；然后，通过protobufvi按一起生成相应的编程语言代码时，repeated字段会被映射为该语言中的集合类型。比如C++会将其映射为std::vector，在python中被映射为list。
 
-##### *d. 服务定义*
+##### d. 服务定义
 
 服务的定义使用 **service** 关键字，后跟服务名称，并包含一个或多个方法的定义。每个方法需要指定请求类型和响应类型。比如：
 
@@ -266,15 +266,13 @@ Protobuf支持多种类型的RPC调用：
 
 - **简单RPC**：客户端发送一个请求，服务器返回一个响应（如上面的SayHello）。
 
-- 流式 RPC
-
-  ：允许客户端和服务器之间的流式数据传输。 
+- 流式 RPC：允许客户端和服务器之间的流式数据传输。 
 
   - **客户端流式**：客户端发送一个请求流，服务器返回一个响应。
   - **服务器流式**：客户端发送一个请求，服务器返回一个响应流。
   - **双向流式**：客户端和服务器可以同时发送和接收流。
 
-##### *e. option 关键字*
+##### e. option 关键字
 
 option关键字用于设置不同的配置选项，以调整消息、字段、服务等的行为或属性。选项可以在多个层级上使用，包括全局、消息、字段、服务和方法级别。
 
@@ -359,7 +357,7 @@ option (cc_optimize_for) = "Speed"; // 或 "Space"
 | 客户端流式 RPC | 客户端传⼊多个请求对象，服务端返回⼀个结果对象               |
 | 双向流式 RPC   | 结合客户端流式RPC和服务端流式RPC，可以传⼊多个请求对象，返回多个结果对象 |
 
-##### *a. 一元RPC*
+##### a. 一元RPC
 
 ```
 service HelloService{
@@ -373,9 +371,9 @@ service HelloService{
 
 ![img](../images/$%7Bfiilename%7D/8d833817306d4ffa9789ac135026b4b8.png)
 
-图片来源：https://blog.csdn.net/qq_43456605/article/details/138647102
+<center>图片来源：https://blog.csdn.net/qq_43456605/article/details/138647102</center>
 
-##### *b. 服务端流式 RPC*
+##### b. 服务端流式 RPC
 
 ```
 service HelloService{
@@ -391,9 +389,9 @@ service HelloService{
 
 ![img](../images/$%7Bfiilename%7D/ab8ee9eaa646446aa93da013d4babd30.png)
 
-图片来源：https://blog.csdn.net/qq_43456605/article/details/138647102
+<center>图片来源：https://blog.csdn.net/qq_43456605/article/details/138647102</center>
 
-##### *c. 客户端流式RPC*
+##### c. 客户端流式RPC
 
 ```
 service HelloService{
@@ -407,20 +405,20 @@ service HelloService{
 
 ![img](../images/$%7Bfiilename%7D/c7571531c6bf432ea64f2fca6c9512ae.png)
 
-图片来源：https://blog.csdn.net/qq_43456605/article/details/138647102
+<center>图片来源：https://blog.csdn.net/qq_43456605/article/details/138647102</center>
 
-##### *d. 双向流式 RPC*
+##### d. 双向流式 RPC
 
 - 双向流式rpc 结合客户端流式rpc和服务端流式rpc，可以传⼊多个对象，返回多个响应对象
 - 应⽤场景：聊天应⽤
 
 ![img](../images/$%7Bfiilename%7D/28f829406fe145878533ab7b60f39f56.png)
 
-图片来源：https://www.cnblogs.com/Mcoming/p/18080564
+<center>图片来源：https://www.cnblogs.com/Mcoming/p/18080564</center>
 
-## 2.配置
+## 2. 配置
 
-### 1）编写grpc服务定义（.proto后缀文件）
+### 2.1 编写grpc服务定义（.proto后缀文件）
 
 ```
 syntax = "proto3";
@@ -461,17 +459,17 @@ message HelloReply {
 D:\app\cppsoft\grpc\vs\third_party\protobuf\Debug\protoc.exe -I="." --grpc_out="." --plugin=protoc-gen-grpc="D:\app\cppsoft\grpc\vs\Debug\grpc_cpp_plugin.exe" "demo.proto"
 ```
 
-- -**I="."** ：指定 demo.proto所在的路径为当前路径。
-- **--grpc_out="."：** 表示生成的pb.h和[http://pb.cc](https://link.zhihu.com/?target=http%3A//pb.cc)文件的输出目录。
-- **grpc_cpp_plugin.exe**：要使用的插件为cpp插件，也就是生成cpp类的头文件和源文件。使用 grpc_cpp_plugin 插件来生成 gRPC 的服务端和客户端代码
+- `-I="."` ：指定 demo.proto所在的路径为当前路径。
+- `--grpc_out="."`： 表示生成的pb.h和`http://pb.cc`文件的输出目录。
+- `grpc_cpp_plugin.exe`：要使用的插件为cpp插件，也就是生成cpp类的头文件和源文件。使用 grpc_cpp_plugin 插件来生成 gRPC 的服务端和客户端代码
 
 不能使用之前学习单独编译的protobuf版本进行编译该文件，因为之前下载的protobuf库和现在下的grpc库不匹配，我们必须使用grpc库自己的proto.exe对该文件进行编译。注意，命令的路径应改为自己电脑中grpc库的目录路径。
 
-然后会在该目录下生成[http://demo.grpc.pb.cc](https://link.zhihu.com/?target=http%3A//demo.grpc.pb.cc)和demo.grpc.pb.h文件，如下：
+然后会在该目录下生成`http://demo.grpc.pb.cc`和`demo.grpc.pb.h`文件，如下：
 
 ![img](../images/$%7Bfiilename%7D/format,png-1730607732038-281.png)
 
-**b.** 这两个文件是给grpc服务的，我们还需要为消息类生成对应的[http://demo.pb.cc](https://link.zhihu.com/?target=http%3A//demo.pb.cc)和demo.pb.h文件：
+b. 这两个文件是给grpc服务的，我们还需要为消息类生成对应的`http://demo.pb.cc`和`demo.pb.h`文件：
 
 ```
 D:\app\cppsoft\grpc\vs\third_party\protobuf\Debug\protoc.exe --cpp_out=. "demo.proto"
@@ -660,7 +658,7 @@ int main(int argc, char** argv) {
 
 其中，GreeterServiceImpl类用于处理客户端发送的请求并返回相应的响应。它通过final关键字公有继承Greeter::Service(通过 gRPC 的 .proto 文件生成的基类)，该类被GreeterServiceImpl继承后无法被其他类继承。
 
-SayHello方法的声明可以从.proto生成的文件中查找，这里我包含了该文件“#include"demo.grpc.pb.h"”，从里面可以找到SayHello方法的具体声明。其中：
+SayHello方法的声明可以从.proto生成的文件中查找，这里我包含了该文件#include"demo.grpc.pb.h"”，从里面可以找到SayHello方法的具体声明。其中：
 
 - ::grpc::ServerContext* context：提供有关 RPC 调用的上下文信息，比如身份验证、超时等；
 - const ::hello::HelloRequest* request：从客户端接收到的请求对象，包含客户端发送的数据。在 .proto 文件中，HelloRequest 定义了一个 message 字段；
@@ -687,7 +685,7 @@ void RunServer() {
 - 首先，定义服务器的监听地址和端口号；
 - 创建一个GreeterServiceImpl 对象**service**用于处理客户端的请求；
 - 使用grpc提供的工具类，定义一个builder，用于配置并构建 gRPC 服务器实例； 
-  - builder首先将服务器监听地址绑定，然后设置“非安全凭证”，即服务器不会加密传输数据，也不使用任何SSL/TLS凭证。
+  - builder首先将服务器监听地址绑定，然后设置非安全凭证”，即服务器不会加密传输数据，也不使用任何SSL/TLS凭证。
   - builder将服务对象service注册到服务器构建器中，当客户端与服务器连接成功后，服务器将处理操作委托给GreeterServiceImpl实现。
 - 调用 builder.BuildAndStart() 方法构建并启动 gRPC 服务器，方法返回一个 std::unique_ptr 指向一个 Server 对象，表示已经启动的服务器。其中，BuildAndStart() 方法会根据之前的配置创建一个服务器实例，并让它开始监听和处理请求。
 - 最后，调用server->Wait() 方法阻塞当前线程，保持服务器的运行状态，直到服务器被显式关闭或遇到异常。服务器将在此期间持续监听客户端请求并进行处理。
@@ -745,8 +743,8 @@ int main(int argc, char* argv[]) {
 FCClient(std::shared_ptr<Channel> channel)
 ```
 
-- 构造函数 FCClient，其参数是 std::shared_ptr<Channel> channel，表示 gRPC 的通信通道（Channel 是客户端与服务器通信的核心）。这个通道封装了客户端与服务器的连接细节，允许客户端发送 RPC 请求。
-- :stub_(Greeter::NewStub(channel))：这里的 stub_ 是一个 Greeter::Stub 对象，用于发起 RPC 请求。Greeter::NewStub(channel) 会根据 gRPC 框架生成的客户端代码，创建一个新的客户端存根（stub），它通过传入的 channel 连接到服务器。 
+- 构造函数 FCClient，其参数是 `std::shared_ptr<Channel> channel`，表示 gRPC 的通信通道（Channel 是客户端与服务器通信的核心）。这个通道封装了客户端与服务器的连接细节，允许客户端发送 RPC 请求。
+- `:stub_(Greeter::NewStub(channel))`：这里的 stub_ 是一个 Greeter::Stub 对象，用于发起 RPC 请求。Greeter::NewStub(channel) 会根据 gRPC 框架生成的客户端代码，创建一个新的客户端存根（stub），它通过传入的 channel 连接到服务器。 
   - Greeter::Stub：这是 gRPC 自动生成的类，用于封装 gRPC 方法的客户端调用逻辑。
 
 ```

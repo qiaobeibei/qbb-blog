@@ -25,11 +25,11 @@ typora-root-url: ./..
 
 参考：
 
-https://www.bilibili.com/video/BV12z4y147y3?vd_source=cb95e3058c2624d2641da6f4eeb7e3a1www.bilibili.com/video/BV12z4y147y3?vd_source=cb95e3058c2624d2641da6f4eeb7e3a1
+[C++ Docker配置 C++ boost 开发环境_哔哩哔哩_bilibili](https://www.bilibili.com/video/BV12z4y147y3/?vd_source=cb95e3058c2624d2641da6f4eeb7e3a1www.bilibili.com%2Fvideo%2FBV12z4y147y3%3Fvd_source%3Dcb95e3058c2624d2641da6f4eeb7e3a1)
 
-恋恋风辰官方博客llfc.club/category?catid=225RaiVNI8pFDD5L4m807g7ZwmF#!aid/2Suf5jJjQEVKDClYNgIiKV9ipcb
+[恋恋风辰官方博客](https://llfc.club/category?catid=225RaiVNI8pFDD5L4m807g7ZwmF#!aid/2QSEHcC1he1RgiewYG93ilaAMiY)
 
-Linux系统安装 docker 容器及部署项目blog.csdn.net/weixin_67722778/article/details/139717151
+[Linux系统安装 docker 容器及部署项目_linux docker-CSDN博客](https://blog.csdn.net/weixin_67722778/article/details/139717151)
 
 ## 1. 安装docker
 

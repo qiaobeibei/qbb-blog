@@ -10,11 +10,9 @@ typora-root-url: ./..
 
 常见的命令可参考：
 
-[Linux vi/vim | 菜鸟教程www.runoob.com/linux/linux-vim.html![img](/images/$%7Bfiilename%7D/icon-default-1730608367547-343.png)https://link.zhihu.com/?target=https%3A//www.runoob.com/linux/linux-vim.html](https://link.zhihu.com/?target=https%3A//www.runoob.com/linux/linux-vim.html)
+[Linux vi/vim | 菜鸟教程](https://www.runoob.com/linux/linux-vim.html)
 
-
-
-https://link.zhihu.com/?target=https%3A//imageslr.com/2021/vim
+[💻【Linux】Vim 入门笔记](https://imageslr.com/2021/vim)
 
 ![img](/images/$%7Bfiilename%7D/v2-44ac6dd17b096a128f424f41667b2ae1_1440w.jpg)
 

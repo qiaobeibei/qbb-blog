@@ -41,8 +41,6 @@ libprotocd.lib
 json_vc71_libmtd.lib
 ```
 
-
-
 客户端代码做以下调整
 
 ```c++
@@ -105,8 +103,6 @@ int main()
 }
 ```
 
-
-
 ## 服务器
 
 服务也通常和客户端做相同的设置，包含库。并在回调读函数中新加这样一段
@@ -122,8 +118,6 @@ int main()
 			std::string return_str = root.toStyledString();
 			Send_protoc(return_str);
 ```
-
-
 
 完整的回调读函数如下：
 

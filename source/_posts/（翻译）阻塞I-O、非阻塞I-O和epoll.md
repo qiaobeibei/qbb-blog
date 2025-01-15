@@ -16,7 +16,7 @@ typora-root-url: ./..
 
 转载自：
 
-[Blocking I/O, Nonblocking I/O, And Epolleklitzke.org/blocking-io-nonblocking-io-and-epoll![img](../images/$%7Bfiilename%7D/icon-default-1730609254885-408.png)https://link.zhihu.com/?target=https%3A//eklitzke.org/blocking-io-nonblocking-io-and-epoll](https://link.zhihu.com/?target=https%3A//eklitzke.org/blocking-io-nonblocking-io-and-epoll)
+[ModernCpp-ConcurrentProgramming-Tutorial/md/04同步操作.md at main · Mq-b/ModernCpp-ConcurrentProgramming-Tutorial](https://github.com/Mq-b/ModernCpp-ConcurrentProgramming-Tutorial/blob/main/md/04同步操作.md)
 
 ------
 

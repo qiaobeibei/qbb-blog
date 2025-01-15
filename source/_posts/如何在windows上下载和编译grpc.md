@@ -12,7 +12,7 @@ typora-root-url: ./..
 
 首先，将github上的grpc项目git到本地，grpc网址：
 
-[GitHub - grpc/grpc: The C based gRPC (C++, Python, Ruby, Objective-C, PHP, C#)github.com/grpc/grpc编辑![img](/images/$%7Bfiilename%7D/icon-default-1730607675597-272.png)https://link.zhihu.com/?target=https%3A//github.com/grpc/grpc](https://link.zhihu.com/?target=https%3A//github.com/grpc/grpc)
+[grpc/grpc: The C based gRPC (C++, Python, Ruby, Objective-C, PHP, C#)](https://github.com/grpc/grpc)
 
 将grpc仓库clone到本地后，进入grpc目录并将grpc仓库中的所有子模块初始化和更新：
 
@@ -24,7 +24,7 @@ git submodule update  --init
 
 因为国内进入github比较慢，我用vpn加速了这个过程，如果不会使用梯子的，可以通过博主恋恋风辰的方法，使用国内的代码工具gitee进行clone：
 
-[恋恋风辰官方博客llfc.club/category?catid=225RaiVNI8pFDD5L4m807g7ZwmF#!aid/2QSEHcC1he1RgiewYG93ilaAMiY![img](/images/$%7Bfiilename%7D/icon-default-1730607675597-272.png)https://link.zhihu.com/?target=https%3A//llfc.club/category%3Fcatid%3D225RaiVNI8pFDD5L4m807g7ZwmF%23%21aid/2QSEHcC1he1RgiewYG93ilaAMiY](https://link.zhihu.com/?target=https%3A//llfc.club/category%3Fcatid%3D225RaiVNI8pFDD5L4m807g7ZwmF%23!aid/2QSEHcC1he1RgiewYG93ilaAMiY)
+[恋恋风辰官方博客](https://llfc.club/category?catid=225RaiVNI8pFDD5L4m807g7ZwmF#!aid/2QSEHcC1he1RgiewYG93ilaAMiY)
 
 然后，使用cmake编译该文件，首先在grpc目录下新建一个vs文件夹
 

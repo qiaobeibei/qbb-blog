@@ -27,15 +27,9 @@ typora-root-url: ./..
 
 视频资料参考up恋恋风辰：
 
-【C++ 网络编程(19) 利用协程实现并发服务器(上)】
+[C++ 网络编程(19) 利用协程实现并发服务器(上)_哔哩哔哩_bilibili](https://www.bilibili.com/video/BV18k4y1M7Nx/?vd_source=cb95e3058c2624d2641da6f4eeb7e3a1)
 
-[https://www.bilibili.com/video/BV18k4y1M7Nx?vd_source=cb95e3058c2624d2641da6f4eeb7e3a1www.bilibili.com/video/BV18k4y1M7Nx?vd_source=cb95e3058c2624d2641da6f4eeb7e3a1](https://link.zhihu.com/?target=https%3A//www.bilibili.com/video/BV18k4y1M7Nx%3Fvd_source%3Dcb95e3058c2624d2641da6f4eeb7e3a1)
-
-【C++ 网络编程(20) 利用协程实现并发服务器(下)】
-
-[https://www.bilibili.com/video/BV1ch4y1G7Dc?vd_source=cb95e3058c2624d2641da6f4eeb7e3a1www.bilibili.com/video/BV1ch4y1G7Dc?vd_source=cb95e3058c2624d2641da6f4eeb7e3a1](https://link.zhihu.com/?target=https%3A//www.bilibili.com/video/BV1ch4y1G7Dc%3Fvd_source%3Dcb95e3058c2624d2641da6f4eeb7e3a1)
-
-## 1. Const.h
+------
 
 ## 1. Const.h
 
@@ -65,7 +59,7 @@ enum MSG_ID {
 
 ## 2. 消息存储节点MsgNode
 
-### **a. MsgNode.h**
+### a. MsgNode.h
 
 ```cpp
 #pragma once
@@ -116,7 +110,7 @@ MsgNode类主要用于构建消息接收节点和消息发送节点
 - RecvNode节点作为接收节点，构造函数仅需最大长度和消息id，同时定义一个GetMsgID()函数用于返回消息id（在逻辑层根据消息id寻找对应已注册回调函数时需要用到）
 - SendNode节点作为发送节点，不仅需要知道最大长度和消息id，还需传入消息首地址msg
 
-### **b. 成员函数实现**
+### b. 成员函数实现
 
 ```cpp
 #include "MsgNode.h"
@@ -148,7 +142,7 @@ SendNode::SendNode(const char* msg, short max_len, short msg_id) :
 
 ## 3. CServer
 
-### **a. CServer.h**
+### a. CServer.h
 
 ```cpp
 #pragma once
@@ -202,7 +196,7 @@ public:
 - **_sessions**：存储会话任务的容器，类似python的字典，键是一个字符串（不同会话有不同的**uuid**），值是session，为每个session会话映射对应的**uuid**，通过uuid可实现会话的**擦除、插入和寻找**
 - **_mutex**：锁，保证线程安全
 
-### ***b. 成员函数实现***
+### b. 成员函数实现
 
 ```cpp
 CServer::CServer(boost::asio::io_context& io_context, short port) :
@@ -244,9 +238,7 @@ void CServer::HandleAccept(std::shared_ptr<CSession> new_session, const boost::s
 }
 ```
 
-
-
-该回调函数主要处理客户端的连接请求，如果**客户端连接成功**（没有错误），那么启动会话（new_session->Start()），并加锁将该会话以及对应的uuid插入至**_sessions**，以便后续管理此session，‘}’结束后自动释放锁，无需手动释放。
+该回调函数主要处理客户端的连接请求，如果**客户端连接成功**（没有错误），那么启动会话`（new_session->Start()）`，并加锁将该会话以及对应的uuid插入至**_sessions**，以便后续管理此session，`‘}’`结束后自动释放锁，无需手动释放。
 
 最后调用**StartAccept()**，**重新从线程池中取出ioc并创建一个新的会话session**，只待主线程的ioc监听到客户端连接申请之后，便将新会话交给新连接请求进行收发。
 
@@ -261,7 +253,7 @@ void CServer::ClearSession(std::string uuid) {
 
 ## 4. 线程池AsioIOServicePool
 
-### **a. AsioIOServicePool.h**
+### a. AsioIOServicePool.h
 
 ```cpp
 #pragma once
@@ -321,8 +313,8 @@ public:
 
 **AsioIOServicePool**的成员函数在后面定义的时候详细解释，这里介绍AsioIOServicePool以下成员变量：
 
-- **IOService**：将boost::asio::io_context重命名为IOService，以便使用
-- **Work**：将boost::asio::io_context::work重命名为Work，Work用来绑定ioc，以防ioc.run()提前返回，详细解释可参考
+- **IOService**：将`boost::asio::io_context`重命名为IOService，以便使用
+- **Work**：将`boost::asio::io_context::work`重命名为Work，Work用来绑定ioc，以防ioc.run()提前返回，详细解释可参考
 
 [爱吃土豆：网络编程（16）——asio多线程模型IOServicePool5 赞同 · 0 评论文章](https://zhuanlan.zhihu.com/p/890395457)
 
@@ -335,7 +327,7 @@ public:
 
 [爱吃土豆：网络编程（13）——单例模式0 赞同 · 0 评论文章](https://zhuanlan.zhihu.com/p/774652701)
 
-### **b. 成员函数实现**
+### b. 成员函数实现
 
 ```cpp
 void SafeDeletor::operator()(AsioIOServicePool* st) {
@@ -424,13 +416,13 @@ std::shared_ptr<AsioIOServicePool> AsioIOServicePool::_instance = nullptr;
 
 ![img](/images/$%7Bfiilename%7D/9bdf7fe5ff534c6a97d1b480313e7342.png)编辑
 
-服务器架构
+<center>服务器架构</center>
 
 上图所示的是一个完成的服务器架构，一般需要将逻辑层独立出来，因为如果在解析完对端数据后需要执行一些复杂的操作，比如玩家需要叠加各自buff或者技能，此时可能会耗时1s甚至更多，如果没有独立的逻辑层进行操作，那么系统会一直停留在执行回调函数那一步，造成**阻塞**，直至操作结束。
 
 而逻辑层是独立的，回调函数只需将数据投递给逻辑**队列**（回调函数将数据放入队列中之后系统会运行下一步，便不会被阻塞），逻辑系统会自动从队列中取数据并做相应操作，如果需要在执行完操作之后做相应回复，那么逻辑系统会调用写事件并注册写回调给asio网络层，网络层就是asio底层通信的网络层步骤。
 
-### **a. LogicSystem.h**
+### a. LogicSystem.h
 
 ```cpp
 #pragma once
@@ -501,7 +493,7 @@ FunCallBack使用了C++11新特性**std::function**来声明了一个函数签�
 
 因为逻辑队列存储的成员需要包含对应session和消息内容，所以需要重新定义一个逻辑节点，用于存储会话session中将对应消息投递至逻辑队列的内容，包括该session和消息内容。
 
-### **b. LogicNode**
+### b. LogicNode
 
 ```cpp
 class LogicNode {
@@ -528,7 +520,7 @@ _session(session), _recvnode(recvnode){}
 
 用于接收一个session会话和该会话投递的消息内容
 
-### **c. 成员函数实现**
+### c. 成员函数实现
 
 ```cpp
 LogicSystem::LogicSystem() :_b_stop(false) {
@@ -539,9 +531,9 @@ LogicSystem::LogicSystem() :_b_stop(false) {
 
 - **_b_stop**初始化为false，当前工作线程不会停止
 - **RegisterCallBacks()：**调用回调注册函数：这个函数用于**注册消息处理的回调函数**。将不同的消息 ID 和对应的处理函数关联起来，以便在处理消息时能够找到正确的函数。
-- _worker_thread = std::thread(&LogicSystem::DealMsg, this);
+- `_worker_thread = std::thread(&LogicSystem::DealMsg, this);`
   - 创建工作线程：使用 std::thread 创建一个新的线程。
-  - &LogicSystem::DealMsg：指定要在新线程中执行的成员函数，即 DealMsg，该函数将负责从消息队列中提取消息并处理它。
+  - `&LogicSystem::DealMsg`：指定要在新线程中执行的成员函数，即 DealMsg，该函数将负责从消息队列中提取消息并处理它。
   - this：传递当前对象的指针，以便 DealMsg 可以访问 LogicSystem 的成员变量和函数。
 
 ```cpp
@@ -567,13 +559,7 @@ void LogicSystem::HelloWordCallBack(std::shared_ptr<CSession> session, const sho
 }
 ```
 
-- HelloWordCallBack
-
-  是对应消息id：
-
-  MSG_HELLO_WORD
-
-  的回调函数 	
+- HelloWordCallBack 是对应消息id：MSG_HELLO_WORD 的回调函数 	
 
   - 使用jsoncpp库包装或者解析数据
   - 调用 parse 方法将 **msg_data** 字符串解析为 JSON 格式，结果存储在 root 中
@@ -625,11 +611,7 @@ void LogicSystem::DealMsg() {
 }
 ```
 
-当逻辑类实例化后，开始循环运行消息处理函数**DealMsg()**
-
-为了实现自由加解锁，定义一个unique_lock类的锁unique_lk
-
-当逻辑队列为空并且服务器未停止时，进行等待while循环中，因为while循环也会占用资源，所以使用C++11特性条件变量 **std::condition_variable**将线程挂起，该线程不会占用cpu资源，并释放锁使得其他线程可以获取共享资源，线程挂起持续至被唤醒（notify_one()或者notify_all()）。条件变量的详细介绍可参考
+当逻辑类实例化后，开始循环运行消息处理函数**DealMsg()**。为了实现自由加解锁，定义一个unique_lock类的锁unique_lk。当逻辑队列为空并且服务器未停止时，进行等待while循环中，因为while循环也会占用资源，所以使用C++11特性条件变量 **std::condition_variable**将线程挂起，该线程不会占用cpu资源，并释放锁使得其他线程可以获取共享资源，线程挂起持续至被唤醒（notify_one()或者notify_all()）。条件变量的详细介绍可参考
 
 [爱吃土豆：C++11新特性0 赞同 · 0 评论文章](https://zhuanlan.zhihu.com/p/781350340)
 
@@ -686,7 +668,7 @@ CSession用于接收客户端的连接，并处理异步收发，在该类中，
 
 所以我们这里仍然使用之前代码中用到的发送队列的方式。
 
-### *a. CSession.h*
+### a. CSession.h
 
 ```cpp
 #pragma once
@@ -734,7 +716,7 @@ private:
 
 同样，CSession类的成员函数在后面定义时详细介绍，这里仅介绍成员变量：
 
-- boost::asio::io_context**&** _io_context：用于接收从线程池**AsioIOServicePool**中提取的ioc，注意，这里是引用而不是重新声明一个io_context新实例
+- `boost::asio::io_context& _io_context`：用于接收从线程池**AsioIOServicePool**中提取的ioc，注意，这里是引用而不是重新声明一个io_context新实例
 - **CServer _server**：接收CServer指针，当Session收发操作出错时，方便调用Server的Clear函数擦除该session会话任务
 - **_socket**：每个session都有一个独立的套接字，负责异步收发
 - **_b_close**：session会话任务是否结束的标志位
@@ -743,7 +725,7 @@ private:
 - **_recv_head_node**：消息头节点，将收到消息的id和长度存储至该节点
 - **LogicNode**：逻辑节点，负责将session和消息内容投递至逻辑队列，逻辑队列元素的格式为LogicNode
 
-### **b. 成员函数实现**
+### b. 成员函数实现
 
 ```cpp
 CSession::CSession(boost::asio::io_context& io_context, CServer* server) :
@@ -839,17 +821,15 @@ void CSession::Start() {
 
 首先，构造一个**收协程：**
 
-- 这里通过**boost::asio::co_spawn**构造一个收协程，传入ioc和lambda函数，以及**detached**。注意，如果用=捕获所有变量，但是lambda表达式并未使用智能指针则不会增加引用计数，除非在lambda内部使用这个指针或者在【】中显式捕获该指针，我们这里通过【self = shared_from_this(), this】显式增加session的引用计数，防止协程处理过程中，智能指针被意外释放，通过智能指针实现伪闭包。
-- 显式指定返回类型为**boost::asio::awaitable<void>，awaitable<void>**类型允许函数在执行时可以被暂停和恢复，这使得它能够与 **co_await** 一起使用，所以函数返回类型必须是**awaitable<void>。**
+- 这里通过**boost::asio::co_spawn**构造一个收协程，传入ioc和lambda函数，以及**detached**。注意，**如果用 `=` 捕获所有变量，但是lambda表达式并未使用智能指针则不会增加引用计数，除非在lambda内部使用这个指针或者在 `[]` 中显式捕获该指针，我们这里通过`self = shared_from_this()`, this显式增加session的引用计数，防止协程处理过程中，智能指针被意外释放，通过智能指针实现伪闭包。**
+- 显式指定返回类型为`boost::asio::awaitable<void>`，`awaitable<void>`类型允许函数在执行时可以被暂停和恢复，这使得它能够与 **co_await** 一起使用，所以函数返回类型必须是`awaitable<void>`。
 - session会在Start()函数中循环执行收协程，直至该会话被关闭，每一次执行都需要将消息头结点清空，接收下一个消息。通过**co_await** 关键字和**use_awaitable** 以同步的方式调用异步读操作async_read，并将读到的字节数（4字节）返回，只有读到4字节才会返回，否则已知挂起。这里和asynv_read_some有一些区别然后分别读取消息id、消息长度和消息内容，且需要将消息id和消息长度从网络序列转换为本地序列。这里使用**async_read**指定读取字节数，而不是像之前粘包处理使用**async_read_some**函数，通过调用回调函数处理粘包问题。
 - 最后，在接收完所有消息后，将消息投递至逻辑队列进行相应的处理。
 
-在协程中，co_return用来返回一个值或表示**协程结束**，它将把值传递给协程的返回对象（如果返回类型不为boost::asio::awaitable<void>，对象是boost::asio::awaitable）。
+在协程中，co_return用来返回一个值或表示**协程结束**，它将把值传递给协程的返回对象（如果返回类型不为`boost::asio::awaitable<void>`，对象是`boost::asio::awaitable`）。
 
 - co_return 只能在协程中使用，而普通函数中使用的是 return。
 - co_return 将结果传递给协程的承诺（promise）对象，这个对象会将值交给协程的返回类型
-
-
 
 协程关键字和函数**use_awaitable、co_spawn、detached**如何使用请参考文章：
 
@@ -914,7 +894,7 @@ void CSession::Send(std::string msg, short msg_id) {
 }
 ```
 
-Send()的两种重载，针对数据内容是string类型和char*类型。
+Send()的两种重载，针对数据内容是string类型和`char*`类型。
 
 首先设置unique_lock，方便自由加解锁；
 

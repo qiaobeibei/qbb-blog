@@ -20,6 +20,12 @@ typora-root-url: ./..
 
 在后续文章中，我们会对比这两种模式的区别。这里我们先介绍第一种模式，即多个线程，**每个线程管理一个独立的 io_context 服务。**
 
+参考：
+
+[恋恋风辰官方博客](https://llfc.club/category?catid=225RaiVNI8pFDD5L4m807g7ZwmF)
+
+[visual studio配置C++ boost库_哔哩哔哩_bilibili](https://www.bilibili.com/video/BV1FY4y1S7QW/?spm_id_from=333.999.0.0&vd_source=29868cdbb6b2fb1514ce3c7c31892d68)
+
 ## 1. 什么是多线程？
 
 之前在完善消息节点的章节学习过asio服务器底层通信的流程，它是基于单线程运行的，可参考
@@ -48,7 +54,7 @@ IOServicePool 服务池中，IOServicePool 类会根据系统的 CPU 核数创�
 
 IOServicePool本质上是一个线程池，基本功能就是**根据构造函数传入的数量创建n个线程和iocontext，然后每个线程跑一个iocontext**，这样就可以并发处理不同iocontext读写事件了
 
-### ***a. IOServicePool.h**
+### a. IOServicePool.h
 
 ```cpp
 #pragma once
@@ -89,7 +95,7 @@ private:
 - _threads：存储指定数量的线程
 - _nextIOService：记录ioc在vector的下标，通过轮询返回ioc时，需要记录当前ioc的下标，累加，当超过vector的size时就归零，然后继续按轮询的方式返回
 
-### **b. IOServicePool构造函数**
+### b. IOServicePool构造函数
 
 ```cpp
 AsioIOServicePool::AsioIOServicePool(std::size_t size) : _ioServices(size), _works(size), _nextIOService(0) {
@@ -133,7 +139,7 @@ boost::asio::io_context::work::work(boost::asio::io_context& io_context)
 
 最后，遍历多个ioservice，创建多个线程，每个线程内部启动ioservice。
 
-***c. GetIOService()**
+### **c. GetIOService()**
 
 ```cpp
 boost::asio::io_context& AsioIOServicePool::GetIOService() {
@@ -147,7 +153,7 @@ boost::asio::io_context& AsioIOServicePool::GetIOService() {
 
 该段代码用于从ioc存储容器_ioServices中获取io_context&，其中_nextIOService为索引，轮询获取io_context&
 
-### ***d. Stop()**
+### d. Stop()
 
 ```cpp
 void AsioIOServicePool::Stop(){
@@ -160,13 +166,11 @@ void AsioIOServicePool::Stop(){
 }
 ```
 
-
-
 同样我们要实现Stop函数，控制AsioIOServicePool停止所有ioc的工作，并等待所有线程结束。因为我们要保证每个线程安全退出后再让AsioIOServicePool停止。
 
 ## 3. 服务器修改
 
-### ***a. void CServer::start_accept()**
+### a. void CServer::start_accept()
 
 ```cpp
 void CServer::start_accept() {
@@ -188,7 +192,7 @@ std::shared_ptr<CSession> new_session = std::make_shared<CSession>(_ioc, this); 
 std::shared_ptr<CSession> new_session = std::make_shared<CSession>(ioc, this); // 修改后
 ```
 
-### ***b. AsyncServer_MsgNode.cpp**
+### b. AsyncServer_MsgNode.cpp
 
 主函数也需要修改，因为现在的ioc不止用于执行异步接受，还有线程池中的ioc，所以需要将二者均stop
 
@@ -309,7 +313,8 @@ int main()
 
 ## 5. 总结
 
-**1. boost::asio::io_context::work的作用？**
+> **1. boost::asio::io_context::work的作用？**
+>
 
 在实际使用中，我们通常会将一些异步操作提交给io_context进行处理，然后该操作会被异步执行，而不会立即返回结果。如果没有其他任务需要执行，那么io_context就会停止工作，导致所有正在进行的异步操作都被取消。这时，我们需要使用**boost::asio::io_context::work**对象来防止io_context停止工作。
 

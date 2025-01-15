@@ -24,9 +24,7 @@ typora-root-url: ./..
 
 资料参考自博主恋恋风辰：
 
-【C++ 网络编程(21) asio实现http服务器】
-
-https://www.bilibili.com/video/BV1Ns4y1C72v?vd_source=cb95e3058c2624d2641da6f4eeb7e3a1www.bilibili.com/video/BV1Ns4y1C72v?vd_source=cb95e3058c2624d2641da6f4eeb7e3a1
+[C++ 网络编程(21) asio实现http服务器_哔哩哔哩_bilibili](https://www.bilibili.com/video/BV1Ns4y1C72v/?vd_source=cb95e3058c2624d2641da6f4eeb7e3a1www.bilibili.com/video/BV1Ns4y1C72v?vd_source=cb95e3058c2624d2641da6f4eeb7e3a1)
 
 ## **1. HTTP报头（**(HTTP header**）**
 
@@ -378,7 +376,7 @@ int main(int argc, char* argv[])
     boost::asio::streambuf response_; // 接收和解析从服务器获取到的响应
 ```
 
-### **a. 构造函数**
+### a. 构造函数
 
 ```c++
 client(boost::asio::io_context& io_context,
@@ -387,7 +385,7 @@ client(boost::asio::io_context& io_context,
 
 Client构造函数接收ioc、域名**server**、路径**path**，其中**server**一般由服务器的ip和端口组成，比如“127.0.0.1:80”，**path**是请求资源的路径，比如"/index.html"。然后构建http请求并存储至**request_**，解析服务器的IP和端口存储至**ip**和**port**变量。最后，调用**async_resolve**将服务器ip和端口异步解析为可以用于连接的端点，如果解析成功，调用**handle_resolve**函数连接该服务器端点。
 
-### **b. handle_resolve**
+### b. handle_resolve
 
 ```c++
     // resolver_解析成功后，调用该函数连接服务器端点
@@ -410,7 +408,7 @@ Client构造函数接收ioc、域名**server**、路径**path**，其中**server
 
 调用**async_connect**函数异步连接解析成功的服务器端点，连接成功后调用**handle_connect**函数，进行异步发操作。
 
-### **c. handle_connect**
+### c. handle_connect
 
 ```c++
     void handle_connect(const boost::system::error_code& err)
@@ -428,9 +426,9 @@ Client构造函数接收ioc、域名**server**、路径**path**，其中**server
     }
 ```
 
-连接成功后，调用异步发async_write函数发送请求头（构造函数构建的请求头存储至request_），发送成功后调用handle_write_request函数，读取http相应行，也就是“HTTP/1.1200 OK\r\n”
+连接成功后，调用异步发async_write函数发送请求头（构造函数构建的请求头存储至request_），发送成功后调用`handle_write_request`函数，读取http相应行，也就是`HTTP/1.1200 OK\r\n`
 
-### **d. handle_write_request**
+### d. handle_write_request
 
 ```c++
     // 异步发成功后，调用该函数执行异步读，直到读取到指定的分隔符（\r\n）
@@ -474,7 +472,7 @@ Content-Length: 123\r\n
 
 响应状态行读取成功后，调用**handle_read_status_line**函数读取并解析http响应状态行
 
-### **e. handle_read_status_line**
+### e. handle_read_status_line
 
 ```c++
 // 读取到分隔符（\r\n）后，调用该函数解析http状态响应
@@ -520,7 +518,7 @@ Content-Length: 123\r\n
 
 对状态行进行判断处理，如果一切准备就绪，调用async_read_until函数读取响应头，直至响应头结束。两个换行表示响应头读取结束，结束后调用**handle_read_headers**函数解析响应头。
 
-### **f. handle_read_headers**
+### f. handle_read_headers
 
 ```c++
 // 响应头读取成功后，调用该函数解析响应头
@@ -562,7 +560,7 @@ boost::asio::transfer_at_least(1)
 
 确保每次读取至少一个字节的数据，保证读取的有效性。读取到正文数据后，调用**handle_read_content**函数进行处理。
 
-### **g. handle_read_content**
+### g. handle_read_content
 
 ```c++
     // 该函数用于处理异步读取HTTP响应正文的数据
@@ -586,7 +584,7 @@ boost::asio::transfer_at_least(1)
     }
 ```
 
-### **h. 主函数**
+### h. 主函数
 
 ```c++
 int main(int argc, char* argv[])
@@ -608,11 +606,11 @@ int main(int argc, char* argv[])
 }
 ```
 
-实例化client ，"127.0.0.1:8080"表示服务器域名，"/" 表示网站的根目录，服务器返回“/index.html”
+实例化client ，`127.0.0.1:8080`表示服务器域名，`/`表示网站的根目录，服务器返回`/index.html`
 
 ## 3.服务器
 
-### *a. 主函数*
+### a. 主函数
 
 ```c++
 #include <iostream>
@@ -661,7 +659,7 @@ void server::run()
 }
 ```
 
-### *b. server*
+### b. server
 
 ```c++
 #ifndef HTTP_SERVER_HPP
@@ -747,7 +745,7 @@ server::server(const std::string& address, const std::string& port,
 		}
 ```
 
-首先初始化各个成员变量，绑定signals_，acceptor_，socket_，其中connection_manager_和request_handler_是自己封装的类。
+首先初始化各个成员变量，绑定`signals_`，`acceptor_`，`socket_`，其中`connection_manager_`和`request_handler_`是自己封装的类。
 
 然后，绑定**SIGINT**、**SIGTERM**信号，如果定义过**SIGQUIT**，同样将SIGQUIT绑定，如果这三个信号中任意一个被激活，执行**do_await_stop()**函数，使得服务器可以主动优雅地退出。
 
@@ -763,9 +761,9 @@ void server::do_await_stop()
 }
 ```
 
-异步等待函数signals_.async_wait被调用后，主线程进行异步等待。
+异步等待函数`signals_.async_wait`被调用后，主线程进行异步等待。
 
-同时，定义一个resolver解析器，用于将将服务器域名解析为ip和端口号；并通过*resolver.resolve()方法将解析出来的ip和端口号解析为端点，方便acceptor绑定，并执行以下操作
+同时，定义一个resolver解析器，用于将将服务器域名解析为ip和端口号；并通过`resolver.resolve()`方法将解析出来的ip和端口号解析为端点，方便acceptor绑定，并执行以下操作
 
 ```c++
 acceptor_.open(endpoint.protocol()); // acceptor使用端点的协议
@@ -822,7 +820,7 @@ connection::connection(boost::asio::ip::tcp::socket socket,
 {}
 ```
 
-connection_manager_也是我们封装好的类，connection_manager_.start()的执行过程如下
+`connection_manager_`也是我们封装好的类，`connection_manager_.start()`的执行过程如下
 
 ```c++
 void connection_manager::start(connection_ptr c)
@@ -1210,9 +1208,9 @@ request_parser::result_type request_parser::consume(request& req, char input)
 
 ## 4. 总结
 
-**1.acceptor_.listen()和acceptor_.async_accept()的区别？**
+> **1.`acceptor_.listen()`和`acceptor_.async_accept()`的区别？**
 
-**新版本中，****boost::asio::ip::tcp::acceptor** 的构造函数已经可以自动调用 **listen** ，只通过以下代码即可实现对客户端的监听，而不用繁琐的进行各种规定：
+新版本中，`boost::asio::ip::tcp::acceptor` 的构造函数已经可以自动调用 `listen` ，只通过以下代码即可实现对客户端的监听，而不用繁琐的进行各种规定：
 
 ```c++
  boost::asio::ip::tcp::acceptor a(ios, asio::ip::tcp::endpoint(asio::ip::tcp::v4(), 3333));

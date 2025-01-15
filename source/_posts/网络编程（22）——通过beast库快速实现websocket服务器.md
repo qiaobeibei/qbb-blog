@@ -23,7 +23,7 @@ websocket有两种实现方式，第一种是基于tcp长连接进行升级，�
 
 参考视频：
 
-[C++ 网络编程(23) beast网络库实现websocket服务器_哔哩哔哩_bilibili![img](/images/$%7Bfiilename%7D/icon-default-1730607206171-219.png)https://www.bilibili.com/video/BV1Mu411b7qV/?spm_id_from=333.337.search-card.all.click](https://www.bilibili.com/video/BV1Mu411b7qV/?spm_id_from=333.337.search-card.all.click)
+[C++ 网络编程(23) beast网络库实现websocket服务器_哔哩哔哩_bilibili](https://www.bilibili.com/video/BV1Mu411b7qV/?spm_id_from=333.337.search-card.all.click)
 
 ## 1. websocket简述
 
@@ -210,33 +210,33 @@ public:
 
 成员变量的介绍如下：
 
-- **std::unique_ptr<websocket::stream<tcp_stream>> _ws_ptr**：初始化一个WebSocket流指针，用于管理WebSocket连接。其中，websocket::stream<T>是Beast 库中用于表示一个 WebSocket 流的模板类，这里将一个底层的TCP连接（tcp_stream）包装为一个WebSocket，通过这个类，程序可以在一个 TCP 连接上实现 WebSocket 协议，进行双向的实时通信。
+- `std::unique_ptr<websocket::stream<tcp_stream>> _ws_ptr`：初始化一个WebSocket流指针，用于管理WebSocket连接。其中，`websocket::stream<T>`是Beast 库中用于表示一个 WebSocket 流的模板类，这里将一个底层的TCP连接（tcp_stream）包装为一个WebSocket，通过这个类，程序可以在一个 TCP 连接上实现 WebSocket 协议，进行双向的实时通信。
 
-通过 **websocket::stream<tcp_stream>** 简单写一个**客户端**：
+通过 `websocket::stream<tcp_stream>` 简单写一个**客户端**：
 
 ```cpp
-        net::io_context ioc;
-        tcp::resolver resolver(ioc);
-        auto const results = resolver.resolve("example.com", "80");
+    net::io_context ioc;
+    tcp::resolver resolver(ioc);
+    auto const results = resolver.resolve("example.com", "80");
 
-        // 创建 TCP 流并连接到服务器
-        tcp::socket socket(ioc);
-        net::connect(socket, results.begin(), results.end());
+    // 创建 TCP 流并连接到服务器
+    tcp::socket socket(ioc);
+    net::connect(socket, results.begin(), results.end());
 
-        // 创建 WebSocket 流并进行 WebSocket 握手
-        websocket::stream<tcp::socket> ws(std::move(socket));
-        ws.handshake("example.com", "/");
+    // 创建 WebSocket 流并进行 WebSocket 握手
+    websocket::stream<tcp::socket> ws(std::move(socket));
+    ws.handshake("example.com", "/");
 
-        // 发送一条消息
-        ws.write(net::buffer(std::string("Hello WebSocket!")));
+    // 发送一条消息
+    ws.write(net::buffer(std::string("Hello WebSocket!")));
 
-        // 接收服务器返回的消息
-        beast::flat_buffer buffer;
-        ws.read(buffer);
-        std::cout << beast::make_printable(buffer.data()) << std::endl;
+    // 接收服务器返回的消息
+    beast::flat_buffer buffer;
+    ws.read(buffer);
+    std::cout << beast::make_printable(buffer.data()) << std::endl;
 
-        // 关闭 WebSocket 连接
-        ws.close(websocket::close_code::normal);
+    // 关闭 WebSocket 连接
+    ws.close(websocket::close_code::normal);
 ```
 
 - **_uuid**：用于存储每个connection的名称，每个名称都是唯一的
@@ -247,7 +247,7 @@ public:
 
 Connection类的函数实现如下：
 
-#### *1）构造函数*
+#### 1）构造函数
 
 ```cpp
 Connection::Connection(net::io_context& ioc) : 
@@ -259,11 +259,11 @@ Connection::Connection(net::io_context& ioc) :
 }
 ```
 
-首先，构造函数接受一个io_context引用的ioc作为参数，并将ioc赋值给_ioc，用于管理异步操作。然后，创建一个 websocket::stream<tcp_stream> 对象，并赋值给_ws_ptr（这里要么在初始化列表中进行赋值，要么通过右值进行赋移动值，因为_ws_ptr是一个unique_ptr不允许被复制拷贝或者赋值）。
+首先，构造函数接受一个io_context引用的ioc作为参数，并将ioc赋值给`_ioc`，用于管理异步操作。然后，创建一个 `websocket::stream<tcp_stream>` 对象，并赋值给`_ws_ptr`（这里要么在初始化列表中进行赋值，要么通过右值进行赋移动值，因为_ws_ptr是一个unique_ptr不允许被复制拷贝或者赋值）。
 
 然后，通过boost自带的函数（雪花算法）生成一个唯一的uuid。每个Connection的uuid可以代表这个独立的连接。
 
-#### *2）GetUid()*
+#### 2）GetUid()
 
 ```cpp
 std::string Connection::GetUid() {
@@ -271,7 +271,7 @@ std::string Connection::GetUid() {
 }
 ```
 
-#### *3）GetSocket()*
+#### 3）GetSocket()
 
 ```cpp
 net::ip::tcp::socket& Connection::GetSocket() {
@@ -284,7 +284,7 @@ net::ip::tcp::socket& Connection::GetSocket() {
 
 返回局部变量的引用会有问题吗？在这里不会有问题，因为socket是由_ws_ptr生成的，只有_ws_ptr不被释放，那么socket就一直存在。
 
-#### *4）AsyncAccept()*
+#### 4）AsyncAccept()
 
 ```cpp
 void Connection::AsyncAccept() {
@@ -338,7 +338,7 @@ Websocker的流程如下：
 
 如果WebSocket 握手成功，调用lambda函数，将当前连接对象加入ConnectionMgr 的管理中，并调用该连接对象的Start()函数开始处理WebSocket 的数据传输，进入连接的业务逻辑。
 
-#### *5）Start()*
+#### 5）Start()
 
 ```cpp
 void Connection::Start() {
@@ -376,7 +376,7 @@ void Connection::Start() {
 - 将读取到的消息打印出来，然后将接受到的数据转发到 **AsyncSend()** 函数，处理发送响应；
 - 递归调用Start()，等待下一条消息。
 
-#### *6）AsyncSend*
+#### 6）AsyncSend
 
 ```cpp
 void Connection::AsyncSend(std::string msg) {

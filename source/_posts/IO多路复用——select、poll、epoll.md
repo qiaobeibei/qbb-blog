@@ -11,83 +11,21 @@ tags:
 typora-root-url: ./.. 
 ---
 
-**目录**
-
-[1. 网络IO模型](#h_2632349361_0)
-
-[1.1 信号驱动IO](#h_2632349361_1)
-
-[1.2 同步阻塞IO](#h_2632349361_2)
-
-[1.3 非阻塞IO](#h_2632349361_3)
-
-[1.4 异步非阻塞IO](#h_2632349361_4)
-
-[1.5 总结（什么是阻塞/非阻塞？什么是同步/异步？）](#h_2632349361_5)
-
-[2. IO多路复用](#h_2632349361_6)
-
-[2.1 什么是IO？](#h_2632349361_7)
-
-[2.2 什么是 IO多路复用？](#h_2632349361_8)
-
-[2.3 从阻塞 IO 到 IO 多路复用](#h_2632349361_9)
-
-[2.4 文件描述符](#h_2632349361_10)
-
-[3. 基础socket模型](#h_2632349361_11)
-
-[4. select 模型（linux/windows）](#h_2632349361_12)
-
-[4.1 原理](#h_2632349361_13)
-
-[4.2 函数原型](#h_2632349361_14)
-
-[4.3 fd_set操作过程](#h_2632349361_15)
-
-[4.4 select实现网络通信流程](#h_2632349361_16)
-
-[4.5 select使用示例](#h_2632349361_17)
-
-[4.6 优缺点](#h_2632349361_18)
-
-[5. poll 模型（linux）](#h_2632349361_19)
-
-[5.1 函数原型](#h_2632349361_20)
-
-[5.2 示例](#h_2632349361_21)
-
-[6. epoll 模型（linux）](#h_2632349361_22)
-
-[6.1 epoll函数](#h_2632349361_23)
-
-[6.2 示例](#h_2632349361_24)
-
-[6.3 epoll的工作模式](#h_2632349361_25)
-
-[6.4 使用边沿非阻塞IO模式下的示例代码](#h_2632349361_26)
-
-[6.5 关于边缘模式的问题](#h_2632349361_27)
-
-[6.6 epoll的优点](#h_2632349361_28)
-
-------
-
 
 
 参考：
 
-[IO多路复用，一文彻底搞懂！-51CTO.COMwww.51cto.com/article/794412.html![img](https://csdnimg.cn/release/blog_editor_html/release2.3.7/ckeditor/plugins/CsdnLink/icons/icon-default.png?t=O83A)https://link.zhihu.com/?target=https%3A//www.51cto.com/article/794412.html](https://link.zhihu.com/?target=https%3A//www.51cto.com/article/794412.html)
+[IO多路复用，一文彻底搞懂！-51CTO.COM](https://www.51cto.com/article/794412.html)
 
-[勤劳的小手：100%弄明白5种IO模型1252 赞同 · 101 评论文章![img](/../../images/$%7Bfiilename%7D/icon-default-1730608959145-359.png)https://zhuanlan.zhihu.com/p/115912936](https://zhuanlan.zhihu.com/p/115912936)
+[100%弄明白5种IO模型 - 知乎](https://zhuanlan.zhihu.com/p/115912936)
 
-[[操作系统]IO多路复用 - Duancf - 博客园www.cnblogs.com/DCFV/p/18379027![img](/../../images/$%7Bfiilename%7D/icon-default-1730608959145-359.png)https://link.zhihu.com/?target=https%3A//www.cnblogs.com/DCFV/p/18379027](https://link.zhihu.com/?target=https%3A//www.cnblogs.com/DCFV/p/18379027)
+[[操作系统\]IO多路复用 - Duancf - 博客园](https://www.cnblogs.com/DCFV/p/18379027)
 
-[IO多路转接（复用）之selectsubingwen.cn/linux/select/#2-1-%E5%87%BD%E6%95%B0%E5%8E%9F%E5%9E%8B![img](/../../images/$%7Bfiilename%7D/icon-default-1730608959145-359.png)https://link.zhihu.com/?target=https%3A//subingwen.cn/linux/select/%232-1-%25E5%2587%25BD%25E6%2595%25B0%25E5%258E%259F%25E5%259E%258B](https://link.zhihu.com/?target=https%3A//subingwen.cn/linux/select/%232-1-%E5%87%BD%E6%95%B0%E5%8E%9F%E5%9E%8B)
+[IO多路转接（复用）之select | 爱编程的大丙](https://subingwen.cn/linux/select/#2-1-函数原型)
 
-[程序员林夕：【面试】彻底理解 IO多路复用？2 赞同 · 0 评论文章![img](/../../images/$%7Bfiilename%7D/icon-default-1730608959145-359.png)https://zhuanlan.zhihu.com/p/691368029](https://zhuanlan.zhihu.com/p/691368029)
+[【面试】彻底理解 IO多路复用？ - 知乎](https://zhuanlan.zhihu.com/p/691368029)
 
-[【操作系统】I/O 多路复用，select / poll / epoll 详解imageslr.com/2020/02/27/select-poll-epoll.html#whynonblock![img](/../../images/$%7Bfiilename%7D/icon-default-1730608959145-359.png)https://link.zhihu.com/?target=https%3A//imageslr.com/2020/02/27/select-poll-epoll.html%23whynonblock](https://link.zhihu.com/?target=https%3A//imageslr.com/2020/02/27/select-poll-epoll.html%23whynonblock)
+[📔【操作系统】I/O 多路复用，select / poll / epoll 详解](https://imageslr.com/2020/02/27/select-poll-epoll.html#whynonblock)
 
 # 1. 网络IO模型
 
@@ -107,7 +45,9 @@ typora-root-url: ./..
 
 ## 1.2 同步阻塞IO
 
-阻塞IO是一种简单的输入输出模型，调用该操作时会阻塞程序的执行，直到数据准备好或操作完成。这意味着在线程处理过程中，如果涉及到IO操作，那么当前线程会被阻塞，直到IO处理完成，线程才接着处理后续流程。如下图，服务器针对客户端的每个socket都会分配一个新的线程处理，每个线程的业务处理分2步，当步骤1处理完成后遇到IO操作(比如：加载文件)，这时候，当前线程会被阻塞，直到IO操作完成，线程才接着处理步骤2。![img](/../../images/$%7Bfiilename%7D/ac6438b52a9b45ebbb7b3f1a85e641c3-1730608959145-363.png)
+阻塞IO是一种简单的输入输出模型，调用该操作时会阻塞程序的执行，直到数据准备好或操作完成。这意味着在线程处理过程中，如果涉及到IO操作，那么当前线程会被阻塞，直到IO处理完成，线程才接着处理后续流程。如下图，服务器针对客户端的每个socket都会分配一个新的线程处理，每个线程的业务处理分2步，当步骤1处理完成后遇到IO操作(比如：加载文件)，这时候，当前线程会被阻塞，直到IO操作完成，线程才接着处理步骤2。
+
+![img](/../../images/$%7Bfiilename%7D/ac6438b52a9b45ebbb7b3f1a85e641c3-1730608959145-363.png)
 
 图片来源：https://www.51cto.com/article/794412.html
 
@@ -209,7 +149,7 @@ return count
 
 这部分内容可以详细看一下这篇文章，讲的非常好，我后面可能会将其翻译出来：
 
-[Blocking I/O, Nonblocking I/O, And Epolleklitzke.org/blocking-io-nonblocking-io-and-epoll![img](/../../images/$%7Bfiilename%7D/icon-default-1730608959145-359.png)https://link.zhihu.com/?target=https%3A//eklitzke.org/blocking-io-nonblocking-io-and-epoll](https://link.zhihu.com/?target=https%3A//eklitzke.org/blocking-io-nonblocking-io-and-epoll)
+[📔【操作系统】I/O 多路复用，select / poll / epoll 详解](https://imageslr.com/2020/02/27/select-poll-epoll.html#whynonblock)
 
 ## 2.4 文件描述符
 
@@ -219,11 +159,11 @@ return count
 
 图片来源：https://subingwen.cn/linux/file-descriptor/#2-2-%E6%96%87%E4%BB%B6%E6%8F%8F%E8%BF%B0%E7%AC%A6%E8%A1%A8
 
-### ***2.4.1 文件描述符上限***
+### 2.4.1 文件描述符上限
 
 每一个进程对应的文件描述符表能够存储的打开的文件数是有限制的，默认为**1024**个，这个默认值是可以修改的，支持打开的最大文件数据取决于操作系统的硬件配置。
 
-### ***2.4.2 默认分配的文件描述符***
+### 2.4.2 默认分配的文件描述符
 
 当一个进程被启动之后，内核PCB的文件描述符表中就已经分配了三个文件描述符，这三个文件描述符对应的都是当前启动这个进程的终端文件（Linux中一切皆文件，终端就是一个设备文件，在 /dev 目录中）
 
@@ -235,14 +175,14 @@ return count
 
 > 这三个默认分配的文件描述符是可以通过close()函数关闭掉，但是关闭之后当前进程也就不能和当前终端进行输入或者输出的信息交互了。
 
-### ***2.4.3 新打开的文件如何分配文件描述符***
+### 2.4.3 新打开的文件如何分配文件描述符
 
 因为进程启动之后，文件描述符表中的0,1,2就被分配出去了，因此**从3开始分配**。在进程中每打开一个文件，就会给这个文件分配一个新的文件描述符，比如：
 
 - 通过open()函数打开 /hello.txt，文件描述符 3 被分配给了这个文件，**保持这个打开状态**，**再次**通过open()函数打开 /hello.txt，文件描述符 4 被分配给了这个文件，也就是说一个进程中不同的文件描述符打开的磁盘文件可能是同一个。
 - 通过open()函数打开 /hello.txt，文件描述符 3 被分配给了这个文件，**将打开的文件关闭**，此时文件描述符**3就被释放了**。再次通过open()函数打开 /hello.txt，文件描述符 3 被分配给了这个文件，也就是说打开的**新文件会关联文件描述符表中最小的没有被占用的文件描述符**。
 
-### ***2.4.4 socket***
+### 2.4.4 socket
 
 > **socket也是一种文件描述符：**socket通过系统调用创建后，会返回一个文件描述符，进程可以使用这个描述符进行网络通信
 
@@ -282,7 +222,7 @@ return count
 
 参考：
 
-[Linux 教程subingwen.cn/linux/#%E7%AC%AC1%E7%AB%A0-Linux-%E5%9F%BA%E7%A1%80![img](/../../images/$%7Bfiilename%7D/icon-default-1730608959145-359.png)https://link.zhihu.com/?target=https%3A//subingwen.cn/linux/%23%25E7%25AC%25AC1%25E7%25AB%25A0-Linux-%25E5%259F%25BA%25E7%25A1%2580](https://link.zhihu.com/?target=https%3A//subingwen.cn/linux/%23%E7%AC%AC1%E7%AB%A0-Linux-%E5%9F%BA%E7%A1%80)
+[Linux 教程 | 爱编程的大丙](https://subingwen.cn/linux/#第1章-Linux-基础)
 
 # 3. 基础socket模型
 
@@ -307,7 +247,7 @@ while (true) { //循环监听客户端连接请求
 
 > 这种基础socket模型看起来和我们之前学习的asio实现的服务器步骤相似，但其实并**不相同**。asio中io_context.run()会根据平台选择相应的IO多路复用模型执行，只不过这些步骤都被隐藏了。asio底层通信可以参考文章：
 
-[爱吃土豆：网络编程（12）——完善粘包处理操作+asio底层通信过程3 赞同 · 0 评论文章![img](/../../images/$%7Bfiilename%7D/icon-default-1730608959145-359.png)https://zhuanlan.zhihu.com/p/745782212](https://zhuanlan.zhihu.com/p/745782212)
+[网络编程（12）——完善粘包处理操作+asio底层通信过程 - 知乎](https://zhuanlan.zhihu.com/p/745782212)
 
 # 4. select 模型（linux/windows）
 
@@ -430,7 +370,7 @@ int FD_ISSET(int fd, fd_set *fdset); // 检测 fd_set 某一位是否为 1
 
 ## 4.5 select使用示例
 
-### ***4.5.1 服务器***
+### 4.5.1 服务器
 
 ```cpp
 int main() {
@@ -471,7 +411,7 @@ int main() {
   }
 ```
 
-### ***4.5.2 客户端***
+### 4.5.2 客户端
 
 客户端不需要使用IO多路复用，因为客户端和服务器的对应关系是 1：N，也就是说客户端是比较专一的，只能和一个连接成功的服务器通信。
 
@@ -659,13 +599,13 @@ int epoll_ctl(int epfd, int op, int fd, struct epoll_event *event);
 int epoll_wait(int epfd, struct epoll_event * events, int maxevents, int timeout);
 ```
 
-select/poll低效的原因之一是***将“添加/维护待检测任务”和“阻塞进程/线程”两个步骤合二为一***。每次调用select都需要这两步操作，然而大多数应用场景中，需要监视的socket个数相对固定，并不需要每次都修改。***epoll将这两个操作分开，先用epoll_ctl()维护等待队列，再调用epoll_wait()阻塞进程（解耦）***。通过下图的对比显而易见，epoll的效率更高。
+select/poll低效的原因之一是**将“添加/维护待检测任务”和“阻塞进程/线程”两个步骤合二为一**。每次调用select都需要这两步操作，然而大多数应用场景中，需要监视的socket个数相对固定，并不需要每次都修改。***epoll将这两个操作分开，先用epoll_ctl()维护等待队列，再调用epoll_wait()阻塞进程（解耦）***。通过下图的对比显而易见，epoll的效率更高。
 
 ![img](/../../images/$%7Bfiilename%7D/format,png-1730608959133-358.png)
 
 图片来源：https://subingwen.cn/linux/epoll/#2-%E6%93%8D%E4%BD%9C%E5%87%BD%E6%95%B0
 
-### ***6.1.1 epoll_create()***
+### 6.1.1 epoll_create()
 
 ```
 int epoll_create(int size);
@@ -682,7 +622,7 @@ epoll 实例内部存储：
 - 监听列表：所有要监听的文件描述符，使用**红黑树**
 - 就绪列表：所有就绪的文件描述符，使用**链表**
 
-### ***6.1.2 epoll_ctl ()***
+### 6.1.2 epoll_ctl ()
 
 该函数用于管理红黑树实例上的节点，可以进行添加、删除、修改操作。epoll_wait方法返回的事件必然是通过 epoll_ctl添加到 epoll中的。
 
@@ -721,7 +661,7 @@ epoll_ctl 会监听文件描述符 fd 上发生的 event 事件。
 
 epoll_ctl 会将文件描述符 fd 添加到 epoll 实例的监听列表里，同时为 fd 设置一个回调函数，并监听事件 event。当 fd 上发生相应事件时，会调用回调函数，将 fd 添加到 epoll 实例的就绪队列上。
 
-### ***6.1.3 epoll_wait()***
+### 6.1.3 epoll_wait()
 
 这是 epoll 模型的主要函数，功能相当于 select，用于检测创建的epoll实例中有没有就绪的文件描述符。
 
@@ -906,7 +846,7 @@ select 只支持水平触发，epoll 支持水平触发和边缘触发。
 
 水平触发、边缘触发的名称来源：数字电路当中的电位水平，高低电平切换瞬间的触发动作叫边缘触发，而处于高电平的触发动作叫做水平触发。
 
-### ***6.3.1 水平触发***
+### 6.3.1 水平触发
 
 - 读事件：
 
@@ -927,7 +867,7 @@ select 只支持水平触发，epoll 支持水平触发和边缘触发。
 
 水平触发代码可参考 **6.2 示例**
 
-### ***6.3.2 边沿触发***
+### 6.3.2 边沿触发
 
 - 读事件：
 
@@ -988,7 +928,7 @@ for(int i=0; i<num; ++i)
 
 主要就是在建立新连接时，将新连接的socket设置为边沿模式。
 
-#### *b. **边沿模式**必须设置为非阻塞IO*
+#### *b. 边沿模式必须设置为非阻塞IO*
 
 对于写事件的触发一般情况下是不需要进行检测的，因为写缓冲区大部分情况下都是有足够的空间可以进行数据的写入。对于读事件的触发就必须要检测，因为服务器不知道客户端什么时候发送数据，如果使用epoll的**边沿模式**进行读事件的检测，有新数据达到只会通知一次，那么必须要保证得到通知后将数据全部从读缓冲区中读出。那么，应该如何读这些数据呢？
 
@@ -1215,13 +1155,11 @@ int main(int argc, const char* argv[])
 
 ## 6.5 关于边缘模式的问题
 
-### ***6.5.1 为什么边缘触发必须使用非阻塞 I/O？***
+### 6.5.1 为什么边缘触发必须使用非阻塞 I/O？
 
 这部分内容可以回顾一下第一章和第二章关于阻塞IO、非阻塞IO、异步IO、多路复用的知识，并将其串联起来。详细内容可以参考这篇文章，讲的非常详细：
 
-[Blocking I/O, Nonblocking I/O, And Epolleklitzke.org/blocking-io-nonblocking-io-and-epoll![img](/../../images/$%7Bfiilename%7D/icon-default-1730608959145-359.png)https://link.zhihu.com/?target=https%3A//eklitzke.org/blocking-io-nonblocking-io-and-epoll](https://link.zhihu.com/?target=https%3A//eklitzke.org/blocking-io-nonblocking-io-and-epoll)
-
-
+[Blocking I/O, Nonblocking I/O, And Epoll](https://eklitzke.org/blocking-io-nonblocking-io-and-epoll)
 
 > **缓冲区大小限制**：每次通过read系统调用时，最多只能读取与缓冲区大小相等的字节数。如果收到的数据超过了这个大小，就需要多次调用read才能将所有数据读取完。
 
@@ -1242,7 +1180,7 @@ int main(int argc, const char* argv[])
 
 这种方法的好处是，每次调用epoll_wait都能确保数据被全部读取或写入，这样就不会因为没有数据而浪费调用次数。在水平触发模式下，如果epoll_wait时数据未处理完，会直接返回，导致重复通知。
 
-### ***6.5.2 为什么 epoll 的边缘触发模式不能使用阻塞 I/O？***
+### 6.5.2 为什么 epoll 的边缘触发模式不能使用阻塞 I/O？
 
 边缘触发模式需要循环读/写一个文件描述符的所有数据。如果使用阻塞 I/O，那么一定会在***最后一次调用（没有数据可读/写）时阻塞，导致无法正常结束。***
 
@@ -1265,7 +1203,7 @@ int main(int argc, const char* argv[])
 
 参考：
 
-[IO多路转接（复用）之epollsubingwen.cn/linux/epoll/#2-%E6%93%8D%E4%BD%9C%E5%87%BD%E6%95%B0![img](/../../images/$%7Bfiilename%7D/icon-default-1730608959145-359.png)https://link.zhihu.com/?target=https%3A//subingwen.cn/linux/epoll/%232-%25E6%2593%258D%25E4%25BD%259C%25E5%2587%25BD%25E6%2595%25B0](https://link.zhihu.com/?target=https%3A//subingwen.cn/linux/epoll/%232-%E6%93%8D%E4%BD%9C%E5%87%BD%E6%95%B0)
+[IO多路转接（复用）之epoll | 爱编程的大丙](https://subingwen.cn/linux/epoll/#2-操作函数)
 
 ------
 
