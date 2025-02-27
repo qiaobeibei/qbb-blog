@@ -1,9 +1,11 @@
 ---
-title:八股（1）——cpp篇
-date: 2025-02-27 16:30:34
+title: 八股——cpp篇
+date: 2025-02-25 12:48:34
 categories:
-- 八股
-typora-root-url: ./..
+- C++
+tags: 
+- C++
+typora-root-url:./..
 ---
 
 # 1. C++基础
