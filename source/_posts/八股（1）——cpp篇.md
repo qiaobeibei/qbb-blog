@@ -1,5 +1,5 @@
 ---
-title： 八股（1）——C++篇
+title： 八股（1）——cpp篇
 date： 2025-02-25 22：07：31
 categories：
 - 八股
