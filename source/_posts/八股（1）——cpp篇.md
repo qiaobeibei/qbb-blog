@@ -5,7 +5,7 @@ categories:
 - C++
 tags: 
 - C++
-typora-root-url:./..
+typora-root-url: ./..
 ---
 
 # 1. C++基础
