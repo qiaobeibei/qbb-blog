@@ -168,6 +168,15 @@ void AsioIOServicePool::Stop(){
 
 同样我们要实现Stop函数，控制AsioIOServicePool停止所有ioc的工作，并等待所有线程结束。因为我们要保证每个线程安全退出后再让AsioIOServicePool停止。
 
+### e. 析构函数
+
+```cpp
+AsioIOServicePool::~AsioIOServicePool() {
+	Stop();
+	std::cout << "AsioIOServicePool destruct" << std::endl;
+}
+```
+
 ## 3. 服务器修改
 
 ### a. void CServer::start_accept()

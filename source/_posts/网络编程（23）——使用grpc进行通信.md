@@ -503,6 +503,10 @@ D:\app\cppsoft\grpc\third_party\address_sorting\include
 然后，在库目录中，包含下面的目录
 
 ```
+D:\app\cppsoft\grpc\visualpro\third_party\abseil-cpp\absl\profiling\Debug
+D:\app\cppsoft\grpc\visualpro\third_party\abseil-cpp\absl\flags\Debug
+D:\app\cppsoft\grpc\visualpro\third_party\abseil-cpp\absl\random\Debug
+D:\app\cppsoft\grpc\visualpro\third_party\protobuf\Debug
 D:\app\cppsoft\grpc\visualpro\third_party\re2\Debug
 D:\app\cppsoft\grpc\visualpro\third_party\abseil-cpp\absl\types\Debug
 D:\app\cppsoft\grpc\visualpro\third_party\abseil-cpp\absl\synchronization\Debug
@@ -528,6 +532,7 @@ D:\app\cppsoft\grpc\visualpro\third_party\cares\cares\lib\Debug
 最后，链接器->输入->附加依赖库，把用到的库文件写进去
 
 ```
+json_vc71_libmtd.lib
 libprotobufd.lib
 gpr.lib
 grpc.lib
@@ -537,7 +542,6 @@ address_sorting.lib
 ws2_32.lib
 cares.lib
 zlibstaticd.lib
-upb.lib
 ssl.lib
 crypto.lib
 absl_bad_any_cast_impl.lib
@@ -552,7 +556,6 @@ absl_demangle_internal.lib
 absl_examine_stack.lib
 absl_exponential_biased.lib
 absl_failure_signal_handler.lib
-absl_flags.lib
 absl_flags_config.lib
 absl_flags_internal.lib
 absl_flags_marshalling.lib
@@ -565,7 +568,6 @@ absl_hash.lib
 absl_hashtablez_sampler.lib
 absl_int128.lib
 absl_leak_check.lib
-absl_leak_check_disable.lib
 absl_log_severity.lib
 absl_malloc_internal.lib
 absl_periodic_sampler.lib
