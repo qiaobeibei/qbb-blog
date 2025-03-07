@@ -15,7 +15,7 @@ typora-root-url: ./..
 
 之前我们介绍了**IOServicePool**的方式，一个IOServicePool开启n个线程和n个iocontext，每个线程内独立运行iocontext, 各个iocontext监听各自绑定的socket是否就绪，如果就绪就在各自线程里触发回调函数。为避免线程安全问题，我们将网络数据封装为逻辑包投递给逻辑系统，逻辑系统有一个单独线程处理，这样将网络IO和逻辑处理解耦合，极大的提高了服务器IO层面的吞吐率。
 
-今天给大家介绍asio多线程模式的第二种多线程模式**IOThreadPool**，我们只初始化一个iocontext用来监听服务器的读写事件，包括新连接到来的监听也用这个iocontext。只是我们让iocontext.run在多个线程中调用，启动一个 io_context，由多个线程共享，这样回调函数就会被不同的线程触发，从这个角度看回调函数被并发调用了。
+今天给大家介绍asio多线程模式的第二种多线程模式**IOThreadPool**，我们只初始化一个iocontext用来监听服务器的读写事件，包括新连接到来的监听也用这个iocontext。只是我们让iocontext.run在多个线程中调用，启动一个 io_context，由多个线程共享，这样回调函数就会被不同的线程触发，从这个角度看**回调函数被并发调用**了。
 
 ![img](/images/$%7Bfiilename%7D/format,png-1730605565645-66.png)
 
@@ -189,7 +189,7 @@ void CSession::Start() {
         );
 ```
 
-# 3. 客户端
+# 3. 服务端
 
 ```cpp
 int main()
@@ -211,6 +211,7 @@ int main()
             });
 
         CServer s(pool->GetIOService(), 10086);
+        // 启动监听signals的ioc，主线程的ioc仅用来监听signal，不用于监听客户端的连接
         ioc.run();
         {
             std::unique_lock<std::mutex> lock(mutex_quit);
@@ -222,19 +223,18 @@ int main()
     catch (std::exception& e) {
         std::cerr << "Exception: " << e.what() << '\n';
     }
-    boost::asio::io_context io_context;
 }
 ```
 
-之所以用条件变量是因为传入Server的ioc是从线程池中获得的，Server初始化之后并没有调用ioc.run()，线程池中的ioc是运行在自己的线程中的，下面这段是运行在主线程中的，是为了防止主线程结束了而子线程还在运行，所以必须设置条件变量防止主线程结束
+之所以用条件变量是因为传入Server的ioc是在主线程中从线程池中获得的，Server初始化之后并没有调用ioc.run()，线程池中的ioc是运行在自己的线程中的，下面这段是运行在主线程中的，是为了**防止主线程结束了而子线程还在运行**，所以必须设置条件变量防止主线程结束
 
 ```cpp
-        {
-            std::unique_lock<std::mutex> lock(mutex_quit);
-            while (!bstop) {
-                cond_quit.wait(lock);
-            }
-        }
+{
+    std::unique_lock<std::mutex> lock(mutex_quit);
+    while (!bstop) {
+        cond_quit.wait(lock);
+    }
+}
 ```
 
 如果不设置条件变量使主线程挂起，那么当主线程结束后，如果server还没有跑起来，server相当于子线程，那么会直接让子线程结束
@@ -246,12 +246,12 @@ CServer s(pool->GetIOService(), 10086);
 单独生成一个ioc运行监听信号，当收到两个退出信号时，服务器退出，而server的ioc是从线程池中获取的。当获取到退出信号时，首先将监听信号的ioc退出，然后将线程池的unique_ptr释放work，使得线程池中的ioc能退出，最后上锁然后唤醒主线程，主线程结束。
 
 ```cpp
-                std::cout << "Signal " << signal_number << " received." << std::endl;
-                ioc.stop();  // 停止 io_context
-                pool->Stop();
-                std::unique_lock<std::mutex> lock(mutex_quit);
-                bstop = true;
-                cond_quit.notify_one();
+std::cout << "Signal " << signal_number << " received." << std::endl;
+ioc.stop();  // 停止 io_context
+pool->Stop();
+std::unique_lock<std::mutex> lock(mutex_quit);
+bstop = true;
+cond_quit.notify_one();
 ```
 
 # 4. 总结
@@ -260,15 +260,18 @@ CServer s(pool->GetIOService(), 10086);
 
 这是因为
 
-第一种方式调用了n+1个ioc.run()，第二种方式调用了2个ioc.run()
+第一种方式调用了**n+1**个ioc.run()，第二种方式调用了**2**个ioc.run()
 
 - **前者**在main函数中处理信号监听和Server任务，当main中的ioc接收到客户端连接之后，生成一个子session，并从IOServicePool线程池中取一个ioc用于管理子Session的收发。也就是说，main中的ioc用于监听信号和server任务处理，而线程池中的ioc用于处理子Session的收发。main中的ioc一旦停止，那么服务器就会停止客户端的连接服务，session任务不会在增加，而线程池中的ioc全部停止后，线程的收发就会停止。
-- **后者**再main函数中处理监听信号任务，而server任务处理交给了线程池IOThreadPool中唯一的ioc进行处理。也就是说，让一个ioc单独监听信号，另一个ioc运行在多线程中做收发。main中的ioc停止后，仅仅只是服务器的信号监听停止了，而server的任务处理以及session的收发仍然会持续。
+- **后者**再main函数中处理监听signals任务，而server任务处理交给了线程池IOThreadPool中唯一的ioc进行处理。也就是说，让一个ioc单独监听signal，另一个ioc运行在多线程中做收发、客户端连接。main中的ioc停止后，**仅仅只是服务器的信号监听停止了，而server的任务处理以及session的收发仍然会持续。**
 
 此外，他们的退出机制也有些不同。
 
-- **第一种方式**：信号处理函数在 `ioc` 上注册，当收到信号时，会调用 `ioc.stop()` 停止 `io_context`，并调用线程池的 `Stop` 方法停止线程池的运行。这种方式不需要额外的同步机制，因为主线程就是 `ioc.run()` 的执行线程，一旦停止，就会退出。
-- **第二种方式**：信号处理函数在主线程的 `ioc` 上注册，但实际处理的 I/O 事件由线程池中的 `io_context` 完成。为了协调多线程退出，需要使用 `mutex` 和条件变量（`cond_quit`）来确保所有线程安全地退出。信号处理函数在停止 `io_context` 后，会通知等待在条件变量上的线程退出，从而确保整个程序能够正确结束。
+- **第一种方式**：信号处理函数在 `ioc` 上注册，当收到信号时，会调用 `ioc.stop()` 停止 `io_context`，这时候服务器不会再监听客户端的连接，并调用线程池的 `Stop` 方法停止线程池的运行，这时候会逐个停止session的收发。这种方式不需要额外的同步机制，因为主线程就是 `ioc.run()` 的执行线程，一旦停止，就会退出连接，session因为已经停止了收发，即使主线程退出也无所谓，子线程可以慢慢处理剩余的任务。
+
+- **第二种方式**：信号处理函数在主线程的 `ioc` 上注册，但实际处理的 I/O 事件由线程池中的 `io_context` 完成。为了协调多线程退出，需要使用 `mutex` 和条件变量（`cond_quit`）来确保所有线程安全地退出。信号处理函数在停止 `io_context` 后，会通知等待在条件变量上的线程退出，从而确保整个程序能够正确结束。因为子线程中不仅在进行客户端的监听，还执行任务的收发，我们要确保客户端的监听和任务的收发都不会执行，才能安全退出。
+
+  在第一种方式中，我们先停止了客户端的收发，然后将线程池中的ioc也停止，任务收发停止。在第二种中，主线程的ioc是监听isgnal的，和客户端的收发无关，所以我们必须要要条件变量等到线程池中的所有ioc停止后才能推出。
 
 > **2. 哪一种多线程模式的效率最高？**
 >
