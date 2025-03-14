@@ -111,7 +111,7 @@ shared_ptr& operator=( const shared_ptr<Y>& r ) noexcept;
 
 ### 1.2.1 make_shared
 
-我们可以通过构造函数来创建一个智能指针，也可以通过make_shared来构造智能指针，但更推荐后者，因为：
+我们可以通过构造函数来创建一个智能指针，也可以通过`make_shared`来构造智能指针，但更推荐后者，因为：
 
 1. `std::make_shared` **减少了内存分配的次数**：
    - **使用 `new` 创建：** 当直接使用 `std::shared_ptr` 时，需要两次内存分配：

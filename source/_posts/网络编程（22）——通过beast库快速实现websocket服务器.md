@@ -206,7 +206,7 @@ public:
 };
 ```
 
-首先，为了实现伪闭包，Connection类需要继承std::enable_shared_from_this<T>，便于调用shared_from_this()函数。
+首先，为了实现伪闭包，`Connection`类需要继承`std::enable_shared_from_this<T>`，便于调用`shared_from_this()`函数。
 
 成员变量的介绍如下：
 
