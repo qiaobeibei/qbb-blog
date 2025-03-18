@@ -347,9 +347,19 @@ int main() {
 
 当出现类的等号赋值时，会调用拷贝函数，在未定义显示拷贝构造函数的情况下，系统会调用默认的拷贝函数-即浅拷贝，它能够完成成员的一一复制。当数据成员中没有指针时，浅拷贝是可行的。
 
-但当数据成员中有指针时，如果采用简单的浅拷贝，则两类中的两个指针指向同一个地址，当对象快要结束时，会调用两次析构函数，而导致指野指针的问题。
+但当数据成员中有指针时，如果采用简单的浅拷贝，则两类中的两个指针指向同一个地址，当两个对象共享同一个指针，其中一个对象析构时释放了内存，另一个对象的指针就变成了**悬空指针**。另外，如果两个对象都尝试释放同一个内存，就会导致**重复释放**。还有，如果其中一个对象修改了指针指向的内容，另一个对象也会受到影响，因为它们指向同一块内存。
 
 所以，这时必需采用深拷贝。深拷贝与浅拷贝之间的区别就在于**深拷贝会在堆内存中另外申请空间来存储数据，从而也就解决来野指针的问题**。简而言之，当数据成员中有指针时，必需要用深拷贝更加安全。
+
+当然，我们也可以通过智能指针管理对象，智能指针会自行管理内存。
+
+**浅拷贝**：只复制对象的值或引用，多个对象共享同一个动态分配的内存空间，修改其中一个对象的数据会影响到另一个对象。
+
+**深拷贝**：复制对象本身的值，并且对对象引用的内存进行递归复制，确保每个对象拥有独立的内存，修改其中一个对象的数据不会影响另一个对象。
+
+![4000b04ed8b33ea0df35a01f5972dfb](/images/$%7Bfiilename%7D/4000b04ed8b33ea0df35a01f5972dfb.jpg)
+
+<center>图片来源：C++ primer plus：深拷贝</center>
 
 ## 1.16 什么情况下会调用拷贝构造函数(三种情况)  
 
@@ -979,7 +989,40 @@ union ChannelManager{
 
 STL 中迭代器的特性萃取用的就是模板特例化。
 
-# 2. C++内存管理
+## 1.40 move和forward的区别
+
+st::move 的简单实现如下：
+
+```cpp
+template<typename T>
+typename remove_reference<T>::type && my_move(T&& t){
+    return static_cast<typename remove_reference<T>::type &&>(t);
+}
+```
+
+它首先通过引用折叠将传入的是值折叠为左值引用或右值引用，然后调用 `remove_reference<T>::type` 移除类型 `T` 上的引用（如果有的话），无论 `T` 是左值引用、右值引用，还是非引用类型，`remove_reference<T>::type` 得到的都是原始的类型。
+
+移除引用后，将该类型强制转换为右值引用（类型是右值引用），以便允许移动语义的优化
+
+```cpp
+template <class _Ty>
+_NODISCARD constexpr _Ty&& forward(
+    remove_reference_t<_Ty>& _Arg) noexcept { // forward an lvalue as either an lvalue or an rvalue
+    return static_cast<_Ty&&>(_Arg);
+}
+
+template <class _Ty>
+_NODISCARD constexpr _Ty&& forward(remove_reference_t<_Ty>&& _Arg) noexcept { // forward an rvalue as an rvalue
+    static_assert(!is_lvalue_reference_v<_Ty>, "bad forward call");
+    return static_cast<_Ty&&>(_Arg);
+}
+```
+
+而 `std::forward<T>`只是单纯的返回一个T&&，但是T的类型需要上层函数传入，如果T是int&，那么返回的其实也是int&；如果T是int&&或者int（右值引用模板参数中，右值会被推断为int，所以这里的int代表右值），返回的其实还是int&&。
+
+ **`std::forward<T>`是为了解决传递参数时的临时对象（右值）被强制转换为左值的问题**。
+
+参考：[C++——完美转发（引用折叠+forward） | 爱吃土豆的个人博客](https://www.aichitudou.cn/2024/11/07/cpp——完美转发（引用折叠-forward）/)
 
 ## 2.1 C++内存分配
 
@@ -1648,6 +1691,8 @@ funbindstatic("Rolis");
 
 - 完美转发
 - 移动语义，通过移动构造函数和移动赋值运算符，可以将临时对象的资源高效地转移到新对象中，避免不必要的拷贝。
+
+参考：[C++——完美转发（引用折叠+forward） | 爱吃土豆的个人博客](https://www.aichitudou.cn/2024/11/07/cpp——完美转发（引用折叠-forward）/)
 
 ## 3.7 智能指针
 
@@ -2440,3 +2485,1798 @@ key 会从小到大依次排列到 vector 中。
 
 > 如果父进程在子进程结束之前退出，子进程会成为**孤儿进程**，被 `init` 进程收养。如果子进程结束后，父进程没有及时回收子进程的资源，子进程会成为**僵尸进程**，占用系统资源。
 
+## 5.9 OSI/TCP模型
+
+![image-20250314113134581](/images/$%7Bfiilename%7D/image-20250314113134581.png)
+
+- 物理层：负责最后将信息编码成电流脉冲或其它信号用于网上传输
+- 数据链路层:
+  - 数据链路层通过物理网络链路供数据传输。
+  - 规定了0和1的分包形式，确定了网络数据包的形式；
+- 网络层
+  - 网络层负责在源和终点之间建立连接;
+  - 此处需要确定计算机的位置，通过IPv4，IPv6格式的IP地址来找到对应的主机
+- 传输层
+  - 传输层向高层提供可靠的端到端的网络数据流服务。
+  - 每一个应用程序都会在网卡注册一个端口号，该层就是端口与端口的通信
+- 会话层
+  - 会话层建立、管理和终止表示层与实体之间的通信会话；
+  - 建立一个连接（自动的手机信息、自动的网络寻址);
+- 表示层:
+  - 对应用层数据编码和转化, 确保以一个系统应用层发送的信息 可以被另一个系统应用层识别;
+
+## 5.10 CAS和ABA
+
+CAS是解决多线程并行情况下使用锁造成性能损耗的一种机制。
+
+- CAS操作包含三个操作数——内存位置（V）、预期原值（A）、新值(B)。
+- 如果内存位置的值与预期原值相匹配，那么处理器会自动将该位置值更新为新值。
+- 否则，处理器不做任何操作。
+- 无论哪种情况，它都会在CAS指令之前返回该位置的值。
+- CAS有效地说明了“我认为位置V应该包含值A；如果包含该值，则将B放到这个位置；否则，不要更改该位置，只告诉我这个位置现在的值即可。
+
+**一个 CAS 涉及到以下操作：**
+
+假设内存中的原数据V，旧的预期值A，需要修改的新值B
+
+- **比较 A 与 V 是否相等**
+- **如果比较相等，将 B 写入 V**
+- **返回操作是否成功**
+
+**C++11中的CAS**，C++11中的STL中的atomic类的函数可以让你跨平台。
+
+```c
+template< class T > bool atomic_compare_exchange_weak( std::atomic* obj,T* expected, T desired ); 
+template< class T > bool atomic_compare_exchange_weak( volatile std::atomic* obj,T* expected, T d
+```
+
+- `compare_exchange_weak`：尝试将原子对象的当前值与预期值进行*比较*，如果相等则将其**更新为新值**（不是将`expected`的值赋给`flag`，而是有另外一个设定值）并返回 `true`；否则，将原子对象的值加载进 `expected`（进行加载操作）并返回 `false`。**此操作可能会由于某些硬件的特性而出现假失败，需要在循环中重试**。
+
+  ```cpp
+  std::atomic<bool> flag{ false }; // 初始化为 false
+  bool expected = false; // 比较值
+  
+  while (!flag.compare_exchange_weak(expected, true));
+  ```
+
+  - 它比较原子对象的当前持有值（相当于先调用`head.load()`）与预期值 `expected` **是否相等**。
+
+  - 如果相等，则将原子对象的值更新为新值（此例为 `true`），并返回 `true`。
+
+  - 如果不相等，则不会更新原子对象的值，并将原子对象的当前值加载到 `expected` 中，返回 `false`。
+
+  返回 `false` 即代表出现了*假失败*，因此需要在循环中重试。。
+
+- `compare_exchange_strong`：类似于 `compare_exchange_weak`，**但不会出现假失败，因此不需要重试**。适用于需要确保操作成功的场合。
+
+  ```cpp
+  std::atomic<bool> flag{ false }; // 初始化为 false
+  bool expected = false; // 比较值
+  
+  void try_set_flag() {
+      // 判断 flag 的值与 expected 是否相同，如果相同，将 flag 修改为我们设定的值，并返回 true
+      if (flag.compare_exchange_strong(expected, true)) {
+          std::cout << "flag 为 false，设为 true。\n";
+      }
+      else { // 如果不相同，将 expected 的值修改为我们设定的值，并返回false
+          std::cout << "flag 为 true, expected 设为 true。\n";
+      }
+  }
+  ```
+
+  假设有两个线程运行 `try_set_flag` 函数，那么第一个线程调用 `compare_exchange_strong` 将原子对象 `flag` 设置为 `true`。第二个线程调用 `compare_exchange_strong`，当前原子对象的值为 `true`，而 `expected` 为 `false`，不相等，将原子对象的值设置给 `expected`。此时 `flag` 与 `expected` 均为 `true`。
+
+  ```cpp
+  std::thread t1{ try_set_flag };
+  std::thread t2{ try_set_flag };
+  t1.join();
+  t2.join();
+  std::cout << "flag: " << std::boolalpha << flag << '\n';
+  std::cout << "expected: " << std::boolalpha << expected << '\n';
+  ```
+
+  输出为：
+
+  ```
+  flag 为 false，flag 设为 true。
+  flag 为 true, expected 设为 true。
+  flag: true
+  expected: true
+  ```
+
+与 `exchange` 的另一个不同是，`compare_exchange_weak` 和 `compare_exchange_strong` 允许指定成功和失败情况下的内存次序。这意味着可以根据成功或失败的情况，为原子操作指定不同的内存次序。
+
+```cpp
+std::atomic<bool> data{ false };
+bool expected = false;
+
+// 成功时的内存序为 memory_order_release，失败时的内存序为 memory_order_acquire
+if (data.compare_exchange_weak(expected, true,
+    std::memory_order_release, std::memory_order_acquire)) {
+    // 操作成功
+}
+else {
+    // 操作失败
+}
+```
+
+- exchange 也是读改写操作，只不过它没有比较，而是直接修改原子变量，并返回原子变量持有的旧值
+
+```cpp
+x = b.exchange(false, std::memory_order_acq_rel); // 将 b 修改为false，并返回 b 持有的旧值
+```
+
+
+
+
+
+ABA问题描述：
+
+- 进程P1在共享变量中读到值为A
+- P1被抢占了，进程P2执行
+- P2把共享变量里的值从A改成了B，再改回到A，此时被P1抢占。
+- P1回来看到共享变量里的值没有被改变，于是继续执行。
+
+真正要做到严谨的CAS机制，**我们在compare阶段不仅要比较期望值A和地址V中的实际值，还要比较变量的版本号是否一致。**
+
+**举个栗子：**
+
+假设地址V中存储着变量值A，当前版本号是01。线程1获取了当前值A和版本号01，想要更新为B，但是被阻塞了。
+
+![img](/images/$%7Bfiilename%7D/v2-037599dac1f61af90d7d4c64aff994f1_1440w.jpg)
+
+这时候，内存地址V中变量发生了多次改变，版本号提升为03，但是变量值仍然是A
+
+![img](/images/$%7Bfiilename%7D/v2-1d8f9a7a5061a57049fac29dc3547720_1440w.jpg)
+
+随后线程1恢复运行，进行compare操作。经过比较，线程1所获得的值和地址的实际值都是A，但是版本号不相等，所以这一次更新失败
+
+![img](/images/$%7Bfiilename%7D/v2-dbd411b18e0a240d15660fbd626385dd_1440w-1742202337072-10.jpg)
+
+解决思路：增加版本号，每次变量更新时把版本号+1，A-B-A就变成了1A-2B-3A。JDK5之后的atomic包提供了`AtomicStampedReference`来解决ABA问题，它的`compareAndSet`方法会首先检查当前引用是否等于预期引用，并且当前标志是否等于预期标志。全部相等，才会以原子方式将该引用、该标志的值设置为更新值。
+
+## 5.11 最烦恼的解析
+
+```cpp
+class MyClass {
+public:
+    MyClass() {}
+};
+
+// 返回对象是MyClass ，函数名为obj，无参数
+MyClass obj(); // 这不是对象的声明，而是一个函数的声明
+```
+
+在上面的代码中，`MyClass obj()`; 被编译器解析为一个返回 `MyClass` 类型的函数 `obj`，而不是一个 `MyClass` 类型的对象。这种情况被称为“最烦恼的解析”，导致编译器将原本应该是对象的构造解析为函数的声明。原因：
+
+- **语法规则**：C++ 的语法规则允许使用类名后跟括号的形式来声明函数（仿函数）。如果没有其他上下文，编译器会选择这种解析方式。
+- **上下文歧义**：在某些情况下，编译器无法明确判断你是想要创建一个对象还是声明一个函数，因此选择最符合语法的解析方式。
+
+为了避免最烦恼的解析，可以使用如下方法：
+
+```cpp
+// 1. 使用花括号
+MyClass obj{}; // 这明确表示对象的构造
+// 2. 使用额外的括号
+MyClass obj((1)); // 使用额外的括号，避免解析为函数声明
+// 3. 使用指针
+MyClass* obj = new MyClass(); // 使用指针来创建对象
+```
+
+所以我们如果使用仿函数作为可调用对象传入时，可以这样做：
+
+```cpp
+class background_task {
+public:
+    void operator() {
+        std::cout << "str is " << std::endl;
+    }
+};
+
+// 1.创建对象
+background_task task; // 创建对象
+std::thread t2(task); // 传入对象和参数
+// 2. 使用花括号
+std::thread t2{ background_task() }; // 使用花括号初始化对象
+// 3. 使用指针
+background_task* task = new background_task(); // 创建对象并使用指针
+std::thread t2(*task);
+// 4. 使用临时对象
+std::thread t2((background_task())); // 使用额外的括号
+```
+
+但如果仿函数中有参数，那么就不会造成"最烦恼的解析”，因为上下文有解释，我是要调用仿函数（因为传入的参数和仿函数对应，构造函数与其不对应），比如：
+
+```cpp
+class background_task {
+public:
+    void operator()(std::string str) {
+        std::cout << "str is " << str << std::endl;
+    }
+};
+
+std::string str = "hello world!";
+// 不会发生报错
+std::thread t2(background_task(), str);
+t2.join();
+```
+
+> ***"最烦恼的解析”一般*在无传入参数的情况下发生。**
+
+## 5.12 为什么要使用join()等待子线程完成
+
+> 虽然使用 `std::thread` 创建的线程在结束时会自动释放其资源，但在主线程（或创建线程的线程）中仍需要等待其子线程结束。**我们需要在主线程中显式调用`join()`函数等待子线程的结束，**子线程结束后主线程才会继续运行。
+
+原因如下：
+
+1. 如果创建的子线程在其执行过程中没有被主线程等待，那么当主线程结束或被销毁时，操作系统将会终止这个子线程，这可能导致子线程的资源（如内存、文件句柄等）不会被释放，产生**资源泄漏**。
+2. 如果不调用 `join()`，主线程在没有等待子线程结束的情况下继续执行，可能会导致程序在子线程完成之前就结束，从而**未能正确处理子线程的结果**（子线程的结果可能不会被主线程处理）。
+3. 如果主线程需要依赖于子线程完成某些任务（例如数据处理或文件写入），需要通过 `join()` 确保子线程在主线程继续执行之前完成，可以避免因**数据未更新而导致的不一致性**。
+
+> 线程的回收通过线程的析构函数来完成，即执行`terminate`操作。
+
+## 5.13 detach() 不要将局部变量按引用传入
+
+可以使用`detach`允许子线程采用分离的方式在后台**独自运行**，不受主线程影响。主线程和子线程执行各自的任务，使用各自的资源。
+
+> 注意：当一个线程被分离后，**主线程将无法直接管理它**，也无法使用`join()`等待被分离的线程结束。处理日志记录或监控任务这些线程一般会让其在后台持续运行，使用`detach`。
+
+```cpp
+struct func {
+    int& _i;
+    func(int & i): _i(i){}
+    void operator()() {
+        for (int i = 0; i < 3; i++) {
+            _i = i;
+            std::cout << "_i is " << _i << std::endl;
+            std::this_thread::sleep_for(std::chrono::seconds(1));
+        }
+    }
+};
+void oops() {
+        int some_local_state = 0;
+        func myfunc(some_local_state);
+        std::thread functhread(myfunc);
+        //隐患，访问局部变量，局部变量可能会随着}结束而回收或随着主线程退出而回收
+        functhread.detach();    
+}
+// detach 注意事项
+oops();
+//防止主线程退出过快，需要停顿一下，让子线程跑起来detach
+std::this_thread::sleep_for(std::chrono::seconds(1));
+```
+
+`detach`使用时有一些**风险**，比如上述代码。
+
+当主线程调用`oops`时，会创建一个线程执行`myfunc`的重载`()`运算符，然后将主线程将`oops`创建的一个线程分离。但注意，当`oops`执行到 `'}'` 时，局部变量 `some_local_state` 会被释放，但**引用（这里是引用传递而不是按值传递，按值传递不会引起该错误，因为线程中已经有一个自己的拷贝副本了**）该局部资源的子线程 `functhread` 却仍然在后台运行，容易发生错误。
+
+我们可以采取一些措施解决该问题：
+
+1. 通过**智能指针传递局部变量**，因为引用计数会随着赋值增加，可保证局部变量在使用期间不被释放，避免悬空指针的问题（网络编程中学习的伪闭包原理）。
+2. **按值传递**，将局部变量的值作为参数传递而不是按引用传递，这么做需要局部变量有拷贝复制的功能，而且拷贝耗费空间和效率。
+3. 使用 `join()` 确保局部变量的生命周期，保证局部变量被释放前线程已经运行结束，但是可能会影响运行逻辑。
+
+## 5.14 线程守卫&&joinable()
+
+当启动一个子线程时，子线程和主线程是并发运行的。如果主线程由于某种原因崩溃（例如未捕获的异常），则整个进程将会终止（主线程崩溃或者结束时，主进程会回收所有线程的资源），这意味着所有正在运行的线程，包括子线程（不管有没有被detach）都会被强制结束，导致子线程未完成的操作（如数据库写入）被中断。这可能会导致子线程待写入的信息丢失。
+
+为了防止主线程崩溃导致子线程异常退出，可以在主线程中捕获可能抛出的异常，在捕获到异常后，可以选择在主线程中等待所有子线程完成。这样可以确保即使主线程遇到问题，子线程仍然能够完成其操作，并安全地结束。
+
+但是这样太过于繁琐，我们还得捕获异常后将对应的线程进行`join`，但如果我们有多个线程和多个异常呢？难道还要一个个的组合，写异常处理？
+
+可以使用`RAII`技术：
+
+```cpp
+class thread_guard {
+private:
+    std::thread& _t;
+public:
+    explicit thread_guard(std::thread& t):_t(t){}
+    ~thread_guard() {
+        //join只能调用一次
+        if (_t.joinable()) {
+            _t.join();
+        }
+    }
+    thread_guard(thread_guard const&) = delete;
+    thread_guard& operator=(thread_guard const&) = delete;
+};
+```
+
+- `joinable()` 是 `std::thread` 的一个成员函数，返回一个布尔值，**指示线程是否可连接**（即是否已创建且尚未调用 `join()` 或 `detach()`），如果`_t`是一个有效的线程对象且没有调用`join()` 或 `detach()`，那么调用`join`等待该线程结束。
+
+我们可以将需要保护的线程（可能发生异常错误的线程）传递给thread_guard创建一个实例，如果主线程异常发生，保护子线程实例的析构函数会自动调用，确保主线程发生异常时，子线程也能被正确管理，防止资源泄漏
+
+举例：
+
+```cpp
+void auto_guard() {
+    int some_local_state = 0;
+    func my_func(some_local_state);
+    std::thread  t(my_func);
+    thread_guard g(t);
+    //主线程可能会造成异常的程序代码
+    std::cout << "auto guard finished " << std::endl;
+}
+auto_guard();
+```
+
+如上例所示，通过`thread_guard` 构造一个新实例来保护线程t，那么即使在 `auto_guard` 函数中发生异常，`thread_guard` 也会确保线程t被正确管理，避免资源泄漏。
+
+## 5.15 线程中使用引用
+
+> 在创建线程时，使用 `std::thread` 来传递参数时，***参数是以拷贝的方式传递的***。即使你传入的是一个左值（如一个变量），`std::thread` 会在内部创建该参数的拷贝。但是在main函数中，如果传入的实参是左值，形参类型是引用，那么函数**不会创建副本**，而是直接对传入的值进行修改。
+
+**主线程**：当在主线程中调用函数时（没有创建线程，而是直接调用），参数是按值传递还是按引用传递取决于函数的参数声明。如果函数的参数是引用类型（如 `int&`），那么传递的是对原始变量的引用，可以直接修改这个变量。
+
+```cpp
+void change_param(int& param) {
+    param++; // 修改引用的值
+}
+
+int main() {
+    int value = 5;
+    change_param(value); // 这里传递的是 value 的引用
+    std::cout << value; // 输出 6
+}
+```
+
+**子线程**：当在子线程中调用函数时，**即使**参数在函数定义中是引用类型（如 `int&`），如果在 `std::thread` 创建线程时直接传递一个变量（如 `some_param`），这个变量仍会被复制到线程中，子线程内部的修改不会影响主线程中的原始变量。
+
+```cpp
+void change_param(int& param) {
+    param++; // 修改引用的值
+}
+
+void ref_oops() {
+    int some_param = 5;
+    std::thread t2(change_param, some_param); // 传递的是 some_param 的拷贝
+    t2.join();
+    // some_param 的值仍然是 5
+}
+```
+
+而且，上面这段代码和下面这段代码相同，都会报错：
+
+```cpp
+void change_param(int& param) {
+    param++;
+}
+void ref_oops(int some_param) {
+    std::cout << "before change , param is " << some_param << std::endl;
+    //需使用引用显示转换
+    std::thread  t2(change_param, some_param);
+    t2.join();
+    std::cout << "after change , param is " << some_param << std::endl;
+}
+```
+
+即使函数 `change_param` 的参数为`int&`类型，我们传递给`t2`的构造函数为`some_param`，也不会达到在`change_param`函数内部修改关联到外部`some_param`的效果。
+
+**因为`some_param`是外部传给函数`ref_oops`实参的拷贝**（左值，**这里的拷贝不是右值，它仍然可以取地址，右值一般只会在字面常量、表达式返回值、函数非左值引用返回值中出现**），左值传递给线程`thread`的构造函数之后会被保存为**右值引用**（`thread`内部通过`move`，传入左值会被保存为右值，如果传入右值类型不会变化），右值如果传给调用对象`change_param`就会报错。因为`change_param`中的参数是左值引用，左值引用不能接收右值。有两种方法可以修正：
+
+**方法一**：修改 `change_param` 的参数为 `const` 引用类型
+
+```cpp
+void change_param(const int& param) {
+}
+
+void ref_oops(int some_param) { // 将 some_param 改为引用类型
+    std::cout << "before change, param is " << some_param << std::endl;
+    std::thread t2(change_param, some_param); // 使用 std::ref 显式传递引用
+    t2.join();
+    std::cout << "after change, param is " << some_param << std::endl;
+}
+```
+
+但**缺点**是，不能对`some_param`进行修改了，因为**`const int&` 既可以用于传递左值引用，也可以用于传递右值**，唯独不能修改传递过来的值。
+
+**方法二**：传递 `std::ref`
+
+```cpp
+void change_param(int& param) {
+    param++;
+}
+void ref_oops(int some_param) {
+    std::cout << "before change, param is " << some_param << std::endl;
+    std::thread t2(change_param, std::ref(some_param)); // 使用 std::ref 显式传递引用
+    t2.join();
+    std::cout << "after change, param is " << some_param << std::endl;
+}
+```
+
+*第一种方法是直接修改可调用对象参数列表的类型，使其可以接受右值类型。*
+
+*第二种方法其实还是将左值参数通过`ref`进行包装，使得`thread`内部不会将其引用类型`delay`，这样传递给调用对象的参数就仍是左值引用，而不是右值引用。*
+
+> **那么如果我传递的是一个左值，而不是实参的拷贝呢，会不会还有问题？**
+
+```cpp
+void change_param(int& param) {
+    param++;
+}
+void ref_oops(） {
+    int some_param = 5;
+    std::cout << "before change , param is " << some_param << std::endl;
+    //需使用引用显示转换
+    std::thread  t2(change_param, some_param);
+    t2.join();
+    std::cout << "after change , param is " << some_param << std::endl;
+}
+```
+
+该段函数中，我们传给线程调用对象`change_param`的参数是一个左值，而`change_param`形参的类型是引用，那么这样按理说应该是正确的，即线程内部对`some_param`的处理会影响到外部的`some_param`。**但是**，要注意**线程无视引用，即使你传入的是左值，形参是引用，参数同样会被拷贝，除非你按引用传入（`ref`），或者传入的实参本来就是个引用。**
+
+```cpp
+void ref_oops(） {
+    int some_param = 5;
+    std::cout << "before change , param is " << some_param << std::endl;
+    //需使用引用显示转换
+    std::thread  t2(change_param, std::ref(some_param));
+    t2.join();
+    std::cout << "after change , param is " << some_param << std::endl;
+}
+```
+
+线程调用中，左值同样要加`ref`显式变为引用。
+
+## 5.16 yield()
+
+在线程中调用 `yield()` 函数之后，处于运行态的线程会主动让出自己已经抢到的CPU时间片，最终变为就绪态（就绪态的线程需要再次争抢CPU时间片，抢到之后才会变成运行态，这时候程序才会继续向下运行），这样其它的线程就有更大的概率能够抢到CPU时间片了。
+
+使用这个函数的时候需要注意一点，线程调用了`yield()`之后会主动放弃CPU资源，但是这个变为就绪态的线程会马上参与到下一轮CPU的抢夺战中，不排除它能继续抢到CPU时间片的情况，这是概率问题。
+
+## 5.17 thread如何避免传入的对象是thread
+
+**虽然thread的拷贝构造函数被delete**，但如果将thead作为可调用对象传入thread的构造函数时，仍会错误，但thread自定义的构造函数中有以下操作，可避免thead的拷贝操作：
+
+```cpp
+template <class _Fn, class... _Args, enable_if_t<!is_same_v<_Remove_cvref_t<_Fn>, thread>, int> = 0>
+    _NODISCARD_CTOR_THREAD explicit thread(_Fn&& _Fx, _Args&&... _Ax) {
+        _Start(_STD forward<_Fn>(_Fx), _STD forward<_Args>(_Ax)...);
+    }
+```
+
+`enable_if_t`：这是一个 ***[SFINAE](https://link.zhihu.com/?target=https%3A//zh.cppreference.com/w/cpp/language/sfinae)***（Substitution Failure Is Not An Error）技术，用于在模板实例化过程中进行**条件编译**。这里的条件 `!is_same_v<_Remove_cvref_t<_Fn>, thread>` 确保 `_Fn` 的类型在去除 `const/volatile` 修饰和引用后，不是 `std::thread` 类型本身，从而避免将 `std::thread` 对象作为函数参数，进一步**避免线程的拷贝。**
+
+
+
+> 关于这个约束你可能有问题，因为`std::thread`他并没有`operator()`的重载，不是可调用类型，也就是说不能将 `std::thread` 作为可调用参数传入，那么这个`enable_if_t`的意义是什么呢？
+
+```cpp
+struct X{
+    X(X&& x)noexcept{} // 移动构造函数
+    template <class Fn, class... Args> 
+    X(Fn&& f,Args&&...args){} // 模板构造函数
+    X(const X&) = delete;
+};
+
+X x1{ [] {} };
+X x2{ x }; // 选择到了有参构造函数，不导致编译错误
+```
+
+在上段代码中，创建了一个 X 对象 x1，通过模板构造函数，传入了一个 Lambda 表达式（无参数的空函数）。模板构造函数匹配成功，因此 x1 被成功构造。
+
+当试图通过已有的 X 对象 x1 创建另一个 X 对象 x2 时，编译器会选择**模板构造函数**。这是因为 x1 是一个 X 类型的对象，而模板构造函数可以接受任意类型（包括 X），并且与参数类型的匹配规则使得它可以接受一个 X 对象。这个过程不会导致编译错误，因为***模板构造函数并不依赖于传入的对象是否是可调用的（构造函数的选择是基于类型匹配和参数的匹配，而不是基于可调用性）***，尽管 x1 不是可调用类型，编译器选择了这个构造函数来匹配。
+
+以上这段代码可以正常的通过编译。这是重载决议的事情，但我们知道，`std::thread`是不可复制的，这种代码自然不应该让它通过编译，选择到我们的有参构造，所以我们添加一个约束让其不能选择到我们的有参构造：
+
+```cpp
+template <class Fn, class... Args, std::enable_if_t<!std::is_same_v<std::remove_cvref_t<Fn>, X>, int> = 0>
+```
+
+这样，这段代码就会正常的出现编译错误，信息如下：
+
+```cpp
+error C2280: “X::X(const X &)”: 尝试引用已删除的函数
+note: 参见“X::X”的声明
+note: “X::X(const X &)”: 已隐式删除函数
+```
+
+## 5.18 joining_thread
+
+线程守卫（RAII技术），即主线程出现异常时，希望子线程能够运行结束后才退出主程序。其实 `joining_thread` 就是一个自带`RAII`技术的 `thread`类，它和 `std::thread` 的区别就是析构函数会自动 `join` 
+
+`joining_thread` 是 C++17标准的备选提案，但是并没有被引进，直至它改名为 `std::jthread` 后，进入了C++20标准的议程（现已被正式纳入C++20标准）
+
+并且 `joining_thread` 的赋值运算符在将将一个线程的管理权交给一个已经绑定线程的变量时，不会立即调用 `terminate` 引发崩溃，而是先 `jion()` 然后转移另一个线程的管理权。
+
+```cpp
+joining_thread& operator=(std::thread&& other)noexcept {
+    // 如果当前线程_t有任务运行，且未调用过join或detach
+    if (joinable()) { // 如果当前有活跃线程，那就先执行完
+        join();
+    }
+    // 执行完_t线程的任务后，转移other管理权给_t
+    t = std::move(other);
+    return *this;
+}
+// 构造函数6
+joining_thread& operator=(joining_thread other) noexcept
+{
+    //如果当前线程可汇合，则汇合等待线程完成再赋值
+    if (joinable()) {
+        join();
+    }
+    _t = std::move(other._t);
+    return *this;
+}
+```
+
+## 5.19 std::jthread
+
+`std::jthread` 相比于 C++11 引入的 `std::thread`，只是多了两个功能：
+
+1. **RAII 管理**：在析构时自动调用 join()。
+2. **线程停止功能**：线程的取消/停止。
+
+`std::jthread` 所谓的线程停止只是一种**基于用户代码的控制机制**，而不是一种与操作系统系统有关系的线程终止。使用 `std::stop_source` 和`std::stop_token` 提供了一种优雅地请求线程停止的方式，**但实际上停止的决定和实现都由用户代码来完成**。如下：
+
+```cpp
+using namespace std::literals::chrono_literals;
+
+void f(std::stop_token stop_token, int value){
+    while (!stop_token.stop_requested()){ // 检查是否已经收到停止请求
+        std::cout << value++ << ' ' << std::flush;
+        std::this_thread::sleep_for(200ms);
+    }
+    std::cout << std::endl;
+}
+
+int main(){
+    std::jthread thread{ f, 1 }; // 打印 1..15 大约 3 秒
+    std::this_thread::sleep_for(3s);
+    // jthread 的析构函数调用 request_stop() 和 join()。
+}
+```
+
+该段代码主要用于创建一个可以响应停止请求的线程。
+
+- 当 `std::jthread` 对象超出作用域时，它会自动调用 `request_stop()` 请求停止线程，并在销毁时调用 `join()` 等待线程结束。
+- `std::stop_token` 允许线程检查是否接收到停止请求。在函数 f 中，循环体检查 `stop_token.stop_requested()`，如果返回 false，则继续执行；否则退出循环。
+- 在每次循环中，打印当前值并将其递增，然后线程休眠 200 毫秒。这样，每个数字的打印之间有一定的间隔。
+- 在 main 函数中，主线程休眠 3 秒。这段时间内，f 函数将打印数字（大约会打印 15 个数字，因为 3 秒内会输出 1 到 15）。主线程结束后，`jthread` 会自动请求停止并等待 f 函数完成。
+
+------
+
+`std::jthread` 提供了三个成员函数进行所谓的线程停止：
+
+- `get_stop_source`：返回与 `jthread` 对象关联的 `std::stop_source`，允许从外部请求线程停止。
+- `get_stop_token`：返回与 `jthread` 对象停止状态关联的 `std::stop_token`，允许检查是否有停止请求。
+- `request_stop`：请求线程停止。
+
+上面那段代码中，这三个函数并没有被显式调用，不过在 `jthread` 的**析构函数**中，会调用 `request_stop` 请求线程停止：
+
+```cpp
+void _Try_cancel_and_join() noexcept {
+    if (_Impl.joinable()) {
+        _Ssource.request_stop();
+        _Impl.join();
+    }
+}
+~jthread() {
+    _Try_cancel_and_join();
+}
+```
+
+至于 `std::jthread thread{ f, 1 }` 函数 f 的 `std::stop_token` 的形参是谁传递的？其实就是**线程对象自己调用`get_token()`传递的** ，源码一眼便可发现：
+
+```cpp
+template <class _Fn, class... _Args, enable_if_t<!is_same_v<remove_cvref_t<_Fn>, jthread>, int> = 0>
+_NODISCARD_CTOR_JTHREAD explicit jthread(_Fn&& _Fx, _Args&&... _Ax) {
+    if constexpr (is_invocable_v<decay_t<_Fn>, stop_token, decay_t<_Args>...>) {
+        _Impl._Start(_STD forward<_Fn>(_Fx), _Ssource.get_token(), _STD forward<_Args>(_Ax)...);
+    } else {
+        _Impl._Start(_STD forward<_Fn>(_Fx), _STD forward<_Args>(_Ax)...);
+    }
+}
+```
+
+------
+
+**std::stop_source：**
+
+- 这是一个可以发出停止请求的类型。当你调用 `stop_source` 的 `request_stop()` 方法时，它会设置内部的停止状态为“已请求停止”。
+- 任何持有与这个 `stop_source` 关联的 `std::stop_token` 对象都能检查到这个停止请求。
+
+**std::stop_token：**
+
+- 这是一个可以检查停止请求的类型。线程内部可以定期检查 `stop_token` 是否收到了停止请求。
+- 通过调用 `stop_token.stop_requested()`，线程可以检测到停止状态是否已被设置为“已请求停止”。
+
+## 5.20 什么是数据竞争
+
+> 当某个表达式的求值写入某个内存位置，而另一求值读或修改*同一内存位置*时，称这些**表达式冲突**。**拥有两个冲突的求值的程序就有数据竞争**，除非
+
+- 两个求值都在同一线程上，或者在同一信号处理函数中执行，或
+- 两个冲突的求值都是原子操作（见 std::atomic），或
+- 一个冲突的求值发生早于 另一个（见 std::memory_order）
+
+## 5.21 lock_guard
+
+我们可以使用`lock_guard`进行自动加解锁，也就是之前说的**RAII技术**，当`lock_guard`被实例化的时候进行加锁，当`lock_guard`被析构的时候进行解锁。
+
+```cpp
+void use_lock() {
+    while (true) {
+        std::lock_guard<std::mutex> lock(mtx1);
+        shared_data++;
+        std::cout << "current thread is " << std::this_thread::get_id() << std::endl;
+        std::cout << "sharad data is " << shared_data << std::endl;
+        std::this_thread::sleep_for(std::chrono::microseconds(10));
+    }
+}
+```
+
+`lock_guard` 在**作用域结束时**自动调用其析构函数解锁，这么做的一个好处是简化了一些特殊情况从函数中返回的写法，比如异常或者条件不满足时，函数内部直接return，锁也会自动解开。
+
+`lock_guard` 也是一个“管理类”模板，用来管理互斥量的上锁与解锁，可以看一下 `lock_guard` 的源码实现：
+
+```cpp
+_EXPORT_STD template <class _Mutex>
+class _NODISCARD_LOCK lock_guard { // class with destructor that unlocks a mutex
+public:
+    using mutex_type = _Mutex;
+
+    explicit lock_guard(_Mutex& _Mtx) : _MyMutex(_Mtx) { // construct and lock
+        _MyMutex.lock();
+    }
+
+    lock_guard(_Mutex& _Mtx, adopt_lock_t) noexcept // strengthened
+        : _MyMutex(_Mtx) {} // construct but don't lock
+
+    ~lock_guard() noexcept {
+        _MyMutex.unlock();
+    }
+
+    lock_guard(const lock_guard&)            = delete;
+    lock_guard& operator=(const lock_guard&) = delete;
+
+private:
+    _Mutex& _MyMutex;
+};
+```
+
+首先`lock_guard` 作为管理类，要求不可复制，我们定义复制构造与复制赋值为弃置函数。
+
+它只保有一个私有数据成员，一个引用，用来引用互斥量。构造函数中初始化这个引用，**同时上锁**，**析构函数中解锁**，这是一个非常典型的 **RAII** 式的管理。
+
+同时它还提供一个有额外`std::adopt_lock_t`参数的构造函数 ，如果使用这个构造函数，则构造函数不会上锁。 `adopt_lock` 表示这个互斥量的锁已经在其他地方被获取，这样，`lock_guard` 会在构造时不再调用 `lock()` 方法，而是直接采用已锁定的状态。这个功能在某些情况下非常有用，尤其是在希望**将一个已经被锁定的互斥量传递给 `lock_guard` 的时候**。比如：
+
+```cpp
+std::mutex mtx;
+mtx.lock(); // 手动锁定互斥量
+lock_guard<std::mutex> lg(mtx, std::adopt_lock); // 采用已锁定的互斥量
+```
+
+我们一般使用 `lock_guard` 时，经常使用下面的形式：
+
+```cpp
+std::mutex mtx;
+void f(){
+    //code..
+    {
+        std::lock_guard<std::mutex> lc{ mtx };
+        // 涉及共享资源的修改的代码...
+    }
+    //code..
+}
+```
+
+使用`{}`创建了一个块作用域，限制了对象 lc 的生存期，进入作用域构造 lock_guard 的时候上锁（lock），离开作用域析构的时候解锁。
+
+> 我们要尽可能的让互斥量上锁的**粒度**小，只用来确保必须的共享资源的线程安全。**“粒度”通常用于描述锁定的范围大小，较小的粒度意味着锁定的范围更小，因此有更好的性能和更少的竞争。**
+
+## 5.22 try_lock
+
+`try_lock` 是互斥量中的一种尝试上锁的方式。与常规的 lock 不同，`try_lock` 会尝试上锁，但如果锁已经被其他线程占用，则不会阻塞当前线程，而是立即返回。
+
+它的返回类型是 bool ，如果上锁成功就返回 true，失败就返回 false。
+
+这种方法在多线程编程中很有用，特别是在需要保护临界区的同时，又不想线程因为等待锁而阻塞的情况下。
+
+```cpp
+std::mutex mtx;
+
+void thread_function(int id) {
+    // 尝试加锁
+    if (mtx.try_lock()) {
+        std::cout << "线程：" << id << " 获得锁" << std::endl;
+        // 临界区代码
+        std::this_thread::sleep_for(std::chrono::milliseconds(100)); // 模拟临界区操作
+        mtx.unlock(); // 解锁
+        std::cout << "线程：" << id << " 释放锁" << std::endl;
+    } else {
+        std::cout << "线程：" << id << " 获取锁失败 处理步骤" << std::endl;
+    }
+}
+```
+
+## 5.23 unique_lock
+
+**unique_lock** 也是一种管理类模板（满足[可移动构造](https://link.zhihu.com/?target=https%3A//zh.cppreference.com/w/cpp/named_req/MoveConstructible)和[可移动赋值](https://link.zhihu.com/?target=https%3A//zh.cppreference.com/w/cpp/named_req/MoveAssignable)但不满足[可复制构造](https://link.zhihu.com/?target=https%3A//zh.cppreference.com/w/cpp/named_req/CopyConstructible)或[可复制赋值](https://link.zhihu.com/?target=https%3A//zh.cppreference.com/w/cpp/named_req/CopyAssignable)），灵活性比`lock_guard`高很多（允许**手动加解锁**、延迟锁定、有时限的锁定尝试、递归锁定、所有权转移和与条件变量一同使用，存在RAII回收），但是效率比较差，内存占用也比较多。
+
+工作中一般使用`lock_guard` ，但希望更加自由时可以时候unique_lock。
+
+## 5.24 once_flage 和 call_once
+
+`once_flage` 和 `call_once`也相当于一种锁，`std::call_once` 确保所给的函数在多线程环境中**只会被调用一次（仅仅只会调用一次）**，即使多个线程同时调用 `call_once`，只有一个线程会实际执行该函数，其它线程会等待。
+
+其实这也是C++11及之后为什么局部静态变量是线程安全的了。
+
+- 在C++11之前，多线程同时**首次**调用`GetInstance()`时，可能触发**竞态初始化**，导致未定义行为（如重复初始化、值覆盖）。
+- 在C++11及之后，多个线程首次初始化时，**仅有一个线程执行初始化**，其他线程等待直至完成。
+  - 通过**原子标志 + 互斥锁**实现，仅首个线程执行初始化，后续线程通过原子操作感知已初始化，避免加锁，确保 “初始化完成” 的状态全局可见
+
+原理就是多线程中执行了once_flage 和 call_once，保证多线程初始化时仅有一个线程执行初始化。
+
+## 5.25 不得向锁所在的作用域之外传递指针和引用
+
+不得向锁所在的作用域之外传递指针和引用，指向受保护的共享数据没无论是通过函数返回值将它们保存到对外可见 内存，还是将它们作为参数传递给使用者提供的函数。简而言之：**切勿将受保护数据的指针或引用传递到互斥量作用域之外**，不然保护将**形同虚设**。
+
+## 5.26 死锁
+
+死锁其实就是不同线程在互斥上争抢锁：*有两个线程，都需要同时锁住两个互斥，才可以进行某项操作，但它们分别都只锁住了一个互斥，都等着再给另一个互斥加锁*。于时，双方毫无进展，因为它们都在等待对方解锁互斥。这种情形为死锁。
+
+![img](/images/$%7Bfiilename%7D/87c5a015aeb4fbcda34ab40a1b0ed038-1742199149296-1.png)
+
+第一种情况：防范死锁的建议通常是：**始终按相同的顺序对两个互斥加锁。**这也是层级加锁的实现原理。比如我们这里将线程1和线程2都按 A->B 的顺序进行加锁，一般情况下就不会发生死锁。
+
+第二种情况：**但是有的时候即使固定锁顺序，依旧会产生问题**。当有多个互斥量保护同一个类的对象时，对于相同类型的两个不同对象进行数据的交换操作，为了保证数据交换的正确性，就要避免其它线程修改，确保每个对象的互斥量都锁住自己要保护的区域。如果按照前面的的选择一个固定的顺序上锁解锁，则毫无意义，比如：
+
+```cpp
+struct X{
+    X(const std::string& str) :object{ str } {}
+
+    friend void swap(X& lhs, X& rhs);
+private:
+    std::string object;
+    std::mutex m;
+};
+
+void swap(X& lhs, X& rhs) {
+    if (&lhs == &rhs) return;
+    std::lock_guard<std::mutex> lock1{ lhs.m }; 
+    std::lock_guard<std::mutex> lock2{ rhs.m }; 
+    swap(lhs.object, rhs.object);
+}
+```
+
+我们对同一个类的两个实例进行数据交换时，会导致它们陷入死锁：
+
+```cpp
+X a{ "1" }, b{ "2" };
+std::thread t{ [&] {swap(a, b); } };  // 1
+std::thread t2{ [&] {swap(b, a); } }; // 2
+```
+
+- `1` 执行的时候，先上锁 a 的互斥量，再上锁 b 的互斥量。
+- `2` 执行的时候，先上锁 b 的互斥量，再上锁 a 的互斥量。
+
+> 完全可能线程 A 执行 1 的时候上锁了 a 的互斥量，线程 B 执行 `2` 上锁了 b 的互斥量。线程 A 往下执行需要上锁 b 的互斥量，线程 B 则要上锁 a 的互斥量执行完毕才能解锁，哪个都没办法往下执行，**死锁**。其实也就回到了最初的问题。
+
+解决方法：
+
+**法1：**
+
+C++ 标准库有很多办法解决这个问题，可以使用`std::lock` ，它能一次性锁住多个互斥量，并且没有死锁风险。修改 swap 代码后如下：
+
+```cpp
+void swap(X& lhs, X& rhs) {
+    if (&lhs == &rhs) return;
+    std::lock(lhs.m, rhs.m);    // 给两个互斥量上锁
+    std::lock_guard<std::mutex> lock1{ lhs.m,std::adopt_lock }; 
+    std::lock_guard<std::mutex> lock2{ rhs.m,std::adopt_lock }; 
+    swap(lhs.object, rhs.object);
+}
+```
+
+因为前面已经使用了 `std::lock` 上锁，所以后的 `std::lock_guard` 构造都额外传递了一个 `std::adopt_lock` 参数，让其选择到**不会上锁的构造函数**。函数退出也能正常解锁。
+
+`std::lock` 给 `lhs.m` 或 `rhs.m` 上锁时若抛出异常，则在重抛前对任何已锁的对象调用 `unlock()` 解锁，也就是 `std::lock` 要么将互斥量都上锁，要么一个都不锁。如果 `std::lock` 给`lhs.m` 或 `rhs.m` 上锁时，这两个锁的任意一个被锁了， `std::lock` 就不可能不执行，**所以在执行std::lock之前，必须保证要处理的所有锁都处于unlock状态。**
+
+**法2：**
+
+**此外，C++17新增了RAII类模板** `std::scoped_lock`。`std::scoped_lock<>`和 `std::lock_guard<>`完全等价 ，只不过前者是可变参数模板，接收各种互斥型别作为模板参数列表，还以多个互斥对象作为构造函数的参数列表，通常`scoped_lock`的效果比裸调用`std::lock`更好。
+
+代码可以改写为：
+
+```cpp
+void swap(X& lhs, X& rhs) {
+    if (&lhs == &rhs) return;
+    std::scoped_lock guard{ lhs.m,rhs.m };  // ①
+    swap(lhs.object, rhs.object);
+}
+```
+
+上例利用了C++17的新特性：类模板参数推导。①处的代码等价于
+
+```
+std::scoped_lock guard<std::mutex, std::mutex> guard(lhs.m,rhs.m);
+```
+
+> 如果我们需要同时获取多个锁，那么std::lock和std::scoped_lock 可以帮助我们防范死锁。但若代码分别获取各个锁，那么就需要程序员依靠经验将加锁和解锁的功能封装为独立的函数，这样能保证在独立的函数里执行完操作后就解锁，不会导致一个函数里使用多个锁的情况。
+
+以下是一些常用的规则，用于约束程序员的行为，帮助写出无死锁的代码：
+
+- **避免嵌套锁**
+  线程获取一个锁时，就别再获取第二个锁。每个线程只持有一个锁，自然不会产生死锁。如果必须要获取多个锁，使用 `std::lock` 
+- **避免在持有锁时调用外部代码**
+  这个建议是很简单的：因为代码是外部提供的，所以没办法确定外部要做什么。外部程序可能做任何事情，包括获取锁。在持有锁的情况下，如果用外部代码要获取一个锁，就会违反第一个指导意见，并造成死锁（有时这是无法避免的）。当写通用代码时（比如保护共享数据中的 Date 类）。这不是接口设计者可以处理的，只能寄希望于调用方传递的代码是能正常执行的。
+- **使用固定顺序获取锁**
+  如同第一个示例那样，固定的顺序上锁就不存在问题。
+- **层级加锁** 按特定方式规定加锁次序，在运行期间据此查验枷锁操作是否遵守预设规则
+
+层级锁能保证我们每个线程加锁时，一定是**先加权重高的锁，后加权值低的锁，如果反过来就会抛出异常，**并且释放时也保证了顺序。主要原理就是将当前锁的权重保存在线程变量中，这样该线程再次加锁时判断线程变量的权重是否大于锁的权重，如果满足条件则继续加锁。
+
+要加锁时先检查当前线程的层级值是否大于要加锁的互斥量的层级值，只有大于才能加。
+
+## 5.27 如何排查死锁
+
+在 Linux 下，我们可以使用 `pstack` + `gdb` 工具来定位死锁问题。
+
+`pstack` 命令可以显示每个线程的栈跟踪信息（函数调用过程），它的使用方式也很简单，只需要 `pstack <pid>` 就可以了。
+
+那么，在定位死锁问题时，我们可以多次执行 `pstack` 命令查看线程的函数调用过程，多次对比结果，确认哪几个线程一直没有变化，且是因为在等待锁，那么大概率是由于死锁问题导致的。
+
+我用 pstack 输出了我前面模拟死锁问题的进程的所有线程的情况，我多次执行命令后，其结果都一样，如下：
+
+```shell
+$ pstack 87746
+Thread 3 (Thread 0x7f60a610a700 (LWP 87747)):
+#0  0x0000003720e0da1d in __lll_lock_wait () from /lib64/libpthread.so.0
+#1  0x0000003720e093ca in _L_lock_829 () from /lib64/libpthread.so.0
+#2  0x0000003720e09298 in pthread_mutex_lock () from /lib64/libpthread.so.0
+#3  0x0000000000400725 in threadA_proc ()
+#4  0x0000003720e07893 in start_thread () from /lib64/libpthread.so.0
+#5  0x00000037206f4bfd in clone () from /lib64/libc.so.6
+Thread 2 (Thread 0x7f60a5709700 (LWP 87748)):
+#0  0x0000003720e0da1d in __lll_lock_wait () from /lib64/libpthread.so.0
+#1  0x0000003720e093ca in _L_lock_829 () from /lib64/libpthread.so.0
+#2  0x0000003720e09298 in pthread_mutex_lock () from /lib64/libpthread.so.0
+#3  0x0000000000400792 in threadB_proc ()
+#4  0x0000003720e07893 in start_thread () from /lib64/libpthread.so.0
+#5  0x00000037206f4bfd in clone () from /lib64/libc.so.6
+Thread 1 (Thread 0x7f60a610c700 (LWP 87746)):
+#0  0x0000003720e080e5 in pthread_join () from /lib64/libpthread.so.0
+#1  0x0000000000400806 in main ()
+
+....
+
+$ pstack 87746
+Thread 3 (Thread 0x7f60a610a700 (LWP 87747)):
+#0  0x0000003720e0da1d in __lll_lock_wait () from /lib64/libpthread.so.0
+#1  0x0000003720e093ca in _L_lock_829 () from /lib64/libpthread.so.0
+#2  0x0000003720e09298 in pthread_mutex_lock () from /lib64/libpthread.so.0
+#3  0x0000000000400725 in threadA_proc ()
+#4  0x0000003720e07893 in start_thread () from /lib64/libpthread.so.0
+#5  0x00000037206f4bfd in clone () from /lib64/libc.so.6
+Thread 2 (Thread 0x7f60a5709700 (LWP 87748)):
+#0  0x0000003720e0da1d in __lll_lock_wait () from /lib64/libpthread.so.0
+#1  0x0000003720e093ca in _L_lock_829 () from /lib64/libpthread.so.0
+#2  0x0000003720e09298 in pthread_mutex_lock () from /lib64/libpthread.so.0
+#3  0x0000000000400792 in threadB_proc ()
+#4  0x0000003720e07893 in start_thread () from /lib64/libpthread.so.0
+#5  0x00000037206f4bfd in clone () from /lib64/libc.so.6
+Thread 1 (Thread 0x7f60a610c700 (LWP 87746)):
+#0  0x0000003720e080e5 in pthread_join () from /lib64/libpthread.so.0
+#1  0x0000000000400806 in main ()
+```
+
+可以看到，Thread 2 和 Thread 3 一直阻塞获取锁（*pthread_mutex_lock*）的过程，而且 pstack 多次输出信息都没有变化，那么可能大概率发生了死锁。
+
+但是，还不能够确认这两个线程是在互相等待对方的锁的释放，因为我们看不到它们是等在哪个锁对象，于是我们可以使用 gdb 工具进一步确认。
+
+整个 gdb 调试过程，如下：
+
+```csharp
+// gdb 命令
+$ gdb -p 87746
+
+// 打印所有的线程信息
+(gdb) info thread
+  3 Thread 0x7f60a610a700 (LWP 87747)  0x0000003720e0da1d in __lll_lock_wait () from /lib64/libpthread.so.0
+  2 Thread 0x7f60a5709700 (LWP 87748)  0x0000003720e0da1d in __lll_lock_wait () from /lib64/libpthread.so.0
+* 1 Thread 0x7f60a610c700 (LWP 87746)  0x0000003720e080e5 in pthread_join () from /lib64/libpthread.so.0
+//最左边的 * 表示 gdb 锁定的线程，切换到第二个线程去查看
+
+// 切换到第2个线程
+(gdb) thread 2
+[Switching to thread 2 (Thread 0x7f60a5709700 (LWP 87748))]#0  0x0000003720e0da1d in __lll_lock_wait () from /lib64/libpthread.so.0 
+
+// bt 可以打印函数堆栈，却无法看到函数参数，跟 pstack 命令一样 
+(gdb) bt
+#0  0x0000003720e0da1d in __lll_lock_wait () from /lib64/libpthread.so.0
+#1  0x0000003720e093ca in _L_lock_829 () from /lib64/libpthread.so.0
+#2  0x0000003720e09298 in pthread_mutex_lock () from /lib64/libpthread.so.0
+#3  0x0000000000400792 in threadB_proc (data=0x0) at dead_lock.c:25
+#4  0x0000003720e07893 in start_thread () from /lib64/libpthread.so.0
+#5  0x00000037206f4bfd in clone () from /lib64/libc.so.6
+
+// 打印第三帧信息，每次函数调用都会有压栈的过程，而 frame 则记录栈中的帧信息
+(gdb) frame 3
+#3  0x0000000000400792 in threadB_proc (data=0x0) at dead_lock.c:25
+27    printf("thread B waiting get ResourceA \n");
+28    pthread_mutex_lock(&mutex_A);
+
+// 打印mutex_A的值 ,  __owner表示gdb中标示线程的值，即LWP
+(gdb) p mutex_A
+$1 = {__data = {__lock = 2, __count = 0, __owner = 87747, __nusers = 1, __kind = 0, __spins = 0, __list = {__prev = 0x0, __next = 0x0}}, 
+  __size = "\002\000\000\000\000\000\000\000\303V\001\000\001", '\000' <repeats 26 times>, __align = 2}
+
+// 打印mutex_B的值 ,  __owner表示gdb中标示线程的值，即LWP
+(gdb) p mutex_B
+$2 = {__data = {__lock = 2, __count = 0, __owner = 87748, __nusers = 1, __kind = 0, __spins = 0, __list = {__prev = 0x0, __next = 0x0}}, 
+  __size = "\002\000\000\000\000\000\000\000\304V\001\000\001", '\000' <repeats 26 times>, __align = 2}  
+```
+
+我来解释下，上面的调试过程：
+
+1. 通过 `info thread` 打印了所有的线程信息，可以看到有 3 个线程，一个是主线程（LWP 87746），另外两个都是我们自己创建的线程（LWP 87747 和 87748）；
+2. 通过 `thread 2`，将切换到第 2 个线程（LWP 87748）；
+3. 通过 `bt`，打印线程的调用栈信息，可以看到有 threadB_proc 函数，说明这个是线程 B 函数，也就说 LWP 87748 是线程 B;
+4. 通过 `frame 3`，打印调用栈中的第三个帧的信息，可以看到线程 B 函数，在获取互斥锁 A 的时候阻塞了；
+5. 通过 `p mutex_A`，打印互斥锁 A 对象信息，可以看到它被 LWP 为 87747（线程 A） 的线程持有着；
+6. 通过 `p mutex_B`，打印互斥锁 A 对象信息，可以看到他被 LWP 为 87748 （线程 B） 的线程持有着；
+
+因为线程 B 在等待线程 A 所持有的 mutex_A, 而同时线程 A 又在等待线程 B 所拥有的mutex_B, 所以可以断定该程序发生了死锁。
+
+## 5.28 读写锁
+
+试想这样一个场景，对于一个DNS服务，我们可以根据域名查询服务对应的ip地址，它很久才更新一次，比如新增记录，删除记录或者更新记录等。平时大部分时间都是提供给外部查询，对于查询操作，即使多个线程并发查询不加锁也不会有问题，但是当有线程修改DNS服务的ip记录或者增减记录时，其他线程不能查询，需等待修改完再查询。或者等待查询完，线程才能修改。也就是说读**操作并不是互斥的，同一时间可以有多个线程同时读，但是写和读是互斥的，写与写是互斥的。**简而言之，写操作需要独占锁。而读操作需要共享锁。**
+
+C++ 标准库自然为我们提供了其他两种**互斥**：***[std::shared_timed_mutex](https://link.zhihu.com/?target=https%3A//zh.cppreference.com/w/cpp/thread/shared_timed_mutex)***（C++14）、***[std::shared_mutex](https://link.zhihu.com/?target=https%3A//zh.cppreference.com/w/cpp/thread/shared_mutex)***（C++17）。它们的区别简单来说，前者支持更多的操作方式，后者有更高的性能优势。C++11中无上述互斥，但可以通过boost库使用（boost库定义了该互斥）。
+
+`std::shared_mutex` 同样支持`std::lock_guard、std::unique_lock`。和 `std::mutex` 做的一样，保证*写线程*的独占访问。**而那些无需修改数据结构的读线程，可以使用`std::shared_lock<std::shared_mutex>`获取访问权**，多个线程可以一起读取。
+
+如果我们想**构造共享锁**，可以使用`std::shared_lock`，如果我们想**构造独占锁**, 可以使用`std::lock_gurad`。
+
+我们用一个类DNService代表DNS服务，**查询操作使用共享锁，而写操作使用独占锁**，可以是如下方式的。
+
+```cpp
+class DNService {
+private:
+    std::map<std::string, std::string> _dns_info;
+    mutable std::shared_mutex  _shared_mtx;
+public:
+    DNService() {}
+    //读操作采用共享锁
+    std::string QueryDNS(std::string dnsname) {
+        std::shared_lock<std::shared_mutex> shared_locks(_shared_mtx);
+        auto iter = _dns_info.find(dnsname);
+        if (iter != _dns_info.end()) {
+            return iter->second;
+        }
+        return "";
+    }
+    //写操作采用独占锁
+    void AddDNSInfo(std::string dnsname, std::string dnsentry) {
+        std::lock_guard<std::shared_mutex>  guard_locks(_shared_mtx);
+        _dns_info.insert(std::make_pair(dnsname, dnsentry));
+    }
+};
+```
+
+## 5.29 递归锁
+
+线程对已经上锁的 `std::mutex` 再次上锁是错误的，这是未定义行为。然而在某些情况下，一个线程会尝试在释放一个互斥量前多次获取，所以提供了`std::recursive_mutex`。比如，在实现接口的时候内部加锁，接口内部调用完结束自动解锁。会出现一个接口调用另一个接口的情况，如果用普通的`std::mutex`就会出现卡死，因为嵌套加锁导致卡死，但是我们可以使用递归锁`std::recursive_mutex`。
+
+`std::recursive_mutex` 是 C++ 标准库提供的一种互斥量类型，它允许**同一线程多次锁定同一个互斥量**，而不会造成死锁。当同一线程多次对同一个 `std::recursive_mutex` 进行锁定时，**只有在解锁与锁定次数相匹配时，互斥量才会真正释放**。但它并不影响不同线程对同一个互斥量进行锁定的情况。**不同线程对同一个互斥量进行锁定时，会按照互斥量的规则进行阻塞**。
+
+> 但在工作中并不推荐使用递归锁，我们可以从设计源头规避嵌套加锁的情况，将接口相同的功能抽象出来，统一加锁。
+
+## 5.30 乐观锁/悲观锁
+
+悲观锁总是假设最坏的情况，认为共享资源每次被访问的时候就会出现问题(比如共享数据被修改)，所以每次在获取资源操作的时候都会上锁，这样其他线程想拿到这个资源就会阻塞直到锁被上一个持有者释放。也就是说，**共享资源每次只给一个线程使用，其它线程阻塞，用完后再把资源转让给其它线程**。
+
+乐观锁总是假设最好的情况，认为共享资源每次被访问的时候不会出现问题，线程可以不停地执行，无需加锁也无需等待，只是在提交修改的时候去验证对应的资源（也就是数据）是否被其它线程修改了（具体方法可以使用版本号机制或 CAS 算法）。
+
+## 5.31 条件变量
+
+参考：[并发编程（5）——条件变量、线程安全队列 | 爱吃土豆的个人博客](https://www.aichitudou.cn/2024/11/03/并发编程（5）——条件变量、线程安全的队列/)
+
+> 为什么`std::condition_variable` 的 wait 方法只能与 `std::unique_lock<std::mutex>` 配合使用，而不能与 `std::lock_guard<std::mutex>` 一起使用？
+
+- 锁的管理: 	
+
+  - `std::unique_lock` 提供了更灵活的锁管理功能，可以在等待条件时释放锁并在条件满足后重新获取锁。
+  - `std::lock_guard` 是一个简单的 RAII（资源获取即初始化）封装，用于自动管理互斥锁的获取和释放，但它不支持在持有锁的状态下进行锁的释放。
+
+- 条件等待机制：
+
+  - `std::condition_variable::wait` 方法会在等待期间释放锁，并在条件满足时重新获取锁。只有 `std::unique_lock` 能够在等待时有效地管理这个过程。
+  - `std::lock_guard` 无法在持有锁的情况下释放锁，这样就无法在条件变量等待期间进行其他线程的操作，导致无法实现正确的等待机制。
+
+wait()有两种重载及原理，第二种是对第一个版本的包装，等待并判断谓词，会调用第一个版本的重载。这可以避免“虚假唤醒"。请详细阅读文章。
+
+> 条件变量虚假唤醒是指在使用条件变量进行线程同步时，有时候线程可能会在没有收到通知的情况下被唤醒。问题取决于程序和系统的具体实现。解决方法很简单，在循环中等待并判断条件可一并解决。
+
+## 5.32 future/shared_future/async/packaged_task/promise
+
+参考：[并发编程（6）——future、promise、async，线程池 | 爱吃土豆的个人博客](https://www.aichitudou.cn/2024/11/04/并发编程（6）——future、promise、async/)
+
+C++ 标准库有两种 `future`，都声明在 `future` 头文件中：独占的 `std::future` 、共享的 `std::shared_future`。它们的区别与 `std::unique_ptr` 和 `std::shared_ptr` 类似。同一事件仅仅允许关联唯一一个`std::future` 实例，但可以关联多个 `std::shared_future` 实例。它们都是模板，它们的模板类型参数，就是其关联的事件（函数）的返回类型。当多个线程需要访问一个独立 `future` 对象时， 必须使用互斥量或类似同步机制进行保护。而多个线程访问同一共享状态，若每个线程都是通过其自身的 `shared_future` 对象副本进行访问，则是安全的。
+
+async和future需要配合使用，使用 std::async 启动一个异步任务（也就是创建一个子线程执行相关任务，主线程可以执行自己的任务），它会返回一个 std::future 对象，这个对象和任务关联，将持有任务最终执行后的结果。当需要任务执行结果的时候，只需要调用 future.get() 成员函数，就会阻塞当前线程直到 future 为就绪为止（即任务执行完毕），返回执行结果。future.valid() 成员函数检查 future 当前是否关联共享状态，即是否当前关联任务。如果还未关联，或者任务已经执行完（调用了 get()、set()），都会返回 false。
+
+```cpp
+#include <iostream>
+#include <future>
+#include <chrono>
+// 定义一个异步任务
+std::string fetchDataFromDB(std::string query) {
+    // 模拟一个异步任务，比如从数据库中获取数据
+    std::this_thread::sleep_for(std::chrono::seconds(5));
+    return "Data: " + query;
+}
+int main() {
+    // 使用 std::async 异步调用 fetchDataFromDB
+    // 使用 resultFromDB 存储 fetchDataFromDB 返回的结果
+    std::future<std::string> resultFromDB = std::async(std::launch::async, fetchDataFromDB, "Data");
+    // 在主线程中做其他事情
+    std::cout << "Doing something else..." << std::endl;
+    // 从 future 对象中获取数据
+    // 在 get 调用之后，主线程一直被阻塞，直至 fetchDataFromDB 函数返回结果
+    std::string dbData = resultFromDB.get();
+    std::cout << dbData << std::endl;
+    return 0;
+}
+```
+
+`std::async`除传递可调用对象、对象参数之外，还需要传递枚举值（也叫策略，比如上面的`std::launch::async`），这些策略在`std::launch`枚举中定义。除了`std::launch::async`之外，还有以下策略：
+
+1. `std::launch::deferred`：这种策略意味着任务将在需要结果时**同步**执行。惰性求值，**不创建线程**，等待 `future` 对象调用 `wait` 或 `get` 成员函数的时候执行任务。
+2. `std::launch::async` 在不同**线程上**执行异步任务。
+3. `std::launch::async | std::launch::deferred`：这种策略是上面两个策略的组合。任务可以在一个单独的线程上异步执行，也可以延迟执行，具体取决于实现。
+
+**默认**情况下，`std::async`使用`std::launch::async | std::launch::deferred`策略。这意味着任务可能异步执行，也可能延迟执行，具体取决于实现。典型情况是，如果系统资源充足，并且异步任务的执行不会导致性能问题，那么系统可能会选择在新线程中执行任务。但是，如果系统资源有限，或者延迟执行可以提高性能或节省资源，那么系统可能会选择延迟执行。
+
+## 5.33 Actor/CSP
+
+参考：[并发编程（9）——Actor/CSP设计模式 | 爱吃土豆的个人博客](https://www.aichitudou.cn/2024/11/11/并发编程（9）——Actor-CSP设计模式/)
+
+在并发编程中，多个线程可能需要同时访问相同的内存资源。为了防止不同线程之间的资源冲突，传统并发设计方法通常使用共享内存和加锁机制来确保线程安全。例如，当一个线程在修改共享数据时，其他线程会被“锁住”，无法同时访问该数据。但是传统并发设计方法在频繁加锁的情况下会带来性能开销，**降低系统的执行效率**；并且共享内存加锁方式要求线程之间对共享数据有很强的依赖关系，这种**依赖增加了代码的复杂性和耦合度**，使代码难以维护。
+
+**新的设计模式**：
+
+- **Actor模式**：Actor模式通过消息传递的方式来实现线程间通信。每个Actor都有自己的状态和行为，它们通过发送消息来完成交互，而不需要共享内存。这种方式避免了加锁的复杂性和性能损耗。
+- **CSP（Communicating Sequential Processes）模式**：CSP模式也是通过消息传递进行通信，但它强调线程（或进程）之间的严格隔离。各个线程通过通道（Channel）来传递消息，而不直接共享状态，避免了竞争条件和加锁问题。
+
+## 5.34 什么是内存模型
+
+内存模型定义了多线程程序中，读写操作如何在不同线程之间可见，以及这些操作在何种顺序下执行。内存模型确保程序的行为在并发环境下是可预测的。
+
+## 5.35 改动序列
+
+在一个C++程序中，每个对象都具有一个改动序列，它由所有线程在对象上的全部**写操作**构成，其中第一个写操作即为对象的初始化。大部分情况下，这个序列会随程序的多次运行而发生变化，但是在程序的任意一次运行过程中，所含的全部线程都必须形成相同的改动序列。
+
+若多个线程共同操作某一对象，但它不属于原子类型，我们就需要自己对这些线程进行互斥加锁，保证各个线程是按一定顺序访问操作该对象，进而确保对于一个变量，所有线程就其达成一致的改动序列（所有线程对变量的修改顺序相同，要么从头，要么从尾开始）。变量的值会随时间推移形成一个序列，在不同的线程上观察属于同一个变量的序列，如果所见各异，就说明出现了数据竞争和未定义行为.
+
+**改动序列基本要求如下**：
+
+1. 只要某线程看到过某个对象，则该线程的后续读操作必须获得相对新近的值，并且，该线程就同一对象的后续写操作，必然出现在改动序列后方（每一次写都基于上一次的改动）；
+2. 如果某线程先向一个对象写数据，过后再读取它，那么必须能读取到前面写的值；
+3. 若在改动序列中，上述读写操作之间还有别的写操作，则必须读取最后写的值；
+4. 在程序内部，对于**同一个对象**，全部线程都必须就其形成相同的改动序列，并且在所有对象上都要求如此；
+5. 多个对象上的改动序列只是相对关系，线程之间不必达成一致。
+
+## 5.36 什么是原子操作？原子操作是线程安全的吗？
+
+- **原子操作**是不可分割的操作。在系统的任一线程中，我们不会观察到这种操作处于**半完成状态**；它或者完全做好，或者完全没做。
+- **非原子操作**在完成到一半的时候，有可能为另一线程所见。
+
+> 当多个线程或进程并发访问同一内存位置，并且至少一个线程在写入数据，其他线程在读取或写入数据，而没有适当的同步机制来保护该内存位置时，称这些**表达式冲突**。**拥有两个冲突的求值的程序就有数据竞争**，除非
+
+- 两个求值都在同一线程上，或者在同一信号处理函数中执行，或
+- 两个冲突的求值都是原子操作（见 std::atomic），或
+- 一个冲突的求值发生早于 另一个（见 std::memory_order）
+
+
+
+> ***原子操作都是线程安全的吗？***
+
+根据上面原子操作的概念：*原子操作过程中不可被打断，所以寄存器内的内容就不会被其它线程修改，在原子操作结束后，结果存入内存，才会被切换到别的线程，听起来似乎没有问题。这一系列操作中，原子操作一定能将任务完成，并且返回正确的结果写入内存。*所以你可能会认为原子操作是线程安全的。
+
+其实并不尽然，在多线程环境中使用原子操作并不一定是线程安全的，因为线程安全需要确保在多线程情况下，**整个代码的逻辑是正确的，而不仅仅是某个操作的原子性**。**当程序逻辑依赖多个操作的组合，而这些操作之间的整体性没有被原子化处理时，就可能不具有线程安全。**
+
+举例说明：
+
+```cpp
+#include <iostream>
+#include <atomic>
+#include <thread>
+
+std::atomic<int> x = 0;
+
+void check_and_increment() {
+    if (x == 0) {         // 1. 检查值
+        x++;              // 2. 增加值
+    }
+}
+
+int main() {
+    std::thread t1(check_and_increment);
+    std::thread t2(check_and_increment);
+
+    t1.join();
+    t2.join();
+
+    std::cout << "Final value of x: " << x << std::endl;
+    return 0;
+}
+```
+
+我们定义一个函数，这个函数只需要执行一个功能：检查类型为`std::atomic<int>`的变量`x`是否为0，并在判断条件为`true`的条件下执行`x++`。
+
+如果我们创建两个线程，令它们几乎在同一时刻执行`if(x==0)`，它们可能都会认为`x==0`，然后执行`x++`，导致最终`x`的值为2，而不是预期的1。这样即使 **`x++` 是原子操作**，**整个 `if (x == 0)` 检查和递增的过程并不是原子的**，可能在检查后但修改前，另一个线程也修改了 `x`，导致逻辑出错。这个过程和我们之前在并发编程（3）中分析两个线程同时pop队列数据可能会导致线程误判而引发一些错误的问题中，简单分析过，详见：[并发编程（3）——锁（上） | 爱吃土豆的个人博客](https://www.aichitudou.cn/2024/11/03/并发编程（3）——锁（上）/)
+
+我们可以通过互斥或原子操作来保证逻辑的完整性：
+
+```cpp
+// 原子比较交换，比较和交换同一步内进行，而不分开
+void check_and_increment_safe() {
+    int expected = 0;
+    if (x.compare_exchange_strong(expected, expected + 1)) {
+        // 成功更新 x
+    }
+}
+// 互斥
+void check_and_increment() {
+    std::lock_guard<std::mutex> lock(mtx);  // 加锁，保证以下代码是线程安全的
+    if (x == 0) {
+        x++;
+    }
+}
+```
+
+由此可以得出：***当操作独立且不依赖其他状态时，原子操作才可以保证线程安全***。
+
+比如，我们只对原子类型进行`++`操作而不进行判断，那么即使在多线程操作中，仍然是线程安全的：
+
+```cpp
+std::atomic<int> counter = 0;
+
+void increment() {
+    for (int i = 0; i < 1000; ++i) {
+        counter++;  // 原子递增
+    }
+}
+
+int main() {
+    std::thread t1(increment);
+    std::thread t2(increment);
+
+    t1.join();
+    t2.join();
+
+    std::cout << "Final value of counter: " << counter << std::endl;
+    return 0;
+}
+```
+
+当**执行的原子操作是独立的并且不依赖于其他状态**（比如判断执行原子操作的变量是否满足一些条件）时，即使在多线程中它仍然是线程安全的，并不需担心。
+
+> 但注意：任何 `std::atomic` 类型的***初始化不是原子操作***。当我们在多个线程中同时对一个 `std::atomic` 对象进行初始化时，并不会自动保证线程安全。
+
+这是因为`std::atomic` 类型提供了对共享数据的原子操作，但这仅仅是指对该对象进行修改（如读、写、加法、减法等）时，操作本身是原子的，即操作是不可分割的。但对于**初始化操作**来说，它仍然**是普通的内存操作**。具体来说，初始化是对象创建的一部分，而对象的创建与内存分配过程（如内存的分配和指针的设置）并没有任何与原子性相关的保障。
+
+不过我们可以通过以下三种方式保证 `std::atomic` 类型有线程安全的初始化：
+
+1. 在主线程中初始化
+2. 使用同步机制（如互斥锁、`std::call_once` 等）
+3. 可以使用单例模式的初始化，确保初始化只发生一次，比如使用 `std::once_flag` 和 `std::call_once` 来保证在多线程环境下初始化只执行一次
+
+**总结：**
+
+1. 如果操作是**单步的、独立的**，使用原子操作即可保证线程安全。
+2. 如果操作需要**多个步骤或涉及依赖其他共享状态**，应使用锁或其他同步机制来保护代码块的逻辑完整性。
+
+## 5.37 什么是内存次序
+
+内存次序指的是在多线程环境中，**线程之间的内存操作顺序**。由于现代处理器和编译器通常会进行优化（如指令重排序、缓存等），线程的内存操作可能不是按程序代码中的顺序执行的。内存次序的概念就是为了**控制和保证不同线程间对共享数据的访问顺序，以确保程序行为的一致性和正确性**。
+
+在多线程编程中，常见的内存次序操作包括**顺序一致性（sequential consistency）**、**强制顺序（strong order）**和**弱顺序（weak order）**等。
+
+- **顺序一致性（Sequential Consistency）**：要求所有线程看到的操作顺序是全局一致的，程序的执行行为按线程间的顺序一致。即每个线程中的操作执行顺序是按程序代码顺序进行的，**不允许重排序**。
+- **强顺序（Strong Ordering）**：对于某些特定的内存操作（如读取、写入），强顺序要求操作顺序严格按照代码中的顺序执行。
+- **弱顺序（Weak Ordering）**：允许内存操作在一定程度上进行重排序，但要求特定的同步操作（如锁）保证共享数据的正确性。
+
+
+
+而对于原子类型上的每一种操作，我们都可以提供额外的参数（这个参数可以用来**指定执行顺序**），从枚举类`std::memory_order`取值，用于设定所需的**内存次序语义**。枚举类`std::memory_order`具有6个可能的值，包括`std::memory_order_relaxed`、`std:: memory_order_acquire`、`std::memory_order_consume`、`std::memory_order_acq_rel`、`std::memory_order_release`和 `std::memory_order_seq_cst`。
+
+- `std::memory_order_relaxed`：不保证任何内存顺序，允许最大程度的重排序。
+- `std::memory_order_consume`：用于读取依赖于先前写入的值。大多数情况下和`memory_order_acquire`相同。
+- `std::memory_order_acquire`：确保当前线程的所有读取和写入操作在当前原子操作之前完成。
+- `std::memory_order_release`：确保当前线程的所有读取和写入操作在当前原子操作之后完成。
+- `std::memory_order_acq_rel`：同时拥有`acquire`和`release`语义，适用于读写操作都涉及共享数据的情况。
+- `std::memory_order_seq_cst`：保证所有原子操作的顺序一致性，是最强的内存顺序保证。
+
+![image-20250318121335707](/images/$%7Bfiilename%7D/image-20250318121335707.png)
+
+原子类型的操作被划分为以下**三类**：
+
+- **存储**（`store`）操作，可选用的内存次序有`std::memory_order_relaxed`、`std::memory_order_release`或`std::memory_order_seq_cst`。
+- **载入**（`load`）操作，可选用的内存次序有`std::memory_order_relaxed`、`std::memory_order_consume`、`std::memory_order_acquire`或`std::memory_order_seq_cst`。
+- **“读-改-写”**（`read-modify-write`）操作，可选用的内存次序有`std::memory_order_relaxed`、`std::memory_order_consume`、`std::memory_order_acquire`、`std::memory_order_release`、`std::memory_order_acq_rel`或`std::memory_order_seq_cst`。
+
+> 操作的类别决定了内存次序所准许的取值，若我们没有把内存次序显式设定成上面的值，则默认采用最严格的内存次序，即`std::memory_order_seq_cst`。
+
+这六种内存顺序相互组合可以实现**三种顺序模型** (ordering model)：
+
+- `Sequencial consistent ordering` ：实现同步, 且保证全局顺序一致 (single total order) 的模型. 是一致性最强的模型, 也是默认的顺序模型
+- `Acquire-release ordering`： 实现同步, 但不保证保证全局顺序一致的模型
+- `Relaxed ordering` ：不能实现同步, 只保证原子性的模型
+
+## 5.38 原子操作为什么不可复制不可赋值
+
+`std::atomic_flag `**不可复制不可赋值**。这不是 `std::atomic_flag ` 特有的，而是**所有原子类型共有的属性**。原子类型的所有操作都是原子的，而赋值和复制涉及两个对象，破坏了操作的原子性（**复制构造和复制赋值操作**不具备原子性）。复制构造和复制赋值会先读取第一个对象的值，然后再写入另一个对象。对于两个独立的对象，这里实际上有两个独立的操作，合并这两个操作无法保证其原子性。因此，这些操作是不被允许的。详细说明：
+
+**复制构造和复制赋值**操作涉及两个对象，这实际上是两个操作：
+
+1. **读取第一个对象的值**（对于复制构造或赋值的目标对象）；
+2. **写入到另一个对象**（即目标对象）。
+
+这两个操作并不是在一个单一的原子步骤中完成的，而是需要两个独立的步骤。这会导致以下问题：
+
+- **先读后写**：在读第一个对象值并写入第二个对象之间，其他线程可能会修改第一个对象的值或第二个对象的值。这就破坏了操作的原子性，可能会导致数据不一致。
+- **竞态条件**：这两个步骤之间如果没有正确同步（如加锁或其他同步机制），就会出现竞态条件，多个线程同时进行赋值或复制操作时，会导致结果无法预测，发生未定义行为。
+
+## 5.39 自旋锁
+
+自旋锁可以理解为一种***忙等锁***，它的基本思想是，当一个线程尝试获取锁时，如果锁已经被其他线程持有，那么该线程就会不断地循环检查锁的状态，直到成功获取到锁为止。与此相对，`std::mutex` 互斥量是一种***睡眠锁***。当线程请求锁（`lock()`）而未能获取时，它会放弃 CPU 时间片，让其他线程得以执行，从而有效利用系统资源。
+
+从性能上看，自旋锁的响应更快，但是睡眠锁更加节省资源，高效。
+
+我们可以利用`std::atomic_flag`实现一个自旋锁：
+
+```cpp
+#include <iostream>
+#include <atomic>
+#include <thread>
+
+class SpinLock {
+public:
+    void lock() {
+        //1 处
+        while (flag.test_and_set(std::memory_order_acquire)); // 自旋等待，直到成功获取到锁
+    }
+    void unlock() {
+        //2 处
+        flag.clear(std::memory_order_release); // 释放锁
+    }
+private:
+    std::atomic_flag flag = ATOMIC_FLAG_INIT;
+};
+```
+
+- 通过`lock()`函数，我们可以将`flag`通过`test_and_set`函数设为`true`，然后返回上一次`flag`的值。如果返回的为`false`（未持有锁），那就退出`lock()`函数，上锁完毕；如果返回的为`true`（持有锁），说明其他线程已持有该锁，无法继续上锁，通过循环调用`test_and_set`函数，可以实现循环的判断锁的状态，一旦其他线程解锁，当前线程便上锁；
+- 通过`unlock()`函数，我们可以将`flag`设为`false`，表示释放锁;
+- `ATOMIC_FLAG_INIT`默认设`flag`为`false`。
+
+测试函数：
+
+```cpp
+void TestSpinLock() {
+    SpinLock spinlock;
+    std::thread t1([&spinlock]() {
+        spinlock.lock(); // 设置自旋锁
+        for (int i = 0; i < 3; i++) {
+            std::cout << "*";
+            }
+        std::cout << std::endl;
+        spinlock.unlock();
+        });
+    
+    std::thread t2([&spinlock]() {
+        spinlock.lock(); // 设置自旋锁
+        for (int i = 0; i < 3; i++) {
+            std::cout << "?";
+        }
+        std::cout << std::endl;
+        spinlock.unlock();
+        });
+    
+    t1.join();
+    t2.join();
+}
+```
+
+我们的 `SpinLock` 对象中存储的 `flag` 对象在默认构造时是清除 (`false`) 状态。在 `lock()` 函数中调用 `test_and_set` 函数，它是原子的，只有一个线程能成功调用并将 `flag` 的状态原子地更改为设置 (`true`)，并返回它先前的值 (`false`)。此时，该线程成功获取了锁，退出循环。
+
+当 `flag` 对象的状态为设置 (`true`) 时，其它线程调用 `test_and_set` 函数会返回 `true`，导致它们继续在循环中自旋，无法退出。直到先前持有锁的线程调用 `unlock()` 函数，将 `flag` 对象的状态原子地更改为清除 (`false`) 状态。此时，等待的线程中会有一个线程成功调用 `test_and_set` 返回 `false`，然后退出循环，成功获取锁。
+
+## 5.40 shared_ptr是线程安全的吗
+
+现在我们可以很简单的回答这个问题：**并不是**。
+
+> 引用计数是线程安全的！！！
+
+`shared_ptr`仅有引用计数是**线程安全**的，因为在shared_ptr的控制块中，引用计数变量使用类似于 `std::atomic::fetch_add` 的操作并结合 `std::memory_order_relaxed` 进行递增（递减操作则需要更强的内存排序，以确保控制块能够安全销毁）。其关键在于使用了**原子操作**对引用计数进行增加或减少，所以是线程安全的。    而且，因为引用计数是线程安全的，多个线程可以安全地操作引用计数和访问管理对象，即使这些 `shared_ptr` 实例是同一对象的副本且共享所有权也是如此，所以**管理共享资源的生命周期是线程安全的**，不用担心因为多线程操作导致资源提早释放或延迟释放。
+
+> `shared_ptr`本身并不是线程安全的！！！
+
+但是**`shared_ptr`本身并不是线程安全的**，`shared_ptr` 对象实例包含一个指向控制块的指针和一个指向底层元素的指针。这两个指针的操作在多个线程中并没有同步机制。因此，如果多个线程同时访问同一个 `shared_ptr` 对象实例并调用非 `const` 成员函数（如 `reset` 或 `operator=`），这些操作会导致对这些指针的并发修改，进而引发数据竞争（就像我们在[并发编程（10](https://www.aichitudou.cn/2024/11/12/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B%EF%BC%8810%EF%BC%89%E2%80%94%E2%80%94%E5%86%85%E5%AD%98%E6%A8%A1%E5%9E%8B%E5%92%8C%E5%8E%9F%E5%AD%90%E6%93%8D%E4%BD%9C/)）中说的一样，独立的原子操作当然是线程安全的，但是如果原子操作依赖于非原子操作，那么这个过程可能就是非线程安全的）。举例：
+
+***情况一：当多线程操作同一个shared_ptr对象时***
+
+```cpp
+// 按指针传入
+void fn(shared_ptr<A>* sp) {
+    ...
+}
+// 按引用传入
+void fn(shared_ptr<A>& sp) {
+        ...
+    if (..) {
+        sp = other_sp;
+    } else if (...) {
+        sp = other_sp2;
+    }
+}
+
+std::thread t1(fn, std::ref(sp1));
+std::thread t2(fn, std::ref(sp1));
+```
+
+如果我们将`shared_ptr`对象的**指针或引用**传入给可调用对象，当创建不同线程对shared_ptr进行修改时，比如修改其指向（如 `reset` 或 `operator=`）。sp原先指向的引用计数的值要减去1，other_sp指向的引用计数值要加1。然而这几步操作加起来并不是一个原子操作（[并发编程（10)](https://www.aichitudou.cn/2024/11/12/并发编程（10）——内存模型和原子操作/)在原子操作中说过，并不是所有原子操作都是线程安全的，如果原子操作依赖于非原子操作，那么这个过程可能就是非线程安全的，这里的条件判断并不是原子操作），如果多少线程都在修改sp的指向的时候，那么可能会出问题。比如在导致计数在操作减一的时候，其内部的指向，已经被其他线程修改过了。引用计数的异常会导致某个管理的对象被提前析构，后续在使用到该数据的时候触发`core dump`。
+
+如果不调用`shared_ptr`的`非const`成员函数修改`shared_ptr`，那么就是线程安全的。
+
+***情况二：当多线程操作不同shared_ptr对象时***
+
+如果不是同一 `shared_ptr` 对象（管理的数据是同一份，引用计数共享，但shared_ptr不是同一个对象），每个线程读写的指针也不是同一个，引用计数又是线程安全的，那么自然不存在数据竞争，可以安全的调用所有成员函数。
+
+```cpp
+// 按值传递
+void fn(shared_ptr<A> sp) {
+    ...
+    if (..) {
+        sp = other_sp;
+    } else if (...) {
+        sp = other_sp2;
+    }
+}
+std::thread t1(fn, std::ref(sp1));
+std::thread t2(fn, std::ref(sp1));
+```
+
+这时候每个线程内看到的sp，他们所管理的是同一份数据，用的是同一个引用计数。但是各自是不同的对象，当发生多线程中修改sp指向的操作的时候，是不会出现非预期的异常行为的，也就是线程安全的。
+
+> `shared_ptr`所管理的对象不是线程安全的！！！
+
+尽管前面我们提到了如果是按值捕获（或传参）的`shared_ptr`对象，那么是该对象是线程安全的。然而话虽如此，但却可能让人误入歧途。因为我们使用`shared_ptr`更多的是操作其中的数据，对其管理的数据进行读写，而不是修改`shared_ptr`的指向。尽管在按值捕获的时候`shared_ptr`本身是线程安全的，我们不需要对此施加额外的同步操作（比如加解锁、条件变量、`call_once` 和`once_flag` ），但是这并不意味着`shared_ptr`所管理的对象是线程安全的！
+
+`shared_ptr`本身和`shared_ptr`管理的对象是两个东西，并不是同一个！！！*如果我们要多线程处理`shared_ptr`所管理的资源，我们需要主动的对其施加额外的同步操作（比如加解锁、条件变量、`call_once` 和`once_flag`）*。
+
+如果`shared_ptr`管理的数据是STL容器而不是仅仅是一个数字，那么多线程如果存在同时修改的情况，是极有可能触发core dump的。比如多个线程中对同一个`vector`进行`push_back`，或者对同一个`map`进行了`insert`。甚至是对STL容器中并发的做clear操作，都有可能出发`core dump`，当然这里的线程不安全性，其实是其所指向数据的类型的线程不安全导致的，并非是`shared_ptr`本身的线程安全性导致的。尽管如此，由于`shared_ptr`使用上的特殊性，所以我们有时也要将其纳入到`shared_ptr`相关的线程安全问题的讨论范围内。
+
+除了STL容器的并发修改操作（这里指的是修改容器的结构，并不是修改容器中某个元素的值，后者是线程安全的，前者不是），protobuf的Message对象也是不能并发操作的，比如一个线程中修改Message对象（set、add、clear），另外一个线程也在修改，或者在将其序列化成字符串都会触发core dump。
+
+STL容器如何解决线程安全可以参考这篇文章：[C++ STL容器如何解决线程安全的问题？ - 知乎](https://www.zhihu.com/question/29987589/answer/1483744520)
+
+简单来说，保证STL容器的线程安全有两种方式：
+
+1. 对其施加同步操作，使容器在进行增删改查时是线程安全的，但是在高并发下，同步操作会造成性能开销
+
+2. 如果是非关联容器，比如vector，那就固定vector的大小，避免动态扩容（无push_back），我们可以使用resize来实现（不是reserve）。reserve就是预留内存。为的是避免内存重新申请以及容器内对象的拷贝。说白了，reserve()是给push_back()准备的！而resize除了预留内存以外，还会调用容器元素的构造函数，不仅分配了N个对象的内存，还会构造N个对象。从这个层面上来说，resize()在时间效率上是比reserve()低的。但是在多线程的场景下，用resize再合适不过。你可以resize好N个对象，多线程不管是读还是写，都是通过容器的下标访问【operator[]】来访问元素，不要push_back新元素。所谓的『写操作』在这里不是插入新元素，而是修改旧元素。而且，我们也可以将固定大小的vector修改成一个环形队列，索引通过原子变量来保证索引的安全。
+
+3. 至于非关联容器，比如map，我记忆中还是使用互斥好一点
+
+   
+
+   
+
+最后，有很多人可能认为引用计数是通过智能指针的静态成员变量所管理的，但这很明显是错的：
+
+```cpp
+shared_ptr<A> sp1 = make_shared<A>(x);
+shared_ptr<A> sp2 = make_shared<A>(y);
+```
+
+两个完全不相干的sp1和sp2，只要模板参数`T`是同一个类型，即使管理的资源不是同一个，但如果使用静态成员变量管理引用计数，那么二者就会共享同一个计数。
+
+## 5.41 如何实现线程安全的智能指针
+
+引用计数的加减是线程安全的不用考虑，我们只需要考虑如何保证一个智能指针实例的 `ptr` 和 `control` 成员线程池安全。
+
+方法一：我们可以使用互斥锁，在 `SimpleSharedPtr` 中引入 `std::mutex`，在所有可能修改 `ptr` 和 `control` 的操作中加锁。
+
+方法二：使用原子模板的偏特化版本：`std::atomic`允许用户原子地操纵 `shared_ptr` 对象。因为它是 `std::atomic` 的特化版本，即使我们还没有深入讲述它，也能知道它是**原子类型**，这意味着它的所有操作都是**原子操作**，肯定是**线程安全**的（即使多个执行线程不同步地同时访问**同一** `std::shared_ptr` 对象，且任何这些访问使用了 `shared_ptr` 的**非 const 成员函数**）。
+
+方法一不多说，就是在进行写操作的时候加互斥即可，对于方法二，下面我分别使用`std::shared_ptr`和**`std::atomic<std::shared_ptr>`**来说明二者的区别：
+
+```cpp
+class Data {
+public:
+    Data(int value = 0) : value_(value) {}
+    int get_value() const { return value_; }
+    void set_value(int new_value) { value_ = new_value; }
+private:
+    int value_;
+};
+
+auto data = std::make_shared<Data>();
+
+void writer(){
+    for (int i = 0; i < 10; ++i) {
+        std::shared_ptr<Data> new_data = std::make_shared<Data>(i);
+        data.swap(new_data); // 调用非 const 成员函数
+        std::this_thread::sleep_for(100ms);
+    }
+}
+
+void reader(){
+    for (int i = 0; i < 10; ++i) {
+        if (data) {
+            std::cout << "读取线程值: " << data->get_value() << std::endl;
+        }
+        else {
+            std::cout << "没有读取到数据" << std::endl;
+        }
+        std::this_thread::sleep_for(100ms);
+    }
+}
+
+int main(){
+    std::thread writer_thread{ writer };
+    std::thread reader_thread{ reader };
+
+    writer_thread.join();
+    reader_thread.join();
+}
+```
+
+以上这段代码是典型的**线程不安全**，它满足：
+
+1. 多个线程不同步地同时访问**同一** `std::shared_ptr` 对象
+2. 任一线程使用 shared_ptr 的**非 const** 成员函数
+
+那么**为什么呢**？为什么满足这些概念就是线程不安全呢？为了理解这些概念，首先需要了解 `shared_ptr` 的内部实现：
+
+`shared_ptr` 的通常实现只保有两个指针
+
+- 指向底层元素的指针（[get()](https://zh.cppreference.com/w/cpp/memory/shared_ptr/get)) 所返回的指针）
+- 指向*控制块* 的指针
+
+**控制块**是一个动态分配的对象，其中包含：
+
+- 指向被管理对象的指针或被管理对象本身
+- 删除器（类型擦除）
+- 分配器（类型擦除）
+- 持有被管理对象的 `shared_ptr` 的数量
+- 涉及被管理对象的 `weak_ptr` 的数量
+
+**控制块是线程安全的**，这意味着多个线程可以安全地操作引用计数和访问管理对象，即使这些 `shared_ptr` 实例是同一对象的副本且共享所有权也是如此。因此，多个线程可以安全地创建、销毁和复制 `shared_ptr` 对象，因为这些操作仅影响控制块中的引用计数。也就是说对于引用计数这一变量的存储，是在堆上的，多个shared_ptr的对象都指向同一个堆地址，对引用计数的加减过程是一个原子过程，是线程安全的。
+
+然而，`shared_ptr` 对象实例本身并不是线程安全的。`shared_ptr` 对象实例包含一个指向控制块的指针和一个指向底层元素的指针。这两个指针的操作在多个线程中并没有同步机制。因此，如果多个线程同时访问同一个 `shared_ptr` 对象实例并调用非 `const` 成员函数（如 `reset` 或 `operator=`），这些操作会导致对这些指针的并发修改，进而引发数据竞争。
+
+如果不是同一 `shared_ptr` 对象，每个线程读写的指针也不是同一个，控制块又是线程安全的，那么自然不存在数据竞争，可以安全的调用所有成员函数。
+
+------
+
+使用 `std::atomic<shared_ptr>` 修改：
+
+```cpp
+std::atomic<std::shared_ptr<Data>> data = std::make_shared<Data>();
+
+void writer() {
+    for (int i = 0; i < 10; ++i) {
+        std::shared_ptr<Data> new_data = std::make_shared<Data>(i);
+        data.store(new_data); // 原子地替换所保有的值
+        std::this_thread::sleep_for(10ms);
+    }
+}
+
+void reader() {
+    for (int i = 0; i < 10; ++i) {
+        if (auto sp = data.load()) {
+            std::cout << "读取线程值: " << sp->get_value() << std::endl;
+        }
+        else {
+            std::cout << "没有读取到数据" << std::endl;
+        }
+        std::this_thread::sleep_for(10ms);
+    }
+}
+```
+
+很显然，这是线程安全的，`store` 是原子操作，而 `sp->get_value()` 只是个读取操作，并会对数据进行修改，所以读操作不需要调用原子操作。
+
+## 5.42 shared_ptr内部实现
+
+简单来说，`shared_ptr`内部包含了两个指针，一个`Ptr to T`指向目标管理对象`T object`，另一个`Ptr to Control Block`指向控制块`Control Block`。控制块包含了一个`引用计数(reference count)`、一个`弱计数(weak count)`和`其他数据(other data)`（比如删除器、分配器等）。
+
+但在智能指针初始化过程中，需要为管理的对象T Object 和控制块Control Block分配内存，并使用两个指针指向它们。
+
+![image-20250318161738108](/images/$%7Bfiilename%7D/image-20250318161738108.png)
+
+简单举一个例子：
+
+```cpp
+std::shared_ptr<int> p1(new int(1));
+std::shared_ptr<int> p2=p1;
+```
+
+`shared_ptr`有很多构造函数，这里使用的构造函数原型为：
+
+```cpp
+template< class Y >
+explicit shared_ptr( Y* ptr );
+
+template< class Y >
+shared_ptr& operator=( const shared_ptr<Y>& r ) noexcept;
+```
+
+二者的内存模型如下所示：
+
+![在这里插入图片描述](/images/$%7Bfiilename%7D/db2e0303e59f4c5c99a40f388e6bb3be.png)
+
+<center>图片来源：https://blog.csdn.net/LCZ411524/article/details/143648637</center>
+
+很明显，p1和p2都指向同一内存空间`T Object`，而且引用计数为2，只有当p1和p2都被释放后，引用计数减为0的同时，智能指针管理的对象才会被释放。
+
+## 5.43 make_shared相比直接构造shared_ptr的优点
+
+1. `std::make_shared` **减少了内存分配的次数**：
+   - **使用 `new` 创建：** 当直接使用 `std::shared_ptr` 时，需要两次内存分配：
+     1. 为所管理的对象分配内存。
+     2. 为 `std::shared_ptr` 的控制块（控制引用计数和资源信息）分配内存。
+   - **使用 `make_shared`：** `std::make_shared` 会在一次内存分配中同时分配对象和控制块的内存，避免了额外的内存分配。
+
+```cpp
+#include <memory>
+
+// 使用 new 创建
+std::shared_ptr<int> sp1(new int(10));  // 两次内存分配
+
+// 使用 make_shared 创建
+std::shared_ptr<int> sp2 = std::make_shared<int>(10);  // 一次内存分配
+```
+
+2. 直接使用 `new` 创建 `std::shared_ptr` 可能引发异常时的资源泄漏问题。
+   - 如果在 `std::shared_ptr` 的构造过程中发生异常，`new` 分配的资源可能无法正确释放，导致内存泄漏。
+   - `std::make_shared` 是异常安全的，因为其分配和构造过程是一体化的，保证资源不会泄漏。
+
+```cpp
+// 错误代码
+void exception_test() {
+    std::shared_ptr<int> sp(new int[100]);  // 动态分配数组
+    throw std::runtime_error("Error occurred");  // 如果异常发生，数组内存泄漏
+}
+
+// 正确代码
+void exception_test() {
+    std::shared_ptr<int> sp = std::make_shared<int[100]>();  // 异常安全，资源会正确管理
+}
+```
+
+3. 当直接使用 `new` 时，需要确保动态分配的内存与 `std::shared_ptr` 的删除器匹配。
+   - 如果使用默认删除器管理动态分配的数组，会导致未定义行为（数组不会被正确释放）。
+   - `std::make_shared` 自动匹配删除器，避免了这种错误。
+
+```cpp
+// 错误代码
+void test() {
+    std::shared_ptr<int> sp(new int[10]);  // 错误！默认删除器无法正确释放数组
+}
+// 正确代码
+void test() {
+    std::shared_ptr<int[]> sp = std::make_shared<int[]>(10);  // 正确，删除器自动匹配
+}
+```
+
+但注意，当存在以下情况时，不应该使用`make_shared`来构造`shared_ptr`对象，而应直接构造`shared_ptr`对象：
+
+1. 需要自定义删除器
+
+   `std::make_shared` 自动使用 `delete` 来销毁对象，但如果我们创建对象管理的资源不是通过`new`分配的内存，那么需要我们自定义一个删除器来销毁该内存；或者我们需要为 `std::shared_ptr` 提供自定义的删除逻辑（例如释放资源时需要执行额外的操作），那么 `std::make_shared` 就不适用了。在这种情况下，我们需要通过`shared_ptr`的构造函数来创建对象，并传递一个自定义的删除器。
+
+2. 创造对象的构造函数是保护或私有时
+
+   **当我们想要创建的对象没有公有的构造函数时，`make_shared`无法使用！！！**
+
+3. 从已有裸指针构造，当对象已通过 new 分配，或由第三方库返回裸指针时，不能用 `make_shared`
+
+4. 使用 `make_shared` 时，对象和控制块的内存是连续的。若希望对象销毁后立即释放其内存（即使仍有 `weak_ptr` 引用控制块），需直接构造 `shared_ptr`。因为 **`std::make_shared`** 分配的对象和控制块的内存是连续的，当所有 `std::shared_ptr` 销毁后，对象和控制块的**连续内存块不会立即释放**，因为控制块仍需维护弱引用计数（供 `std::weak_ptr` 使用），只有当所有 `std::weak_ptr` 也销毁后，**整个内存块（控制块+对象）才会释放**。
+
+   而通过 **`std::shared_ptr`** 直接构造，当所有 `std::shared_ptr` 销毁后，对象的内存（通过 `new` 分配的独立内存块）**立即释放**，控制块的内存仍存在，直到所有 `std::weak_ptr` 销毁后才释放。
+
+   因此 make_shared 会意外延迟内存释放的时间。
+
+   ## 5.44 智能指针返回裸指针需要注意什么
+
+   当我们需要获取内置类型（管理资源）时，可以通过智能指针的方法`get()`返回其底层管理的内置指针。
+
+   > 注意，通过`get()`函数返回的内置指针时要注意以下问题：
+
+   1. 我们不能主动通过`delete`回收该指针，要交给智能指针自己回收，否则会造成double free或者使用智能指针产生崩溃等问题。
+   2. **也不能用`get()`返回的内置指针初始化另一个智能指针**，因为两个智能指针引用一个内置指针会出现问题，比如一个释放了另一个不知道就会导致崩溃等问题。 因为`get()` 方法返回的原始指针（即裸指针），不增加智能指针对对象的引用计数或所有权管理
+
+   ```cpp
+   std::shared_ptr<int> sp1 = std::make_shared<int>(10);
+   int* raw_ptr = sp1.get();
+   
+   // 错误：使用裸指针初始化另一个 shared_ptr
+   std::shared_ptr<int> sp2(raw_ptr);  // 错误，sp2 和 sp1 都会管理同一个内存
+   ```
+
+   这里，`raw_ptr` 是 `sp1` 管理的对象的裸指针，但 `raw_ptr` 不会增加对象的引用计数，也不会管理其生命周期。当我们通过 `raw_ptr` 初始化 `sp2` 时，`sp2` 会成为一个**新的智能指针，指向相同的内存区域**。由于 `sp1` 和 `sp2` 都管理同一个内存对象，但它们并没有共享引用计数。裸指针的生命周期与智能指针不同，它不被智能指针的生命周期管理，这可能会导致以下错误：
+
+   - **多次释放同一内存**：如果两个智能指针都拥有相同的裸指针，而其中一个智能指针释放了这个指针所管理的资源，另一个智能指针会在其析构时试图释放相同的资源。这会导致“双重释放”错误，通常会导致程序崩溃。
+   - **悬挂指针**：如果原始智能指针在另一个智能指针之前被销毁，那么另一个智能指针会变成一个悬挂指针。虽然这个智能指针指向有效内存，但该内存已被释放，访问它会导致未定义行为（通常会崩溃）。
+
+   > `get()`用来将指针的访问权限传递给代码，只有在确定代码不会delete裸指针的情况下，才能使用get。**特别是**，永远不要用get初始化另一个智能指针或者为另一个智能指针赋值。
+
+   ## 5.44 不能将局部变量传给智能指针
+
+   如果将一个函数中的局部变量传给智能指针时，当作用域结束后，智能指针会 delete 局部变量，但是局部变量是栈空间的变量，用`delete`会导致崩溃。我们这时候必须传入一个自定义的删除器，用于删除局部变量：
+
+   ```cpp
+   void delfuncint(int *p)
+   {
+       cout << *p << " in del func" << endl;
+   }
+   
+   void delfunc_shared()
+   {
+       int p = 6;
+       shared_ptr<int> psh(&p, delfuncint);
+   }
+   ```
+
+   如果不传递`delfuncint`，会造成`p`被智能指针`delete`，因为`p`是栈空间的变量，用`delete`会导致崩溃。
+
+## 5.45 智能指针循环引用问题
+
+除了`new`和`delete`能引发循环引用问题外，`shared_ptr`本身也可能会引发内存泄漏问题，即**循环引用问题**。
+
+`shared_ptr` 循环引用问题是指**两个或多个对象之间通过`shared_ptr`相互引用，导致对象无法被正确释放，从而造成内存泄漏。**常见的情况是两个对象A和B，它们的成员变量互相持有了对方的`shared_ptr`。当A和B都不再被使用时，它们的引用计数不会降为0，无法被自动释放。
+
+```cpp
+class Girl;
+
+class Boy {
+public:
+	Boy() {
+		cout << "Boy 构造函数" << endl;
+	}
+	~Boy() {
+		cout << "~Boy 析构函数" << endl;
+	}
+	void setGirlFriend(shared_ptr<Girl> _girlFriend) {
+		this->girlFriend = _girlFriend;
+	}
+private:
+	shared_ptr<Girl> girlFriend;
+};
+
+class Girl {
+public:
+	Girl() {
+		cout << "Girl 构造函数" << endl;
+	}
+	~Girl() {
+		cout << "~Girl 析构函数" << endl;
+        
+	}
+	void setBoyFriend(shared_ptr<Boy> _boyFriend) {
+		this->boyFriend = _boyFriend;
+	}
+private:
+	shared_ptr<Boy> boyFriend;
+};
+
+void useTrap() {
+	shared_ptr<Boy> spBoy(new Boy());
+	shared_ptr<Girl> spGirl(new Girl());
+	// 陷阱用法
+	spBoy->setGirlFriend(spGirl);
+	spGirl->setBoyFriend(spBoy);
+	// 此时boy和girl的引用计数都是2
+    cout << "r_count of spBoy is : " << spBoy.use_count() << endl;
+    cout << "r_count of spGirl is : " << spGirl.use_count() << endl;
+}
+
+int main(void) {
+	useTrap();
+	system("pause");
+	return 0;
+}
+
+Boy 构造函数
+Girl 构造函数
+r_count of spBoy is : 2
+r_count of spGirl is : 2
+```
+
+有没有方法解决这个问题呢？这时候我们就用到了智能指针**`weak_ptr`**。
+
+**`weak_ptr`**是一种**弱引用**，不会增加对象的引用计数，在对象释放时会自动设置为`nullptr`。它**只可以**从一个 `shared_ptr` 或另一个 `weak_ptr` 对象构造， 它的构造和析构不会引起引用记数的增加或减少（当然，`weak_ptr`其实不需要析构函数，因为它不需要管理和释放资源，即没有RAII）。 同时`weak_ptr` 没有重载`operator*`和`operator->`（不支持访问资源），但可以使用 **weak_ptr.lock()** 获得一个可用的 `shared_ptr` 对象，当对象已经释放时会返回一个空`shared_ptr`
+
+```cpp
+class Girl;
+
+class Boy {
+public:
+	Boy() {
+		cout << "Boy 构造函数" << endl;
+	}
+	~Boy() {
+		cout << "~Boy 析构函数" << endl;
+	}
+	void setGirlFriend(shared_ptr<Girl> _girlFriend) {
+		this->girlFriend = _girlFriend;
+		// 在必要的使用可以转换成共享指针
+		shared_ptr<Girl> sp_girl;
+		sp_girl = this->girlFriend.lock();
+		cout << "r_count of spGirl is : " << sp_girl.use_count() << endl;
+		// 使用完之后，再将共享指针置NULL即可
+		sp_girl = NULL;
+	}
+private:
+	weak_ptr<Girl> girlFriend;
+};
+
+class Girl {
+public:
+	Girl() {
+		cout << "Girl 构造函数" << endl;
+	}
+	~Girl() {
+		cout << "~Girl 析构函数" << endl;
+	}
+	void setBoyFriend(shared_ptr<Boy> _boyFriend) {
+		this->boyFriend = _boyFriend;
+	}
+
+private:
+	shared_ptr<Boy> boyFriend;
+};
+
+void useTrap() {
+	shared_ptr<Boy> spBoy(new Boy());
+	shared_ptr<Girl> spGirl(new Girl());
+	spBoy->setGirlFriend(spGirl);
+    cout << "r_count of spGirl is : " << spGirl.use_count() << endl;
+	spGirl->setBoyFriend(spBoy);
+    cout << "r_count of spBoy is : " << spBoy.use_count() << endl;
+    cout << "r_count of spGirl is : " << spGirl.use_count() << endl;
+}
+int main(void) {
+	useTrap();
+	system("pause");
+	return 0;
+}
+```
+
+我们将`Boy`类的私有成员变量类型由`shared_ptr`更换为了`weak_ptr`，此时，对该变量赋值不会造成引用计数的增加，自然就解决了循环引用问题。
+
+代码输出为：
+
+```
+Boy 构造函数
+Girl 构造函数
+r_count of spGirl is : 3
+r_count of spGirl is : 1
+r_count of spBoy is : 2
+r_count of spGirl is : 1
+~Girl 析构函数
+~Boy 析构函数
+```
+
+`spGirl`的引用计数之所以为3是因为，在调用`setGirlFriend`函数时，按值传入一个`spGirl`对象，在函数内部，拥有一个`spGirl`副本，此时引用计数为2；当创建了一个`shared_ptr＜Girl>`类型的对象`sp_girl`，并调用`weak_ptr＜Girl>`的`lock`函数获取`shared_ptr＜Girl>`赋予给`sp_girl`时，引用计数变为了3。但它们都是局部变量，所以当函数作用域结束后，都会被自动释放，所以最后引用计数变为了1。
+
+`spBoy`内部的成员变量类型是`shared_ptr`而不是`weak_ptr`，所以引用计数为2，但是，当`spGirl`被释放后，`spBoy`的引用计数为1，此时spBoy也可以正常释放。
+
+## 5.46 enable_from_this_shared
+
+在一个类的成员函数中，我们不能直接将`this`指针作为`shared_ptr`返回，而需要通过派生`std::enable_shared_from_this`类，通过其方法`shared_from_this`来返回指针。**原因**是`std::enable_shared_from_this`类中有一个`weak_ptr`，这个`weak_ptr`用来观察`this`智能指针，调用`shared_from_this()`方法其实是调用内部这个`weak_ptr`的`lock()`方法，将所观察的`shared_ptr`返回。
+
+需要注意的是，获取自身智能指针的函数仅在`shared_ptr`的构造函数被调用之后才能使用，因为`enable_shared_from_this`内部的`weak_ptr`只有通过`shared_ptr`才能构造。
+
+> 但注意，你不能直接将`this`指针作为`shared_ptr`返回回来！！！
+
+我在前面说过，不能将智能指针通过`get()`函数返回的裸指针用于初始化或`reset`另一个指针。通过这种方法初始化的智能指针，其实和原本在类内部构造的智能指针是两个独立的对象，它们不共享引用计数，仅仅只是管理的资源相同。如果多次析构，会造成同一个资源被重复析构两次的问题。
+
+所以，不要将`this`指针作为`shared_ptr`返回回来，因为`this`指针本质上是一个裸指针，因此，可能会导致重复析构

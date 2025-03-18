@@ -31,17 +31,17 @@ typora-root-url: ./..
 
 在上一节中，我们等待地铁到站的过程中可以通过条件变量提醒我们是否到站，而本节中我们可以通过`std::future`处理地铁到站的情况。举个例子：我们在车站等车，可能会做一些别的事情打发时间，比如玩手机、和朋友聊天等。不过，我们始终在等待一件事情：***车到站***。
 
-C++ 标准库将这种事件称为 [future](https://zh.cppreference.com/w/cpp/thread#.E6.9C.AA.E6.9D.A5.E4.BD.93)。它用于处理线程中需要等待某个事件的情况，**线程知道预期结果**。等待的同时也可以执行其它的任务。
+C++ 标准库将这种事件称为 `future`。它用于处理线程中需要等待某个事件的情况，线程知道预期结果。等待的同时也可以执行其它的任务。
 
-C++ 标准库有两种 future，都声明在 [`future`](https://zh.cppreference.com/w/cpp/header/future) 头文件中：独占的 [`std::future`](https://zh.cppreference.com/w/cpp/thread/future) 、共享的 [`std::shared_future`](https://zh.cppreference.com/w/cpp/thread/shared_future)。它们的区别与 `std::unique_ptr` 和 `std::shared_ptr` 类似。同一事件仅仅允许关联唯一一个`std::future` 实例，但可以关联多个 `std::shared_future` 实例。它们都是模板，它们的模板类型参数，就是其关联的事件（函数）的**返回类型**。当多个线程需要访问一个独立 `future` 对象时， 必须使用互斥量或类似同步机制进行保护。而多个线程访问同一共享状态，若每个线程都是通过其自身的 `shared_future` 对象副本进行访问，则是安全的。
+C++ 标准库有两种 `future`，都声明在 `future` 头文件中：独占的 `std::future` 、共享的 `std::shared_future`。它们的区别与 `std::unique_ptr` 和 `std::shared_ptr` 类似。同一事件仅仅允许关联唯一一个`std::future` 实例，但可以关联多个 `std::shared_future` 实例。它们都是模板，它们的模板类型参数，就是其关联的事件（函数）的返回类型。当多个线程需要访问一个独立 `future` 对象时， 必须使用互斥量或类似同步机制进行保护。而多个线程访问同一共享状态，若每个线程都是通过其自身的 `shared_future` 对象副本进行访问，则是安全的。
 
-> `std::future` 是**只能移动**（拷贝构造和拷贝赋值被delete）的，其所有权可以在不同的对象中互相传递，但只有一个对象可以获得特定的同步结果。而 `std::shared_future` 是**可复制的**，多个对象可以指代同一个共享状态。
+> `std::future` **只能移动**（拷贝构造和拷贝赋值被delete），其所有权可以在不同的对象中互相传递，但只有一个对象可以获得特定的同步结果。而 `std::shared_future` 是**可复制的**，多个对象可以指代同一个共享状态。
 
 ## 1.1 async与future的配合使用
 
-假设需要执行一个耗时任务并获取其返回值，但是并不急切的需要它。那么就可以启动新线程执行，但是***`std::thread` 不能直接从线程获取返回值（可以使用引用或指针直接将数据存储至指定内存，而不用显式返回）***。不过我们可以使用 [`std::async`](https://zh.cppreference.com/w/cpp/thread/async) 函数模板显式获取返回值。
+假设需要执行一个耗时任务并获取其返回值，但是并不急切的需要它。那么就可以启动新线程执行，但是***`std::thread` 不能直接从线程获取返回值（可以使用引用或指针直接将数据存储至指定内存，而不用显式返回***）。不过我们可以使用 `std::async` 函数模板显式获取返回值。
 
-使用 *`std::async` 启动一个**异步任务**（也就是创建一个子线程执行相关任务，主线程可以执行自己的任务），它会返回一个 `std::future` 对象*，这个对象和任务关联，将持有任务最终执行后的结果。当需要任务执行结果的时候，只需要调用 [`future.get()`](https://zh.cppreference.com/w/cpp/thread/future/get) 成员函数，就会**阻塞**当前线程直到 `future` 为就绪为止（即任务执行完毕），返回执行结果。[`future.valid()`](https://zh.cppreference.com/w/cpp/thread/future/valid) 成员函数检查 future 当前是否关联共享状态，即是否当前关联任务。如果还未关联，或者任务已经执行完（调用了 get()、set()），都会返回 **`false`**。
+使用 *`std::async` 启动一个**异步任务**（也就是创建一个子线程执行相关任务，主线程可以执行自己的任务），它会**返回一个 `std::future` 对象***，这个对象和任务关联，将持有任务最终执行后的结果。当需要任务执行结果的时候，只需要调用 [`future.get()`](https://zh.cppreference.com/w/cpp/thread/future/get) 成员函数，就会**阻塞**当前线程直到 `future` 为就绪为止（即任务执行完毕），返回执行结果。[`future.valid()`](https://zh.cppreference.com/w/cpp/thread/future/valid) 成员函数检查 `future` 当前是否关联共享状态，即是否当前关联任务。如果还未关联，或者任务已经执行完（调用了 get()、set()），都会返回 **`false`**。
 
 举一个例子：
 
@@ -86,7 +86,7 @@ Data: Data
 
 与 `std::thread` 一样，`std::async` 支持***任意可调用对象***，以及**传递**调用参数。包括支持使用 `std::ref` ，以及`std::move`。我们下面详细聊一下 `std::async` 参数传递的事。
 
-std::async支持**所有**[可调用(Callable)](https://zh.cppreference.com/w/cpp/named_req/Callable)对象，并且也是默认按值复制（原因可以参考我之前写的关于thread函数源码解析那部分的文章），**必须使用 `std::ref` 才能传递引用**（左值引用）。并且它和 `std::thread` 一样，内部会将保有的参数副本转换为**右值表达式进行传递**，这是为了那些**只支持移动的类型**，左值引用没办法引用右值表达式，所以如果不使用 `std::ref`，这里 `void f(int&)` 就会导致编译错误，如果是 `void f(const int&)` 则可以通过编译，不过引用的不是我们传递的局部对象。
+`std::async`支持**所有**[可调用(Callable)](https://zh.cppreference.com/w/cpp/named_req/Callable)对象，并且也是默认按值复制（原因可以参考我之前写的关于thread函数源码解析那部分的文章），**必须使用 `std::ref` 才能传递引用**（左值引用）。并且它和 `std::thread` 一样，内部会将保有的参数副本转换为**右值表达式进行传递**，这是为了那些**只支持移动的类型**，左值引用没办法引用右值表达式，所以如果不使用 `std::ref`，这里 `void f(int&)` 就会导致编译错误，如果是 `void f(const int&)` 则可以通过编译，不过引用的不是我们传递的局部对象。
 
 ```c++
 void f(const int& p) {}
@@ -134,7 +134,7 @@ int main(){
 
 ### 1.2.1 async的[执行策略](https://zh.cppreference.com/w/cpp/thread/launch)
 
-`std::async`除传递可调用对象、对象参数之外，还需要传递枚举值（也叫策略，比如上面的std::launch::async），这些策略在`std::launch`枚举中定义。除了`std::launch::async`之外，还有以下策略：
+`std::async`除传递可调用对象、对象参数之外，还需要传递枚举值（也叫策略，比如上面的`std::launch::async`），这些策略在`std::launch`枚举中定义。除了`std::launch::async`之外，还有以下策略：
 
 1. `std::launch::deferred`：这种策略意味着任务将在需要结果时**同步**执行。惰性求值，**不创建线程**，等待 `future` 对象调用 `wait` 或 `get` 成员函数的时候执行任务。
 2. `std::launch::async` 在不同**线程上**执行异步任务。
@@ -175,11 +175,11 @@ int main(){
 
 ## 1.3 future的wait和get
 
-1. **std::future::get()**:
+1. `std::future::get()`:
 
 `std::future::get()` 是一个阻塞调用，用于获取 `std::future` 对象表示的值或异常。如果异步任务还没有完成，`get()` 会**阻塞当前线程**，直到任务完成。如果任务已经完成，`get()` 会立即返回任务的结果。重要的是，**`get()` 只能调用一次**，因为它会移动或消耗掉 `std::future` 对象的状态。一旦 `get()` 被调用，或者被**移动**，`std::future` 对象就不能再被用来获取结果。
 
-2. **std::future::wait()**:
+2. `std::future::wait()`:
 
 `std::future::wait()` 也是一个阻塞调用，但它与 `get()` 的主要区别在于 `wait()` 不会返回任务的结果。它只是等待异步任务完成。如果任务已经完成，`wait()` 会立即返回。如果任务还没有完成，`wait()` 会**阻塞当前线程**，直到任务完成。与 `get()` 不同，**`wait()` 可以被多次调用**，它不会消耗掉 `std::future` 对象的状态。
 
@@ -189,7 +189,7 @@ int main(){
 - `get()` 只能调用一次，而 `wait()` 可以被多次调用。
 - 如果任务还没有完成，`get()` 和 `wait()` 都会阻塞当前线程，但 `get()` 会一直阻塞直到任务完成并返回结果，而 `wait()` 只是在等待任务完成。
 
-我们可以使用std::future的wait_for()或wait_until()方法来检查异步操作是否已完成。这些方法返回一个表示操作状态的std::future_status值。
+我们可以使用`std::future`的`wait_for()`或`wait_until()`方法来检查异步操作是否已完成。这些方法返回一个表示操作状态的`std::future_status`值。
 
 ```c++
 if(fut.wait_for(std::chrono::seconds(0)) == std::future_status::ready) {  
@@ -210,7 +210,7 @@ if(fut.wait_for(std::chrono::seconds(0)) == std::future_status::ready) {
 
    如上述代码段，`std::async` 创建了一个临时的 `std::future` 对象，它将持有异步任务的结果，但它并没有将该 `std::future` 对象保存，所以在表达式结束时会被销毁。这导致`std::future` 的析构函数在任务完成前被调用，从而**阻塞主线程**，直到 `f()` 执行完成。
 
-   > `std::future` 的析构函数类似于RAII机制，在析构调用的时候执行类似于线程的`join()`函数，等待async任务执行完毕后才完全销毁。
+   > `std::future` 的析构函数类似于`RAII`机制，在析构调用的时候执行类似于线程的`join()`函数，等待`async`任务执行完毕后才完全销毁。
 
    后续的异步任务（例如 `g()`）会等待 `f()` 完成后才开始执行，因为任务的执行被前一个任务的完成所**阻塞**。
 
@@ -233,7 +233,7 @@ if(fut.wait_for(std::chrono::seconds(0)) == std::future_status::ready) {
 
 ## 1.4 异常处理
 
-如果async在执行可调用对象期间发生了异常，`future`对象会将该异常保存下来，我们可以调用 `std::future::get` 方法来获取这个异常。
+如果`async`在执行可调用对象期间发生了异常，`future`对象会将该异常保存下来，我们可以调用 `std::future::get` 方法来获取这个异常。
 
 ```c++
 void may_throw()
@@ -259,7 +259,7 @@ int main()
 }
 ```
 
-async在异步执行可调用对象`may_throw`时，发生了异常（我们这里手动抛出一个异常表示代码发生异常），我们在try块中调用`get()`函数获取`future`对象的内容，如果内容是正常值，那么代码继续运行；如果内容是异常值，那么会直接被catch块捕获，并对其进行相应的处理。
+`async`在异步执行可调用对象`may_throw`时，发生了异常（我们这里手动抛出一个异常表示代码发生异常），我们在try块中调用`get()`函数获取`future`对象的内容，如果内容是正常值，那么代码继续运行；如果内容是异常值，那么会直接被catch块捕获，并对其进行相应的处理。
 
 输出：
 
@@ -278,7 +278,7 @@ template <class _Ret, class... _ArgTypes>
 class packaged_task<_Ret(_ArgTypes...)> {}
 ```
 
-packaged_task 是一个模板类型，其中：
+`packaged_task` 是一个模板类型，其中：
 
 - `_Ret`：表示可调用目标的返回类型
 - `_ArgTypes...`：可调用目标接受的参数类型
@@ -288,11 +288,11 @@ std::packaged_task<double(int, int)>
 std::packaged_task<void()> 
 ```
 
-所以上面初始化的第一个packaged_task实例表示，接受任何返回类型是double，参数是int,int的可调用对象。
+所以上面初始化的第一个`packaged_task`实例表示，接受任何返回类型是`double`，参数是`int`,`int`的可调用对象。
 
-第二个packaged_tas实例表示，，接受任何返回类型是void，且无参数的可调用对象。
+第二个`packaged_tas`实例表示，接受任何返回类型是`void`，且无参数的可调用对象。
 
-> **`std::packaged_task` 重载了 `operator()` 运算符**，并通过重载的 `operator()` 来执行包装的可调用对象。比如在命令`std::packaged_task<void(int)> task(myFunction); `中，执行`task()`其实就算再执行`myFunction()`.
+> **`std::packaged_task` 重载了 `operator()` 运算符**，并通过重载的 `operator()` 来执行包装的可调用对象。比如在命令`std::packaged_task<void(int)> task(myFunction); `中，执行`task()`其实就算再执行`myFunction()`。
 
 以下是使用`std::packaged_task`和`std::future`的基本步骤：
 
@@ -333,7 +333,7 @@ void use_package() {
 
 C++11引入了`std::promise`和`std::future`两个类，用于实现异步编程。`std::promise`用于在某一线程中设置某个值或异常，之后通过 `std::promise` 对象所创建的`std::future`对象异步获得这个值或异常。
 
-我们可以选择将运行结果保存到promise中，然后通过promise绑定的future获得这个结果。
+我们可以选择将运行结果保存到`promise`中，然后通过`promise`绑定的`future`获得这个结果。
 
 示例：
 
