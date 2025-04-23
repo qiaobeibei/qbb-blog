@@ -2,9 +2,9 @@
 title: cpp常见概念总结
 date: 2025-02-25 12:48:34
 categories:
-- C++
+- 面试
 tags: 
-- C++
+- C++知识点
 typora-root-url: ./..
 ---
 
