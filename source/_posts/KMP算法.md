@@ -99,7 +99,7 @@ void get_next(vector<int>& next, string p)
 {
     int n = p.size();
     next.assign(n + 1, 0);
-    // 因为next[0]和next[1]的值固定，所以只需从j=2开始求
+    // 因为next[0]和next[1]的值固定，所以只需从第二个字符开始开始求
     for (int j = 2; j <= n; j++) {     // 遍历p的所有子串
         string tmp = p.substr(0, j);      // p的子串
         // 因为求的是最大公共前后缀，因此让前后缀长度从大到小遍历，

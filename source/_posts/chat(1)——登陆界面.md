@@ -1,5 +1,5 @@
 ---
-title: chat(1)——登陆界面
+title: 登陆界面头像处理
 date: 2025-01-10 16:30:34
 categories:
 - C++
