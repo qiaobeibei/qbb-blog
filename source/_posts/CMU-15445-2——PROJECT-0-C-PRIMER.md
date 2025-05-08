@@ -525,7 +525,7 @@ $$
 
 ## test
 
-先将`test/primer/hyperloglog_test.cpp`中的测试函数第二个形参的前缀DIABLE_去掉，cd 到build执行：
+先将`test/primer/hyperloglog_test.cpp`中的测试函数第二个形参的前缀DISABLE_去掉，cd 到build执行：
 
 ```
 make -j$(nproc) hyperloglog_test
@@ -565,6 +565,17 @@ cmake -DCLANG_FORMAT_BIN=$(which clang-format) ..
 
 然后重新执行 `make format`
 
+在根目录`CMakeLists.txt` 中修改`“set(P0_FILES)”`为：
+
+```
+set(P0_FILES
+        "src/include/primer/hyperloglog.h"
+        "src/include/primer/hyperloglog_presto.h"
+        "src/primer/hyperloglog.cpp"
+        "src/primer/hyperloglog_presto.cpp"
+)
+```
+
 最后 cd到build下执行：
 
 ```
@@ -572,3 +583,5 @@ make submit-p0
 ```
 
 然后会在根目录下创建一个名为  `project0-submission.zip`的存档，将它提交到 Gradescope即可。
+
+![image-20250430212026470](/images/$%7Bfiilename%7D/image-20250430212026470.png)
