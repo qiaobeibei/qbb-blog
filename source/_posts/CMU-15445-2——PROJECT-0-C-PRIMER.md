@@ -582,6 +582,6 @@ set(P0_FILES
 make submit-p0
 ```
 
-然后会在根目录下创建一个名为  `project0-submission.zip`的存档，将它提交到 Gradescope即可。
+然后会在根目录下创建一个名为  `project0-submission.zip`的存档，将它提交到 Gradescope：https://www.gradescope.com/courses/817456即可。
 
 ![image-20250430212026470](/images/$%7Bfiilename%7D/image-20250430212026470.png)

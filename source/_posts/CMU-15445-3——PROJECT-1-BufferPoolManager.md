@@ -46,9 +46,9 @@ typora-root-url: ./..
 - Disk Scheduler
 - Buffer Pool Manager
 
-上图中的 `Page Table`（页表）通过哈希表实现，用于跟踪当前存在于内存中的页，将页 ID 映射到缓冲池中的帧位置（其实和虚拟内存中的页表一个思路，缓冲池的页表不应与页目录混淆，后者是页 ID 到数据库文件中页位置的映射）。`LRU-K Replacement Policy` 其实就是实现如何通过页表跟踪缓冲池并且记录页面的使用情况进行相应的淘汰过程。
+上图中的 `Page Table`（页表）通过哈希表实现，用于跟踪当前存在于内存中的页，将页 ID 映射到缓冲池中的帧位置（其实和虚拟内存中的页表一个思路，缓冲池的页表不应与页目录混淆，后者是页 ID 到数据库文件中页位置的映射）。`LRU-K Replacement Policy` 其实就是实现如何**通过页表跟踪缓冲池并且记录页面的使用情况进行相应的淘汰过程**。
 
-`Disk Scheduler` 负责缓冲池和硬盘之间的读写，因为页表还维护了每页的额外元数据、`dirty-flag` 和 `pin/reference counter`，每当线程修改页面时，`dirty-flag` 都会由线程设置；且线程在访问页面之前必须递增计数器，如果页面的计数大于零，则不允许存储管理器从内存中淘汰该页面。这些步骤都是需要我们在 `Disk Scheduler` 实现的，并且需要保证**线程安全**。
+`Disk Scheduler` **负责缓冲池和硬盘之间的读写**，因为页表还维护了每页的额外元数据、`dirty-flag` 和 `pin/reference counter`，每当线程修改页面时，`dirty-flag` 都会由线程设置；且线程在访问页面之前必须递增计数器，如果页面的计数大于零，则不允许存储管理器从内存中淘汰该页面。这些步骤都是需要我们在 `Disk Scheduler` 实现的，并且需要保证**线程安全**。
 
 上面两个 TASK 是主要内容的实现，`Buffer Pool Manager` 则是通过 `LRU-K Replacement Policy` 和 Disk Scheduler 从磁盘获取数据库页面，并将它们存储在内存中，必要时也可以安排将脏页写回磁盘。
 
@@ -189,7 +189,7 @@ class LRUKNode {
 
 > 如果我们想要使用该类的某些成员，需要将 `[[maybe_unused]]` 删除
 
-虽然存在其他的策略，比如LRU和时钟，但我们这里仅需要实现LRU-K.同样分析一下 `LRUKReplacer` 的功能和成员：
+虽然存在其他的策略，比如LRU和时钟，但我们这里仅需要实现LRU-K。同样分析一下 `LRUKReplacer` 的功能和成员：
 
 ```cpp
 [[maybe_unused]] std::unordered_map<frame_id_t, LRUKNode> node_store_;
