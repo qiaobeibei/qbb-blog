@@ -1,5 +1,5 @@
 ---
-title: CMU-15445(5)——PROJECT-1-BufferPoolManager-Task-3
+title: CMU-15445(5)——PROJECT#1-BufferPoolManager-Task#3
 date: 2025-05-18 10:38:23
 categories:
 - CMU-15445
