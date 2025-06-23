@@ -7,21 +7,21 @@ tags:
 typora-root-url: ./..
 ---
 
+### 努力学习成为一名合格的程序员
 
+- #### 强化学习✔️
 
-### 正在努力学习成为一名合格的程序员
+- #### 深度学习✔️
 
-- #### 强化学习
+- #### 网络编程✔️
 
-- #### 深度学习
+- #### 并发编程✔️
 
-- #### python
+- #### 设计模式✔️
 
-- #### 网络编程
+- ### C/C++、Python、TS、ArkTS、node-js✔️
 
-- #### linux
-
-- #### 并发编程（ing）
+- ### 数据库（ing）
 
 ------
 
@@ -37,7 +37,7 @@ typora-root-url: ./..
 	</tr>
 	<tr>
 		<td>2026年毕业</td>
-		<td>电话：15991599xxx</td>
+		<td>电话：</td>
 	</tr>
 	<tr>
 		<td>出生年月日：2000年6月23日</td>
@@ -67,8 +67,9 @@ typora-root-url: ./..
 ### ==🏢工作经历==
 
 <h4 style="display: flex;justify-content: space-between;">
-<span>一、公司名称 - 部门</span><span>xxx</span><span>xxx - 至今</span>
+<span>一、广州腾讯科技有限公司 - 基础产品部</span><span>跨平台开发</span><span>2025.6.5 - 至今</span>
 </h4>
+
 
 
 - 
