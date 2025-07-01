@@ -67,8 +67,9 @@ typora-root-url: ./..
 ### ==🏢工作经历==
 
 <h4 style="display: flex;justify-content: space-between;">
-<span>一、广州腾讯科技有限公司 - 基础产品部</span><span>跨平台开发</span><span>2025.6.5 - 至今</span>
+<span>一、腾讯微信事业群 - 基础产品部</span><span>跨平台开发</span><span>2025.6.5 - 至今</span>
 </h4>
+
 
 
 
