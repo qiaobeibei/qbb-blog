@@ -108,10 +108,11 @@ B+ 树与 B 树差异的点，主要是以下这几点：
 
 ### Base-Tree
 
-需要修改的文件：
-
-- `src/include/storage/page/b_plus_tree_page.h`
-- `src/storage/page/b_plus_tree_page.cpp`
+> 需要修改的文件：
+>
+> - `src/include/storage/page/b_plus_tree_page.h`
+> - `src/storage/page/b_plus_tree_page.cpp`
+>
 
 文件中的抽象类 `BPlusTreePage` 是B+树所有节点类型的公共抽象，包含了内部节点和叶节点共享的核心属性和方法，我们实现的函数多数是 `Get/Set`，因此比较简单。
 
@@ -147,6 +148,8 @@ enum class IndexPageType { INVALID_INDEX_PAGE = 0, LEAF_PAGE, INTERNAL_PAGE };
 
 <div style="text-align: center;">   <img src="/images/$%7Bfiilename%7D/image-20250701154206559.png" width="900"> </div>
 
+![image-20250701204130758](/images/$%7Bfiilename%7D/image-20250701204130758.png)
+
 实现整体比较简单，需要注意的只有`GetMinSize()` ，对于内部节点和叶子节点，最小大小有不同的计算方式。
 
 > 最大键值对数量为 N 时，节点的最少键值对数量存在三种情况：
@@ -154,9 +157,109 @@ enum class IndexPageType { INVALID_INDEX_PAGE = 0, LEAF_PAGE, INTERNAL_PAGE };
 > - 根节点：
 >   - 根节点是叶节点时，内部至少需要 1 个键值对，这个很好理解，空树插入首个元素时，根节点必须至少有 1 个键值对（如初始插入场景）
 >   - 根节点是内部节点时，内部至少需要 2 个键值对，因为内部节点需指向至少 2 个子节点（左子树和右子树），因此至少需要 1 个有效键（实际用于索引查询的键值对） + 1 个哨兵键（内部节点最左侧的无效键）
-> - 内部节点：节点插入数据之后可能溢出，这时需要进行分裂操作，为了简化分裂代码的编写，内部节点和根节点会留出一个键值对的位置作为哨兵，实际最大键值对数量为 N−1，加上最左侧的无效键，最小键值对数量为 ⌈(N−2)/2⌉+1；
->   - (N−2)：减去哨兵键和 1 个分裂键
+> - 内部节点：节点插入数据之后可能溢出，这时需要进行分裂操作，为了简化分裂代码的编写，内部节点和根节点会留出一个键值对的位置作为哨兵，实际最大键值对数量为 `N−1`，加上最左侧的无效键，最小键值对数量为 `⌈(N−2)/2⌉+1`；
+>   - `(N−2)`：减去哨兵键和 1 个分裂键
 >   - 加 1 是因为哨兵键必须保留在左子树
-> - 叶节点：最小键值对数量为 ⌈(N−1)/2⌉，因为叶节点无需哨兵键，最大有效键值对为 N−1（留出 1 个空位用于分裂）
+> - 叶节点：最小键值对数量为 `⌈(N−1)/2⌉`，因为叶节点无需哨兵键，最大有效键值对为 `N−1`（留出 1 个空位用于分裂）
 
-未完待续。。。
+### Internal Page
+
+> 需要修改的文件：
+>
+> - `src/include/storage/page/b_plus_tree_internal_page.h`
+> - `src/storage/page/b_plus_tree_internal_page.cpp`
+
+B+ 树和 B 树最大的区别就是 B+ 树的内部节点存储的是索引信息而不是数据，且 m 个 key 对应 m+1 个 child，这种设计使得每个键成为两个相邻子树的分隔符，如下图所示：
+
+<div style="text-align: center;">   <img src="/images/$%7Bfiilename%7D/image-20250701194336614.png" width="300"> </div>
+
+由于 child 的数量不等于 key 的数量，因此将第一个键设置为无效（`key_array_[0] = KeyType()`），并且查找方法应始终从第二个键开始，简单来说就是牺牲空间获取效率，举个例子说明：
+
+![image-20250701201909172](/images/$%7Bfiilename%7D/image-20250701201909172.png)
+
+假如存在 `key_array_ = [5，10，20，30]`，且 `key_array_[0]` 有效，则 child 的含义变为：
+
+- `P0`指向`<5`的键（但B+树根节点的最小键是整个 B + 树中所有键的最小值，在左子树中不存在比5小的键，因此这个区间为空）
+- `P1`指向`[5,10)`的键
+- `P2`指向`[10,20)`的键
+- `P3`指向`[20,30)`的键
+- 还需额外的子指针指向`≥30`的键（但数组已无空间）
+
+因为子指针`page_id_array_[i]`指向的子树包含键值范围：`[key_array_[i], key_array_[i+1])`，若`key_array_[0]`存储有效键，查找最左侧子树时需特殊处理，因为不存在小于 `key_array_[0]` 的区间，所以左子树只能通过判断是否小于 `key_array_[1]` ：
+
+```cpp
+// 假设key_array_[0]有效，查找最左侧子树的代码
+if (key < key_array_[1]) {
+  return page_id_array_[0]; 
+}
+```
+
+正常我们希望的判断逻辑为：
+
+```cpp
+// 实际查找逻辑（从key_array_[1]开始）
+int index = 1;
+while (index < GetSize() && key >= key_array_[index]) {
+  index++;
+}
+return page_id_array_[index-1];  // 无需特殊处理最左侧子树
+```
+
+`P0`指向的区间永远为空，浪费一个子指针位置，且4 个键需要 5 个子指针，但数组只有 4 个位置。因此有必要将 `key_array_[0]` 无效。
+
+![image-20250701201717527](/images/$%7Bfiilename%7D/image-20250701201717527.png)
+
+`key_array_[0]` 无效时， child 的含义变为：
+
+- 子指针`P0`指向`<10`的所有键
+- 子指针`P1`指向`[10,20)`的所有键
+- 子指针`P2`指向`[20,30)`的所有键
+- 子指针`P3`指向`≥30`的所有键
+
+![image-20250701204130758](/images/$%7Bfiilename%7D/image-20250701204130758.png)
+
+特别注意，宏 `INTERNAL_PAGE_SLOT_CNT`  表示 B + 树内部页面最多能存储的键值对数量
+
+```cpp
+\#define INTERNAL_PAGE_SLOT_CNT \
+((BUSTUB_PAGE_SIZE - INTERNAL_PAGE_HEADER_SIZE) / ((int)(sizeof(KeyType) + sizeof(ValueType))))  // NOLINT
+```
+
+一个页通常为 `4KB`，`HEADER`占据 12B，最大键对值数量取决于键值对占用空间，假如 `sizeof(int) + sizeof(int)` = `4 + 4` = `8` 字节，那么一个页能存储的键值对数量为 `(4096 - 12) / (4 + 4) = 510.5` → 向下取整为 `510`。
+
+因此，每个内部页面实际最多存储 510 个键和 511 个子指针（因首个键无效），理论上可容纳 510 个有效键，实际最大有效键数量为 509（因需预留一个位置用于分裂）；最小有效键数量 = `⌈510/2⌉ - 1 = 255 - 1 = 254`，当页面键数量降至 `254` 以下时，可能触发与兄弟节点的合并，当页面键数量达到 `510` 时，插入操作将触发分裂。
+
+内部节点页的结构如下图所示，它比父类多了一个 `array` 数组成员，用于存放 `key | page_id` 键值对，其中 `page_id` 是子节点的页 id：
+
+![image-20250701210025784](/images/$%7Bfiilename%7D/image-20250701210025784.png)
+
+![image-20250701204130758](/images/$%7Bfiilename%7D/image-20250701204130758.png)
+
+函数实现比较简单不过多赘述，需要注意的只有 `KeyAt()` 和 `SetKeyAt()`  在实现时，需要设置边界，禁止访问 `index=0` 的无效键；而 `ValueAt()` 可以访问 `index=0` 的子指针。
+
+### Leaf Page
+
+> 需要修改的文件：
+>
+> - `src/include/storage/page/b_plus_tree_leaf_page.h`
+> - `src/storage/page/b_plus_tree_leaf_page.cpp`
+
+和内部节点不同，叶子节点存储 m 个有序键及其对应的 m 个值，值的类型的 64 位的 RID（指向数据记录的物理位置），并且在 header 区域多了一个 `NextPageId` 字段，该字段是下一个叶节点的指针，用于将叶节点串成单向链表。
+
+叶子节点的页面结构如下图：
+
+![image-20250701212816826](/images/$%7Bfiilename%7D/image-20250701212816826.png)
+
+函数实现很简单，不过多赘述。
+
+![image-20250701204130758](/images/$%7Bfiilename%7D/image-20250701204130758.png)
+
+一个完整的B+Tree结构如下所示：
+
+![img](/images/$%7Bfiilename%7D/2065884-20230611105037424-1678748398.png)
+
+<center>图片来源：https://www.cnblogs.com/zhiyiYo/p/17472784.html</center>
+
+## test
+
+TASK#1 没有测试，完成 TASK#2 后进行。
