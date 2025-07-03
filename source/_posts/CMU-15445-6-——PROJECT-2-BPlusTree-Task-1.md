@@ -171,7 +171,7 @@ enum class IndexPageType { INVALID_INDEX_PAGE = 0, LEAF_PAGE, INTERNAL_PAGE };
 
 B+ 树和 B 树最大的区别就是 B+ 树的内部节点存储的是索引信息而不是数据，且 m 个 key 对应 m+1 个 child，这种设计使得每个键成为两个相邻子树的分隔符，如下图所示：
 
-<div style="text-align: center;">   <img src="/images/$%7Bfiilename%7D/image-20250701194336614.png" width="300"> </div>
+<div style="text-align: center;">   <img src="/images/$%7Bfiilename%7D/image-20250702105918544.png" width="300"> </div>
 
 由于 child 的数量不等于 key 的数量，因此将第一个键设置为无效（`key_array_[0] = KeyType()`），并且查找方法应始终从第二个键开始，简单来说就是牺牲空间获取效率，举个例子说明：
 

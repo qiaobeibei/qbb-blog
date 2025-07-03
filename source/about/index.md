@@ -19,7 +19,7 @@ typora-root-url: ./..
 
 - #### 设计模式✔️
 
-- ### C/C++、Python、TS、ArkTS、node-js✔️
+- ### C/C++、Python、TS、ArkTS、node-js、dart✔️
 
 - ### 数据库（ing）
 
@@ -116,18 +116,19 @@ typora-root-url: ./..
 ### ==🚀个人项目==
 
 <h4 style="display: flex;justify-content: space-between;">
-<span>一、校园博客</span><span>个人开源项目</span><span>2022.03 - 2022.07</span>
+<span>一、xxx</span><span>个人开源项目</span><span>2022.03 - 2022.07</span>
 </h4>
+
 
 
 > 项目介绍
 
 - 
 
-
 <h4  style="display: flex;justify-content: space-between;">
-<span>二、SpEL Validator</span><span>个人开源项目</span><span>2024.04 - 至今</span>
+<span>二、XXX</span><span>个人开源项目</span><span>2024.04 - 至今</span>
 </h4>
+
 
 
 > 项目介绍
