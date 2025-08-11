@@ -43,9 +43,9 @@ Executors 每次需要读写数据时，会通过 Transaction Manager 发起访�
 
 Task#1 要把“访问方法”这一层打通：让计划树最底层能真正读写表与索引，从而支撑后面 Join/Agg 等算子的工作。
 
-执行器都遵循同一个生命周期：Init 只做一次初始化，随后重复调用 Next 逐条产生或消费元组，直到返回 false。它们通过 Catalog 找到目标表/索引，通过 Transaction 贯穿整个操作（真正的锁/恢复放在 lab4），底层读写依赖 Table Heap与B+树索引，缓冲命中与落盘由bpm 负责。
+执行器都遵循同一个生命周期：**Init 只做一次初始化，随后重复调用 Next 逐条产生或消费元组，直到返回 false**。它们通过 Catalog 找到目标表/索引，通过 Transaction 贯穿整个操作（真正的锁/恢复放在 lab4），底层读写依赖 Table Heap与B+树索引，缓冲命中与落盘由bpm 负责。
 
-Task#1 包含 5 个算子，SeqScan、Insert、Update、Delete 和 IndexScan。
+Task#1 包含 5 个算子，SeqScan、Insert、Update、Delete 和 IndexScan，均是**按行处理数据**。
 
 所有算子均基于火山模型设计：
 
@@ -159,7 +159,7 @@ auto SeqScanExecutor::Next(Tuple *tuple, RID *rid) -> bool {
 
 > 修改文件：src/execution/insert_executor.cpp
 
-insert/delete/update 算子和其他算子有一个本质区别：它们不是流式处理数据，而是批量处理所有数据，然后返回一个汇总结果。
+insert/delete/update 算子和其他算子有一个本质区别：它们不是流式处理数据，而是批量处理所有数据（仍然是逐行处理，只不过结果汇总返回，而不是**一次性**批量处理所有数据），然后返回一个汇总结果。
 
 首先额外声明三个私有变量：
 
@@ -172,7 +172,7 @@ int inserted_count_;
 bool finished_{false};
 ```
 
-插入操作的执行流程始于**从子执行器获取要插入的数据**。在数据库的查询执行树中，插入执行器通常位于树的根部，而其子执行器负责产生要插入的元组数据（语句通常带`WHERE`条件，子执行器的作用就是筛选出符合条件的元组），比如在 INSERT BALUES(1, 'hello'), (2, 'world') 语句中，子执行器是 ValueExecutor，它会逐个产生这些要插入的元组。而在 INSERT INTO table1 SELECT * FROM table2 语句中，子执行器可能是查询执行器，负责从另一个表中读取数据。
+插入操作的执行流程始于**从子执行器获取要插入的数据**。在数据库的查询执行树中，插入执行器通常位于树的根部，而其子执行器负责产生要插入的元组数据（语句通常带`WHERE`条件，子执行器的作用就是筛选出符合条件的元组），比如在 `INSERT BALUES(1, 'hello'), (2, 'world')` 语句中，子执行器是 ValueExecutor，它会逐个产生这些要插入的元组。而在 `INSERT INTO table1 SELECT * FROM table2` 语句中，子执行器可能是查询执行器，负责从另一个表中读取数据。
 
 插入执行器通过调用子执行器的 next 方法来逐个获取要插入的元组。
 
@@ -207,7 +207,7 @@ auto InsertExecutor::Next([[maybe_unused]] Tuple *tuple, RID *rid) -> bool {
       }
     }
   }
-// 返回插入的行数
+  // 返回插入的行数
   std::vector<Value> values;
   values.push_back(Value(TypeId::INTEGER, inserted_count_));
   *tuple = Tuple{values, &GetOutputSchema()};
@@ -223,9 +223,9 @@ auto InsertExecutor::Next([[maybe_unused]] Tuple *tuple, RID *rid) -> bool {
 
 整个插入过程必须在事务的上下文中执行，以确保操作的原子性。如果插入过程中发生任何错误，比如违反了唯一性约束或者系统资源不足，整个插入操作都会被回滚，保证数据库的一致性状态。
 
-插入操作的另一个特点是采用批量处理的方式，与SeqScan 每次返回一个数据元组不同，插入执行器会处理所有来自子执行器的元组，然后返回一个包含插入行数的结果元组。
+插入操作的另一个特点是采用批量处理的方式，与SeqScan 每次返回一个数据元组不同，插入执行器会处理所有来自子执行器的元组**（当然还是逐行处理，一次次的将结果汇总，然后返回汇总数据，而不是一次性插入然后返回）**，然后返回一个包含插入行数的结果元组。
 
-## Update
+### Update
 
 > 修改文件：src/execution/update_executor.cpp
 
@@ -314,13 +314,13 @@ UpdateExecutor 完整的执行了上面提到的“子执行器产出待更新�
 
 所有行处理后，返回一个仅有一列的元组，表示更新的行数，并设置 finished_，确保 Update 执行器只返回一次有效结果。
 
-## Delete
+### Delete
 
 > src/execution/delete_executor.cpp
 
 删除流程和Insert/update基本相同，不做分析
 
-## IndexScan
+### IndexScan
 
 > src/execution/index_scan_executor.cpp
 
@@ -352,7 +352,12 @@ void IndexScanExecutor::Init() {
     // 扫描匹配的RID
     index_info->index_->ScanKey(search_key, &result_rids_, exec_ctx_->GetTransaction());
   } else {
-    // 对于全索引扫描，使用B+树
+    // 对于全索引扫描，B+树
+    use_iterator_ = true;
+    it_ = tree_->GetBeginIterator();
+    end_it_ = tree_->GetEndIterator();
+    // 使用迭代器不需要result_rids
+    result_rids_.clear();
  
   }
 
@@ -360,7 +365,7 @@ void IndexScanExecutor::Init() {
  }
 ```
 
-执行初始化时，执行器通过系统目录拿到 indexInfo（包括B+树对象、key_schema、key_attrs）和 table_info。若 plan_ 携带等值键（比如WHERE k = 42 这种能被索引精确匹配的条件），就把这些键表达式求值成符合索引 key_schema 的搜索键，用索引的点查接口直把匹配到的RID批量取出来，存到本地列表中；若没有等值键，完整实现会使用索引迭代器做范围或全索引扫描，最小实现也可以先只支持点查。
+执行初始化时，执行器通过系统目录拿到 indexInfo（包括B+树对象、key_schema、key_attrs）和 table_info。若 plan_ 携带等值键（比如WHERE k = 42 这种能被索引精确匹配的条件），就把这些键表达式求值成符合索引 key_schema 的搜索键，用索引的点查接口直把匹配到的RID批量取出来，存到本地列表中；若没有等值键，完整实现使用索引迭代器做范围或全索引扫描，最小实现也可以先只支持点查。
 
 索引和表的元数据拿到，并且后续RID按键检索出后，接下来Next阶段只需要逐个消费这些 RID：回表根据RID取出元组和meta，跳过已经标删的元组；如果plan_里还有残余谓词，就在回表后对元组求值，不满足的继续丢弃；满足的再按输出schema投影列并返回。
 
@@ -400,7 +405,6 @@ auto IndexScanExecutor::Next(Tuple *tuple, RID *rid) -> bool {
       *rid = current_rid;
       return true;
     }
-    return false;
   } else {
     while (current_idx_ < result_rids_.size()) {
         auto current_rid = result_rids_[current_idx_++];
@@ -431,8 +435,8 @@ auto IndexScanExecutor::Next(Tuple *tuple, RID *rid) -> bool {
         *rid = current_rid;
         return true;
       }
-      return false;
     }
+    return false;
   }
 ```
 
@@ -442,7 +446,17 @@ IndexScan 是一个迭代产出的算子，next 的每一次调用，就尽力�
 
 Next 能保证只返回当前可见且满足条件的行，并且一次只给一条（处理完一条后就return true，等待下一次调用next直至返回false表示无候选数据）。
 
-相比于SeqScan，indexScan首先通过索引把搜索空间裁小，next再做回表与参与判断，比SeqScan要省得多。
+> **IndexScan 和 SeqScan 的区别**
+
+1. 数据访问路径不同：相比于SeqScan，indexScan首先通过索引把搜索空间裁小（即使不存在谓词键pred_keys_使用B+树索引从头遍历，也不像SeqScan一样逐个遍历数据的物理存储，而是遍历数据的索引结构，后者明显快很多），next再做回表与参与判断，比SeqScan要省得多。
+
+2. 功能不同：SeqScan适合全表扫描，但需要读取所有数据页；IndexScan适合选择性查询，只读取符合条件的元组
+
+3. 执行策略不同：SeqScan总是线性扫描，IndexScan支持点查找（根据精确的键值在索引中查找匹配的记录）和全扫描（使用B+树迭代器遍历索引结构找到符合条件的叶子页）
+
+   1. 简单来说，点查找就是”精确匹配“，直到要找什么，直接去索引中去定位，而不是遍历所有索引结构。比如 `SELECT * FROM students WHERE student_id = 1001;`  student_id = 1001 就是谓词键，可以直接在 students 列中定位  student_id = 1001 的元组，存储起来然后在 Next 阶段处理。
+
+      而 `SELECT * FROM students` 就是全扫描了，直接使用B+树迭代器遍历索引结构找到符合的叶子页（虽然没有谓词键的情况下，IndexScan和SeqScan用的都是全扫描，但是前者扫描的是索引结构，比后者快得多）
 
 # test
 
