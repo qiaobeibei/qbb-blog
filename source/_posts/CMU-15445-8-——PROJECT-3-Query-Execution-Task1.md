@@ -500,6 +500,26 @@ make -j$(nproc) sqllogictest
 
 ![image-20250809150823898](/images/$%7Bfiilename%7D/image-20250809150823898.png)
 
+更新会卡住不动，检查发现是 update 的实现会导致插入新元组后，新元组被后续的 update 操作再次处理。修改：
+
+```cpp
+// 错误
+auto new_rid = table_info_->table_->InsertTuple(new_meta, new_tuple, ...);
+if (new_rid.has_value()) {
+	TupleMeta delete_meta{0, true};
+	table_info_->table_->UpdateTupleMeta(delete_meta, child_rid);
+	// ...
+}
+
+// 修改为
+TupleMeata new_meta{0, false};
+tuple_info_->table_->UpdateTupleInPlace(new_meta, new_tuple, child_rid);
+```
+
+通过 UpdateTupleInPlace 更新值，而不是删除然后插入。
+
+
+
 删除测试：
 
 ```
