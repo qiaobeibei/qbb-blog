@@ -723,7 +723,7 @@ page_table_.erase(it);
 
 ```
 make format
-make check-clang-tidy-p1
+make check-clang-tidy-p2
 ```
 
 然后执行：
