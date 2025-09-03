@@ -268,3 +268,5 @@ python3 gradescope_sign.py
 
 提交编译时报错，但是提交文件并没有 executor_factory.cpp 并且没有该错误，很明显gradescope 的代码库和 https://github.com/cmu-db/bustub/releases/tag/v20241207-2024fall 2024 fall 最新的版本不一样，不过官网已经提供了所有测试，本地测试全都通过。
 
+
+
